@@ -4,8 +4,8 @@ set -u
 
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-PRESET_NAMES='aurora ember lagoon violet moss slate sky rose sand coral
-lime ash cherry orchid jade plum fuchsia'
+PRESET_NAMES='blue peach teal mauve green lavender sapphire pink yellow maroon
+lime ash red orchid jade plum purple rosewater flamingo sky gold cornflower'
 
 get_tmux_option() {
   local option="$1"
@@ -56,10 +56,32 @@ seeded_preset() {
   printf '%s\n' "$1"
 }
 
+canonical_preset() {
+  local preset="$1"
+
+  case "$preset" in
+    aurora) preset='blue' ;;
+    ember) preset='peach' ;;
+    lagoon) preset='teal' ;;
+    violet) preset='mauve' ;;
+    moss) preset='green' ;;
+    slate) preset='lavender' ;;
+    rose) preset='pink' ;;
+    sand) preset='yellow' ;;
+    coral) preset='maroon' ;;
+    cherry) preset='red' ;;
+    fuchsia) preset='purple' ;;
+  esac
+
+  printf '%s\n' "$preset"
+}
+
 resolve_preset() {
   local preset="$1"
   local host="$2"
   local name
+
+  preset="$(canonical_preset "$preset")"
 
   for name in $PRESET_NAMES; do
     if [ "$name" = "$preset" ]; then
@@ -98,23 +120,28 @@ apply_preset() {
   local dark='#101216'
 
   case "$preset" in
-    aurora) base='#8aadf4' ;;
-    ember) base='#f5a97f' ;;
-    lagoon) base='#8bd5ca' ;;
-    violet) base='#c6a0f6' ;;
-    moss) base='#a6da95' ;;
-    slate) base='#b7bdf8' ;;
-    sky) base='#7dc4e4' ;;
-    rose) base='#f5bde6' ;;
-    sand) base='#eed49f' ;;
-    coral) base='#ee99a0' ;;
+    blue) base='#8aadf4' ;;
+    peach) base='#f5a97f' ;;
+    teal) base='#8bd5ca' ;;
+    mauve) base='#c6a0f6' ;;
+    green) base='#a6da95' ;;
+    lavender) base='#b7bdf8' ;;
+    sapphire) base='#7dc4e4' ;;
+    pink) base='#f5bde6' ;;
+    yellow) base='#eed49f' ;;
+    maroon) base='#ee99a0' ;;
     lime) base='#c8dd88' ;;
     ash) base='#a5adcb' ;;
-    cherry) base='#ed8796' ;;
+    red) base='#ed8796' ;;
     orchid) base='#e38dcd' ;;
     jade) base='#8cd9b3' ;;
     plum) base='#d290df' ;;
-    fuchsia) base='#e06ee0' ;;
+    purple) base='#ba91d8' ;;
+    rosewater) base='#f4dbd6' ;;
+    flamingo) base='#f0c6c6' ;;
+    sky) base='#91d7e3' ;;
+    gold) base='#efbc88' ;;
+    cornflower) base='#83baee' ;;
   esac
 
   if [ -n "$base_color" ]; then

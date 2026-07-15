@@ -242,8 +242,132 @@
       text-transform: uppercase;
     }
 
-    .demo-heading span:last-child {
+    .demo-preset-control {
+      position: relative;
       color: var(--accent);
+    }
+
+    .demo-preset-trigger {
+      display: grid;
+      min-width: 11.75rem;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0.6rem;
+      border: 1px solid transparent;
+      padding: 0.45rem 0.55rem;
+      background: transparent;
+      cursor: pointer;
+      font: inherit;
+      letter-spacing: inherit;
+      list-style: none;
+    }
+
+    .demo-preset-trigger::-webkit-details-marker {
+      display: none;
+    }
+
+    .demo-preset-trigger:hover,
+    .demo-preset-control[open] .demo-preset-trigger {
+      border-color: var(--line);
+      background: var(--panel);
+    }
+
+    .demo-preset-swatch,
+    .demo-preset-option-swatch {
+      width: 0.65rem;
+      height: 0.65rem;
+      flex: 0 0 auto;
+    }
+
+    .demo-preset-swatch {
+      background: var(--accent);
+    }
+
+    .demo-preset-label {
+      text-align: left;
+    }
+
+    .demo-preset-chevron {
+      width: 0.4rem;
+      height: 0.4rem;
+      border-right: 1px solid currentcolor;
+      border-bottom: 1px solid currentcolor;
+      pointer-events: none;
+      transform: translateY(-0.1rem) rotate(45deg);
+    }
+
+    .demo-preset-control[open] .demo-preset-chevron {
+      transform: translateY(0.1rem) rotate(225deg);
+    }
+
+    .demo-preset-menu {
+      position: absolute;
+      z-index: 10;
+      top: calc(100% + 0.45rem);
+      right: 0;
+      display: grid;
+      width: min(30rem, calc(100vw - 2rem));
+      max-height: min(27rem, 65vh);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      overflow-y: auto;
+      border: 1px solid var(--line);
+      padding: 0.35rem;
+      background: var(--bar);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
+      scrollbar-color: var(--line) var(--bar);
+    }
+
+    .demo-preset-control:not([open]) .demo-preset-menu {
+      display: none;
+    }
+
+    .demo-preset-option {
+      display: grid;
+      width: 100%;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 0.65rem;
+      border: 0;
+      padding: 0.55rem 0.65rem;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      letter-spacing: inherit;
+      text-align: left;
+      text-transform: uppercase;
+    }
+
+    .demo-preset-option:hover,
+    .demo-preset-option[aria-pressed="true"] {
+      background: color-mix(in srgb, var(--swatch), transparent 88%);
+    }
+
+    .demo-preset-option[aria-pressed="true"] {
+      color: var(--swatch);
+    }
+
+    .demo-preset-option-swatch {
+      background: var(--swatch);
+    }
+
+    .demo-preset-option-hex {
+      color: var(--muted);
+    }
+
+    .demo-preset-option::after {
+      width: 0.25rem;
+      height: 0.45rem;
+      border-right: 1px solid currentcolor;
+      border-bottom: 1px solid currentcolor;
+      content: "";
+      opacity: 0;
+      transform: translateY(-0.1rem) rotate(45deg);
+    }
+
+    .demo-preset-option[aria-pressed="true"]::after {
+      opacity: 1;
     }
 
     .status-viewport {
@@ -827,7 +951,21 @@
     <section class="demo shell" aria-labelledby="demo-title">
       <div class="demo-heading">
         <span id="demo-title">Live status line</span>
-        <span id="demo-preset-label">aurora / #8aadf4</span>
+        <details class="demo-preset-control" id="demo-preset-control">
+          <summary class="demo-preset-trigger">
+            <span class="demo-preset-swatch" aria-hidden="true"></span>
+            <span class="demo-preset-label" id="demo-preset-label">
+              blue / #8aadf4
+            </span>
+            <span class="demo-preset-chevron" aria-hidden="true"></span>
+          </summary>
+          <div
+            class="demo-preset-menu"
+            id="demo-preset-menu"
+            role="group"
+            aria-label="Preview palette"
+          ></div>
+        </details>
       </div>
       <div
         class="status-viewport"
@@ -917,7 +1055,7 @@
     <section class="section shell" id="palette">
       <div class="section-label">Palette</div>
       <div class="section-content">
-        <h2>Seventeen signals. One steady foundation.</h2>
+        <h2>Twenty-two signals. One steady foundation.</h2>
         <p class="section-lede">
           Select an accent to apply it across the page and the live status
           line. Each quieter companion color is derived by blending the
@@ -934,7 +1072,7 @@
             <span>Selected accent</span>
           </div>
           <div class="palette-data" aria-live="polite">
-            <h3 class="palette-name" id="palette-name">aurora</h3>
+            <h3 class="palette-name" id="palette-name">blue</h3>
             <div class="palette-values">
               <span>base <strong id="palette-base">#8aadf4</strong></span>
               <span>
@@ -953,7 +1091,7 @@
       <div class="section-content">
         <h2>Recognize the machine before reading its name.</h2>
         <p class="section-lede">
-          Chroma hashes tmux’s short hostname into one of seventeen balanced
+          Chroma hashes tmux’s short hostname into one of twenty-two balanced
           accents. The result is stable on every reload and distinct across
           the machines you use most.
         </p>
@@ -995,7 +1133,7 @@
         <div class="config-grid">
           <div class="code-panel">
             <pre><span class="code-comment"># Optional overrides</span>
-set -g @chroma_preset <span class="code-value">'ember'</span>
+set -g @chroma_preset <span class="code-value">'peach'</span>
 set -g @chroma_powerline <span class="code-value">'on'</span>
 set -g @chroma_show_disk <span class="code-value">'on'</span>
 set -g @chroma_disk_path <span class="code-value">'/'</span>
@@ -1087,23 +1225,28 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
 
   <script>
     const presets = [
-      { name: 'aurora', base: '#8aadf4' },
-      { name: 'ember', base: '#f5a97f' },
-      { name: 'lagoon', base: '#8bd5ca' },
-      { name: 'violet', base: '#c6a0f6' },
-      { name: 'moss', base: '#a6da95' },
-      { name: 'slate', base: '#b7bdf8' },
-      { name: 'sky', base: '#7dc4e4' },
-      { name: 'rose', base: '#f5bde6' },
-      { name: 'sand', base: '#eed49f' },
-      { name: 'coral', base: '#ee99a0' },
+      { name: 'blue', base: '#8aadf4' },
+      { name: 'peach', base: '#f5a97f' },
+      { name: 'teal', base: '#8bd5ca' },
+      { name: 'mauve', base: '#c6a0f6' },
+      { name: 'green', base: '#a6da95' },
+      { name: 'lavender', base: '#b7bdf8' },
+      { name: 'sapphire', base: '#7dc4e4' },
+      { name: 'pink', base: '#f5bde6' },
+      { name: 'yellow', base: '#eed49f' },
+      { name: 'maroon', base: '#ee99a0' },
       { name: 'lime', base: '#c8dd88' },
       { name: 'ash', base: '#a5adcb' },
-      { name: 'cherry', base: '#ed8796' },
+      { name: 'red', base: '#ed8796' },
       { name: 'orchid', base: '#e38dcd' },
       { name: 'jade', base: '#8cd9b3' },
       { name: 'plum', base: '#d290df' },
-      { name: 'fuchsia', base: '#e06ee0' },
+      { name: 'purple', base: '#ba91d8' },
+      { name: 'rosewater', base: '#f4dbd6' },
+      { name: 'flamingo', base: '#f0c6c6' },
+      { name: 'sky', base: '#91d7e3' },
+      { name: 'gold', base: '#efbc88' },
+      { name: 'cornflower', base: '#83baee' },
     ];
 
     const state = {
@@ -1119,10 +1262,35 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
     const paletteName = document.getElementById('palette-name');
     const paletteBase = document.getElementById('palette-base');
     const paletteAlt = document.getElementById('palette-alt');
+    const demoPresetControl = document.getElementById('demo-preset-control');
     const demoPresetLabel = document.getElementById('demo-preset-label');
+    const demoPresetMenu = document.getElementById('demo-preset-menu');
+    const demoPresetTrigger = document.querySelector('.demo-preset-trigger');
 
     function channel(color, index) {
       return parseInt(color.slice(index, index + 2), 16);
+    }
+
+    function colorHue(color) {
+      const red = channel(color, 1) / 255;
+      const green = channel(color, 3) / 255;
+      const blue = channel(color, 5) / 255;
+      const max = Math.max(red, green, blue);
+      const min = Math.min(red, green, blue);
+      const delta = max - min;
+      let hue = 0;
+
+      if (delta === 0) {
+        return hue;
+      }
+      if (max === red) {
+        hue = ((green - blue) / delta) % 6;
+      } else if (max === green) {
+        hue = (blue - red) / delta + 2;
+      } else {
+        hue = (red - green) / delta + 4;
+      }
+      return (hue * 60 + 360) % 360;
     }
 
     function hex(value) {
@@ -1295,6 +1463,12 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
       paletteBase.textContent = preset.base;
       paletteAlt.textContent = alt;
       demoPresetLabel.textContent = preset.name + ' / ' + preset.base;
+      document.querySelectorAll('.demo-preset-option').forEach((button) => {
+        button.setAttribute(
+          'aria-pressed',
+          String(button.dataset.preset === preset.name)
+        );
+      });
       document.querySelectorAll('.swatch-button').forEach((button) => {
         button.setAttribute(
           'aria-pressed',
@@ -1304,10 +1478,34 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
       renderStatus();
     }
 
-    function setupPalette() {
+    function setupPresetControls() {
       const toolbar = document.getElementById('palette-toolbar');
-      presets.forEach((preset) => {
+      const displayPresets = [...presets].sort((first, second) => (
+        colorHue(first.base) - colorHue(second.base)
+      ));
+      displayPresets.forEach((preset) => {
+        const optionButton = document.createElement('button');
+        const optionSwatch = makeElement('demo-preset-option-swatch');
+        const optionName = makeElement('demo-preset-option-name', preset.name);
+        const optionHex = makeElement('demo-preset-option-hex', preset.base);
         const button = document.createElement('button');
+
+        optionButton.className = 'demo-preset-option';
+        optionButton.type = 'button';
+        optionButton.dataset.preset = preset.name;
+        optionButton.style.setProperty('--swatch', preset.base);
+        optionButton.setAttribute(
+          'aria-pressed',
+          String(preset === state.preset)
+        );
+        optionButton.append(optionSwatch, optionName, optionHex);
+        optionButton.addEventListener('click', () => {
+          selectPreset(preset);
+          demoPresetControl.open = false;
+          demoPresetTrigger.focus();
+        });
+        demoPresetMenu.appendChild(optionButton);
+
         button.className = 'swatch-button';
         button.type = 'button';
         button.dataset.preset = preset.name;
@@ -1319,6 +1517,21 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
         );
         button.addEventListener('click', () => selectPreset(preset));
         toolbar.appendChild(button);
+      });
+
+      demoPresetControl.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && demoPresetControl.open) {
+          demoPresetControl.open = false;
+          demoPresetTrigger.focus();
+        }
+      });
+      document.addEventListener('click', (event) => {
+        if (
+          demoPresetControl.open &&
+          !demoPresetControl.contains(event.target)
+        ) {
+          demoPresetControl.open = false;
+        }
       });
     }
 
@@ -1374,7 +1587,7 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
       });
     });
 
-    setupPalette();
+    setupPresetControls();
     renderStatus();
   </script>
 </body>

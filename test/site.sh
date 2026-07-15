@@ -52,6 +52,10 @@ assert_block_contains '.status-prefix' 'background: var(--bar);'
 assert_block_contains '.statusbar' '--status-height: 24px;'
 assert_block_contains '.statusbar' 'height: var(--status-height);'
 assert_block_contains '.statusbar' 'line-height: var(--status-height);'
+assert_block_contains '.demo-preset-trigger' 'padding: 0.45rem 0.55rem;'
+assert_block_contains '.demo-preset-option' 'padding: 0.55rem 0.65rem;'
+assert_block_contains '.demo-preset-menu' \
+  'grid-template-columns: repeat(2, minmax(0, 1fr));'
 assert_block_contains '.powerline-glyph' 'width: 1ch;'
 assert_block_contains '.powerline-glyph' 'height: 100%;'
 assert_block_contains '.status-prefix.is-active' \
@@ -88,6 +92,21 @@ for fragment in \
   case "$(< "$SITE")" in
     *"$fragment"*) ;;
     *) fail 'Powerline SVGs must fill one normalized character cell' ;;
+  esac
+done
+
+for fragment in \
+  'id="demo-preset-control"' \
+  'id="demo-preset-label"' \
+  'id="demo-preset-menu"' \
+  'aria-label="Preview palette"' \
+  "const displayPresets = [...presets].sort" \
+  'colorHue(first.base) - colorHue(second.base)' \
+  "optionButton.style.setProperty('--swatch', preset.base)" \
+  "demoPresetLabel.textContent = preset.name + ' / ' + preset.base"; do
+  case "$(< "$SITE")" in
+    *"$fragment"*) ;;
+    *) fail 'preview palette picker must show hue-sorted color swatches' ;;
   esac
 done
 

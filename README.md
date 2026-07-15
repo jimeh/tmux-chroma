@@ -14,7 +14,7 @@ Explore every preset and status mode on the
 
 ## Features
 
-- Stable, host-seeded accent colors with 17 included presets.
+- Stable, host-seeded accent colors with 22 included presets.
 - Optional Powerline dividers.
 - Prefix-key and synchronized-pane indicators.
 - Bundled CPU and memory metrics for macOS and Linux.
@@ -81,7 +81,7 @@ Set options before Chroma loads:
 For example:
 
 ```tmux
-set -g @chroma_preset 'ember'
+set -g @chroma_preset 'peach'
 set -g @chroma_powerline 'on'
 set -g @chroma_show_disk 'on'
 set -g @chroma_disk_path "${HOME}"
@@ -98,9 +98,14 @@ base color is ignored.
 Chroma includes:
 
 ```text
-aurora  ember  lagoon  violet  moss  slate  sky  rose  sand
-coral   lime   ash     cherry  orchid jade   plum fuchsia
+blue        peach       teal        mauve       green       lavender
+sapphire    pink        yellow      maroon      lime        ash
+red         orchid      jade        plum        purple      rosewater
+flamingo    sky         gold        cornflower
 ```
+
+Legacy preset names remain accepted as aliases. The exception is `sky`, which
+now uses Catppuccin Sky; use `sapphire` for the color previously named `sky`.
 
 The selected preset supplies `base`. Chroma derives `base_alt` as a 60%
 blend of `base` toward the bar background, including when
