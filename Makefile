@@ -1,0 +1,24 @@
+SHELL_FILES := chroma.tmux scripts/cpu scripts/disk scripts/memory \
+	test/palette-sync.sh test/smoke.sh
+MARKDOWNLINT ?= markdownlint-cli2
+HTMLVALIDATE ?= npx --yes html-validate@10.3.0
+
+.PHONY: format
+format:
+	shfmt -w $(SHELL_FILES)
+
+.PHONY: lint
+lint:
+	bash -n $(SHELL_FILES)
+	shellcheck -s bash $(SHELL_FILES)
+	shfmt -d $(SHELL_FILES)
+	$(MARKDOWNLINT) README.md THIRD_PARTY_NOTICES.md AGENTS.md
+	$(HTMLVALIDATE) docs/index.html
+
+.PHONY: test
+test:
+	bash test/palette-sync.sh
+	bash test/smoke.sh
+
+.PHONY: check
+check: lint test

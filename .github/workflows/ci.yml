@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install linters
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes shellcheck
+          go install mvdan.cc/sh/v3/cmd/shfmt@v3.13.1
+      - name: Lint
+        run: >-
+          make lint
+          MARKDOWNLINT="npx --yes markdownlint-cli2@0.23.0"
+
+  linux:
+    name: Linux / tmux ${{ matrix.tmux }}
+    runs-on: ubuntu-latest
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    strategy:
+      fail-fast: false
+      matrix:
+        tmux:
+          - 3.2a
+          - 3.4
+          - 3.6b
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes \
+            bison \
+            build-essential \
+            libevent-dev \
+            libncurses-dev \
+            pkg-config
+      - name: Build tmux
+        env:
+          TMUX_VERSION: ${{ matrix.tmux }}
+        run: |
+          curl --fail --location --silent --show-error \
+            "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz" \
+            --output /tmp/tmux.tar.gz
+          mkdir /tmp/tmux-src
+          tar -xzf /tmp/tmux.tar.gz \
+            --strip-components=1 \
+            --directory /tmp/tmux-src
+          cd /tmp/tmux-src
+          ./configure --prefix="${HOME}/.local"
+          make -j2
+          make install
+      - name: Test
+        run: make test
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tmux
+        run: brew install tmux
+      - name: Test
+        run: make test

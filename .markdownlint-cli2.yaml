@@ -1,0 +1,9 @@
+config:
+  line-length:
+    line_length: 80
+    code_blocks: true
+    tables: false
+  no-duplicate-heading:
+    siblings_only: true
+  blanks-around-fences:
+    list_items: false
