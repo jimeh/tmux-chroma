@@ -292,13 +292,18 @@
 
     .status-prefix {
       width: 19px;
-      background: var(--panel-raised);
-      color: var(--panel-raised);
+      background: var(--bar);
+      color: var(--bar);
       animation-delay: 170ms;
     }
 
     .status-prefix.is-active {
+      background: var(--panel-raised);
       color: var(--warn);
+    }
+
+    .status-prefix.is-powerline {
+      background: var(--bar);
     }
 
     .status-windows {
@@ -383,7 +388,7 @@
     }
 
     .divider-metrics {
-      background: var(--panel-raised);
+      background: var(--bar);
     }
 
     .divider-metrics::before {
@@ -922,6 +927,40 @@
       </div>
     </section>
 
+    <section class="section shell" id="palette">
+      <div class="section-label">Palette</div>
+      <div class="section-content">
+        <h2>Seventeen signals. One steady foundation.</h2>
+        <p class="section-lede">
+          Select an accent to apply it across the page and the live status
+          line. Each quieter companion color is derived by blending the
+          accent toward Chroma’s bar background.
+        </p>
+        <div
+          class="palette-toolbar"
+          id="palette-toolbar"
+          role="group"
+          aria-label="Accent presets"
+        ></div>
+        <div class="palette-detail">
+          <div class="palette-chip">
+            <span>Selected accent</span>
+          </div>
+          <div class="palette-data" aria-live="polite">
+            <h3 class="palette-name" id="palette-name">aurora</h3>
+            <div class="palette-values">
+              <span>base <strong id="palette-base">#8aadf4</strong></span>
+              <span>
+                base_alt
+                <strong id="palette-alt">#5b719e</strong>
+              </span>
+              <span>bar <strong>#15181d</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section shell" id="behavior">
       <div class="section-label">Behavior</div>
       <div class="section-content">
@@ -997,40 +1036,6 @@ run <span class="code-value">'~/.tmux/plugins/tpm/tpm'</span></pre>
                 <dd>Add your own compact status content.</dd>
               </div>
             </dl>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section shell" id="palette">
-      <div class="section-label">Palette</div>
-      <div class="section-content">
-        <h2>Seventeen signals. One steady foundation.</h2>
-        <p class="section-lede">
-          Select an accent to apply it across the page and the live status
-          line. Each quieter companion color is derived by blending the
-          accent toward Chroma’s bar background.
-        </p>
-        <div
-          class="palette-toolbar"
-          id="palette-toolbar"
-          role="group"
-          aria-label="Accent presets"
-        ></div>
-        <div class="palette-detail">
-          <div class="palette-chip">
-            <span>Selected accent</span>
-          </div>
-          <div class="palette-data" aria-live="polite">
-            <h3 class="palette-name" id="palette-name">aurora</h3>
-            <div class="palette-values">
-              <span>base <strong id="palette-base">#8aadf4</strong></span>
-              <span>
-                base_alt
-                <strong id="palette-alt">#5b719e</strong>
-              </span>
-              <span>bar <strong>#15181d</strong></span>
-            </div>
           </div>
         </div>
       </div>
@@ -1188,7 +1193,8 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
 
       const prefix = makeElement(
         'status-segment status-prefix' +
-          (state.prefix === 'active' ? ' is-active' : ''),
+          (state.prefix === 'active' ? ' is-active' : '') +
+          (powerline ? ' is-powerline' : ''),
         '∙ '
       );
       statusbar.appendChild(prefix);
