@@ -11,11 +11,12 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
         with:
           go-version: stable
-      - uses: actions/setup-node@v4
+          cache: false
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Install linters
@@ -42,7 +43,7 @@ jobs:
           - 3.4
           - 3.6b
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install build dependencies
         run: |
           sudo apt-get update
@@ -73,7 +74,7 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install tmux
         run: brew install tmux
       - name: Test
