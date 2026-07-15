@@ -1,7 +1,7 @@
 # Chroma
 
 [![CI](https://github.com/jimeh/tmux-chroma/actions/workflows/ci.yml/badge.svg)](https://github.com/jimeh/tmux-chroma/actions/workflows/ci.yml)
-[![Website](https://img.shields.io/badge/website-live-8aadf4)](https://jimeh.github.io/tmux-chroma/)
+[![Website](https://img.shields.io/badge/website-live-8aadf4)](https://jimeh.me/tmux-chroma/)
 
 A minimal, host-aware status theme for tmux. Chroma deterministically assigns
 an accent preset from each machine's short hostname, making hosts recognizable
@@ -10,7 +10,7 @@ at a glance without per-machine configuration.
 ![Chroma status line in Powerline mode](docs/preview.png)
 
 Explore every preset and status mode on the
-[interactive Chroma website](https://jimeh.github.io/tmux-chroma/).
+[interactive Chroma website](https://jimeh.me/tmux-chroma/).
 
 ## Features
 
