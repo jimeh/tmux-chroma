@@ -32,7 +32,10 @@ make check
   `base_alt` mix formula from `chroma.tmux`. Update both together and run
   `make test`.
 - Keep the GitHub Pages site static and usable without a build step.
-- GitHub Pages inherits the account custom domain. Use
-  `https://jimeh.me/tmux-chroma/` as the canonical site URL.
+- Use `https://jimeh.github.io/tmux-chroma/` as the canonical site URL.
+  The personal site runs on Cloudflare Workers, so keep the legacy
+  `jimeh/jimeh.github.io` Pages custom domain and `CNAME` unset; otherwise
+  GitHub redirects all project Pages through the unrelated personal-site
+  origin.
 - Preserve keyboard focus, mobile overflow handling, and reduced-motion
   behavior when changing the site.
