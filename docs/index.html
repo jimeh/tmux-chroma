@@ -253,9 +253,11 @@
     }
 
     .statusbar {
+      --status-height: 24px;
+
       display: flex;
       min-width: 830px;
-      height: 32px;
+      height: var(--status-height);
       align-items: stretch;
       overflow: hidden;
       background: var(--bar);
@@ -263,7 +265,7 @@
       color: var(--text);
       font-family: var(--mono);
       font-size: 12px;
-      line-height: 32px;
+      line-height: var(--status-height);
       white-space: pre;
     }
 
@@ -274,27 +276,20 @@
 
     .status-segment {
       display: inline-block;
-      animation: segment-in 500ms backwards cubic-bezier(0.2, 0.7, 0.2, 1);
     }
 
     .status-host {
-      padding-inline: 12px;
       background: var(--accent);
       color: var(--dark);
-      animation-delay: 80ms;
     }
 
     .status-session {
-      padding-inline: 10px;
       background: var(--panel-raised);
-      animation-delay: 130ms;
     }
 
     .status-prefix {
-      width: 19px;
       background: var(--bar);
       color: var(--bar);
-      animation-delay: 170ms;
     }
 
     .status-prefix.is-active {
@@ -309,11 +304,9 @@
     .status-windows {
       display: flex;
       align-items: stretch;
-      animation-delay: 210ms;
     }
 
     .status-window {
-      padding-inline: 7px;
       color: var(--subtle);
     }
 
@@ -331,11 +324,8 @@
 
     .status-metrics {
       display: flex;
-      padding-inline: 9px;
       align-items: center;
-      gap: 8px;
       background: var(--panel-raised);
-      animation-delay: 270ms;
     }
 
     .metric-dot {
@@ -343,10 +333,8 @@
     }
 
     .status-tail {
-      padding-inline: 10px;
       background: var(--accent);
       color: var(--dark);
-      animation-delay: 320ms;
     }
 
     .status-tail.is-sync {
@@ -354,55 +342,61 @@
     }
 
     .powerline-divider {
-      position: relative;
-      width: 14px;
-      flex: 0 0 14px;
-      animation: segment-in 500ms 110ms backwards
-        cubic-bezier(0.2, 0.7, 0.2, 1);
+      --divider-glyph-background: var(--divider-to);
+      --divider-glyph-color: var(--divider-from);
+
+      display: flex;
+      flex: 0 0 auto;
+      height: 100%;
     }
 
-    .powerline-divider::before {
-      position: absolute;
-      top: 0;
-      content: "";
-      border-top: 16px solid transparent;
-      border-bottom: 16px solid transparent;
+    .powerline-divider.is-reverse {
+      --divider-glyph-background: var(--divider-from);
+      --divider-glyph-color: var(--divider-to);
+    }
+
+    .powerline-space,
+    .powerline-glyph {
+      width: 1ch;
+      flex: 0 0 1ch;
+    }
+
+    .powerline-space.is-before {
+      background: var(--divider-from);
+    }
+
+    .powerline-space.is-after {
+      background: var(--divider-to);
+    }
+
+    .powerline-glyph {
+      display: block;
+      height: 100%;
+      background: var(--divider-glyph-background);
+    }
+
+    .powerline-glyph polygon {
+      fill: var(--divider-glyph-color);
     }
 
     .divider-forward {
-      background: var(--panel-raised);
-    }
-
-    .divider-forward::before {
-      left: 0;
-      border-left: 14px solid var(--accent);
+      --divider-from: var(--accent);
+      --divider-to: var(--panel-raised);
     }
 
     .divider-to-bar {
-      background: var(--bar);
-    }
-
-    .divider-to-bar::before {
-      left: 0;
-      border-left: 14px solid var(--panel-raised);
+      --divider-from: var(--panel-raised);
+      --divider-to: var(--bar);
     }
 
     .divider-metrics {
-      background: var(--bar);
-    }
-
-    .divider-metrics::before {
-      right: 0;
-      border-right: 14px solid var(--panel-raised);
+      --divider-from: var(--bar);
+      --divider-to: var(--panel-raised);
     }
 
     .divider-tail {
-      background: var(--panel-raised);
-    }
-
-    .divider-tail::before {
-      right: 0;
-      border-right: 14px solid var(--tail-color);
+      --divider-from: var(--panel-raised);
+      --divider-to: var(--tail-color);
     }
 
     .demo-controls {
@@ -695,13 +689,6 @@
 
     .site-footer p {
       margin: 0;
-    }
-
-    @keyframes segment-in {
-      from {
-        opacity: 0;
-        transform: translateY(7px);
-      }
     }
 
     @media (max-width: 800px) {
@@ -1161,8 +1148,33 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
       return element;
     }
 
-    function appendDivider(className, tailColor) {
-      const divider = makeElement('powerline-divider ' + className);
+    function makeDividerGlyph(direction) {
+      const namespace = 'http://www.w3.org/2000/svg';
+      const glyph = document.createElementNS(namespace, 'svg');
+      const shape = document.createElementNS(namespace, 'polygon');
+      const points = direction === 'forward'
+        ? '0,0 1,0.5 0,1'
+        : '1,0 0,0.5 1,1';
+
+      glyph.setAttribute('class', 'powerline-glyph');
+      glyph.setAttribute('viewBox', '0 0 1 1');
+      glyph.setAttribute('preserveAspectRatio', 'none');
+      glyph.setAttribute('aria-hidden', 'true');
+      glyph.setAttribute('focusable', 'false');
+      shape.setAttribute('points', points);
+      glyph.appendChild(shape);
+      return glyph;
+    }
+
+    function appendDivider(className, direction, tailColor) {
+      const divider = makeElement(
+        'powerline-divider is-' + direction + ' ' + className
+      );
+      divider.append(
+        makeElement('powerline-space is-before', ' '),
+        makeDividerGlyph(direction),
+        makeElement('powerline-space is-after', ' ')
+      );
       if (tailColor) {
         divider.style.setProperty('--tail-color', tailColor);
       }
@@ -1180,7 +1192,7 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
       statusbar.appendChild(host);
 
       if (powerline) {
-        appendDivider('divider-forward');
+        appendDivider('divider-forward', 'forward');
       }
 
       statusbar.appendChild(
@@ -1188,7 +1200,7 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
       );
 
       if (powerline) {
-        appendDivider('divider-to-bar');
+        appendDivider('divider-to-bar', 'forward');
       }
 
       const prefix = makeElement(
@@ -1241,7 +1253,7 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
 
       if (metrics.length) {
         if (powerline) {
-          appendDivider('divider-metrics');
+          appendDivider('divider-metrics', 'reverse');
         }
         const metricGroup = makeElement(
           'status-segment status-metrics'
@@ -1252,7 +1264,7 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
               makeElement('metric-dot', '∙')
             );
           }
-          metricGroup.appendChild(makeElement('', metric));
+          metricGroup.appendChild(makeElement('', ' ' + metric + ' '));
         });
         statusbar.appendChild(metricGroup);
       }
@@ -1261,13 +1273,15 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
         ? '#ed8796'
         : state.preset.base;
       if (powerline) {
-        appendDivider('divider-tail', tailColor);
+        appendDivider('divider-tail', 'reverse', tailColor);
       }
-      const tailText = state.tail === 'sync' ? ' SYNC ' : ' 14:32 ';
+      const tailText = state.tail === 'sync'
+        ? (powerline ? ' SYNC  ' : ' SYNC ')
+        : (powerline ? ' 14:32  ' : ' 14:32 ');
       const tail = makeElement(
         'status-segment status-tail' +
           (state.tail === 'sync' ? ' is-sync' : ''),
-        powerline ? ' ' + tailText + ' ' : tailText
+        tailText
       );
       statusbar.appendChild(tail);
     }
