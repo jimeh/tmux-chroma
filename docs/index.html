@@ -273,7 +273,8 @@
     }
 
     .demo-preset-swatch,
-    .demo-preset-option-swatch {
+    .demo-preset-option-swatch,
+    .demo-custom-color-swatch {
       width: 0.65rem;
       height: 0.65rem;
       flex: 0 0 auto;
@@ -307,7 +308,7 @@
       right: 0;
       display: grid;
       width: min(30rem, calc(100vw - 2rem));
-      max-height: min(27rem, 65vh);
+      max-height: min(29rem, 65vh);
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 1px;
       overflow-y: auto;
@@ -320,6 +321,54 @@
 
     .demo-preset-control:not([open]) .demo-preset-menu {
       display: none;
+    }
+
+    .demo-custom-color {
+      --custom-swatch: var(--accent);
+
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: auto auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.65rem;
+      border-bottom: 1px solid var(--line);
+      padding: 0.45rem 0.65rem 0.7rem;
+    }
+
+    .demo-custom-color label {
+      color: var(--muted);
+    }
+
+    .demo-custom-color-swatch {
+      background: var(--custom-swatch);
+    }
+
+    .demo-custom-color-input,
+    .demo-custom-color-submit {
+      border: 1px solid var(--line);
+      padding: 0.45rem 0.55rem;
+      background: var(--panel);
+      color: var(--text);
+      font: inherit;
+      letter-spacing: inherit;
+    }
+
+    .demo-custom-color-input {
+      width: 100%;
+      min-width: 0;
+      text-transform: lowercase;
+    }
+
+    .demo-custom-color-input::placeholder {
+      color: var(--subtle);
+    }
+
+    .demo-custom-color-submit {
+      cursor: pointer;
+    }
+
+    .demo-custom-color-submit:hover {
+      color: var(--accent);
     }
 
     .demo-preset-option {
@@ -964,7 +1013,33 @@
             id="demo-preset-menu"
             role="group"
             aria-label="Preview palette"
-          ></div>
+          >
+            <form
+              class="demo-custom-color"
+              id="demo-custom-color"
+              aria-label="Custom accent color"
+              novalidate
+            >
+              <label for="demo-custom-color-input">Custom</label>
+              <span
+                class="demo-custom-color-swatch"
+                aria-hidden="true"
+              ></span>
+              <input
+                class="demo-custom-color-input"
+                id="demo-custom-color-input"
+                type="text"
+                inputmode="text"
+                maxlength="7"
+                placeholder="#rrggbb"
+                autocomplete="off"
+                spellcheck="false"
+              >
+              <button class="demo-custom-color-submit" type="submit">
+                Apply
+              </button>
+            </form>
+          </div>
         </details>
       </div>
       <div
@@ -1266,6 +1341,10 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
     const demoPresetLabel = document.getElementById('demo-preset-label');
     const demoPresetMenu = document.getElementById('demo-preset-menu');
     const demoPresetTrigger = document.querySelector('.demo-preset-trigger');
+    const customColorForm = document.getElementById('demo-custom-color');
+    const customColorInput = document.getElementById(
+      'demo-custom-color-input'
+    );
 
     function channel(color, index) {
       return parseInt(color.slice(index, index + 2), 16);
@@ -1291,6 +1370,13 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
         hue = (red - green) / delta + 4;
       }
       return (hue * 60 + 360) % 360;
+    }
+
+    function normalizeHex(value) {
+      const candidate = value.trim().replace(/^#?/, '#');
+      return /^#[0-9a-f]{6}$/i.test(candidate)
+        ? candidate.toLowerCase()
+        : '';
     }
 
     function hex(value) {
@@ -1517,6 +1603,37 @@ run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
         );
         button.addEventListener('click', () => selectPreset(preset));
         toolbar.appendChild(button);
+      });
+
+      customColorInput.addEventListener('input', () => {
+        const customBase = normalizeHex(customColorInput.value);
+        customColorInput.setCustomValidity('');
+        customColorInput.removeAttribute('aria-invalid');
+        customColorForm.style.setProperty(
+          '--custom-swatch',
+          customBase || state.preset.base
+        );
+      });
+      customColorForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const customBase = normalizeHex(customColorInput.value);
+
+        if (!customBase) {
+          customColorInput.setCustomValidity(
+            'Enter a six-digit hex color, such as #83baee.'
+          );
+          customColorInput.setAttribute('aria-invalid', 'true');
+          customColorInput.reportValidity();
+          return;
+        }
+
+        customColorInput.setCustomValidity('');
+        customColorInput.removeAttribute('aria-invalid');
+        customColorInput.value = customBase;
+        customColorForm.style.setProperty('--custom-swatch', customBase);
+        selectPreset({ name: 'custom', base: customBase });
+        demoPresetControl.open = false;
+        demoPresetTrigger.focus();
       });
 
       demoPresetControl.addEventListener('keydown', (event) => {
