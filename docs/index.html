@@ -729,7 +729,7 @@
       /* A real terminal renders the status line as a single compact
          text cell; the taller dock height is a page-navigation
          affordance the gallery doesn't need. */
-      --dock-height: 17px;
+      --dock-height: 15px;
 
       pointer-events: none;
     }
@@ -1217,9 +1217,15 @@ set -g @chroma_show_disk   <button
       const namespace = 'http://www.w3.org/2000/svg';
       const glyph = document.createElementNS(namespace, 'svg');
       const shape = document.createElementNS(namespace, 'polygon');
+      // The triangle keeps its full-height base on the viewport edge
+      // and extends a rectangle past it, clipped away. Painted exactly
+      // on the edge, the base antialiases against the glyph background
+      // and shows a hairline seam; simply overshooting the base
+      // corners instead would narrow them along the diagonals and
+      // detach the triangle from the neighboring segment's corners.
       const points = direction === 'forward'
-        ? '0,0 1,0.5 0,1'
-        : '1,0 0,0.5 1,1';
+        ? '-0.1,0 0,0 1,0.5 0,1 -0.1,1'
+        : '1.1,0 1,0 0,0.5 1,1 1.1,1';
 
       glyph.setAttribute('class', 'powerline-glyph');
       glyph.setAttribute('viewBox', '0 0 1 1');
