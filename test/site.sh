@@ -46,14 +46,24 @@ section_order="$(
 expected_order="$(printf '%s\n' palette behavior configure install)"
 
 [ "$section_order" = "$expected_order" ] ||
-  fail 'palette must immediately follow the live preview'
+  fail 'palette must immediately follow the interactive preview'
+
+manual_code_count="$(
+  sed -n '/<h3>Manually<\/h3>/,/<h3>Requirements<\/h3>/p' "$SITE" |
+    sed -n '/class="inline-code"/p' |
+    wc -l |
+    tr -d ' '
+)"
+[ "$manual_code_count" = '2' ] ||
+  fail 'manual installation must use separate shell and tmux snippets'
 
 for fragment in \
   '<span class="wordmark-name">Chroma</span>' \
   '<span class="wordmark-context">tmux theme</span>' \
   '<p class="eyebrow">tmux status theme</p>' \
   '<h1>Chroma</h1>' \
-  '<p class="hero-tagline">A different accent for every host.</p>'; do
+  '<p class="hero-tagline">A different accent for every host.</p>' \
+  '<span id="demo-title">Interactive tmux preview</span>'; do
   case "$(< "$SITE")" in
     *"$fragment"*) ;;
     *) fail 'landing page must identify Chroma as a tmux theme' ;;
@@ -63,6 +73,12 @@ done
 assert_block_contains '.status-prefix' 'background: var(--bar);'
 assert_block_contains '.hero-title' \
   'grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.65fr);'
+assert_block_contains '.section' \
+  'grid-template-columns: 120px minmax(0, 1fr);'
+assert_block_contains '.section' 'gap: clamp(2rem, 4vw, 3rem);'
+assert_block_contains '.section-content' 'min-width: 0;'
+assert_block_contains '.install-step > div' 'min-width: 0;'
+assert_block_contains '.inline-code' 'max-width: 100%;'
 assert_block_contains '.statusbar' '--status-height: 24px;'
 assert_block_contains '.statusbar' 'height: var(--status-height);'
 assert_block_contains '.statusbar' 'line-height: var(--status-height);'

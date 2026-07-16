@@ -663,8 +663,8 @@
 
     .section {
       display: grid;
-      grid-template-columns: minmax(150px, 0.32fr) minmax(0, 1fr);
-      gap: clamp(2rem, 7vw, 7rem);
+      grid-template-columns: 120px minmax(0, 1fr);
+      gap: clamp(2rem, 4vw, 3rem);
       padding: clamp(5rem, 10vw, 8rem) 0;
       border-top: 1px solid var(--line);
     }
@@ -676,6 +676,10 @@
       font-weight: 600;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+    }
+
+    .section-content {
+      min-width: 0;
     }
 
     .section-content h2 {
@@ -864,6 +868,10 @@
       border-bottom: 1px solid var(--line);
     }
 
+    .install-step > div {
+      min-width: 0;
+    }
+
     .install-step h3 {
       margin: 0;
       font-family: var(--mono);
@@ -877,8 +885,23 @@
       color: var(--muted);
     }
 
+    .install-command-group {
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    .install-step .install-command-label {
+      margin-bottom: 0.55rem;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+    }
+
     .inline-code {
       display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
       padding: 1rem;
       overflow-x: auto;
       border: 1px solid var(--line);
@@ -986,6 +1009,12 @@
         gap: 0.6rem;
       }
 
+      .inline-code {
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
       .site-footer {
         display: grid;
         gap: 0.5rem;
@@ -1052,7 +1081,7 @@
 
     <section class="demo shell" aria-labelledby="demo-title">
       <div class="demo-heading">
-        <span id="demo-title">Live status line</span>
+        <span id="demo-title">Interactive tmux preview</span>
         <details class="demo-preset-control" id="demo-preset-control">
           <summary class="demo-preset-trigger">
             <span class="demo-preset-swatch" aria-hidden="true"></span>
@@ -1185,9 +1214,9 @@
       <div class="section-content">
         <h2>Twenty-two signals. One steady foundation.</h2>
         <p class="section-lede">
-          Select an accent to apply it across the page and the live status
-          line. Each quieter companion color is derived by blending the
-          accent toward Chroma’s bar background.
+          Select an accent to apply it across the page and the interactive
+          theme preview. Each quieter companion color is derived by blending
+          the accent toward Chroma’s bar background.
         </p>
         <div
           class="palette-toolbar"
@@ -1317,11 +1346,21 @@ run <span class="code-value">'~/.tmux/plugins/tpm/tpm'</span></pre>
             <h3>Manually</h3>
             <div>
               <p>
-                Clone the repository and run the plugin after your own
-                overrides.
+                Install Chroma in tmux’s plugin directory, then load it from
+                your configuration.
               </p>
-              <code class="inline-code">git clone https://github.com/jimeh/tmux-chroma.git ~/.tmux/plugins/tmux-chroma
-run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
+              <div class="install-command-group">
+                <div>
+                  <p class="install-command-label">Clone the plugin</p>
+                  <code class="inline-code">git clone https://github.com/jimeh/tmux-chroma.git ~/.tmux/plugins/tmux-chroma</code>
+                </div>
+                <div>
+                  <p class="install-command-label">
+                    Add to ~/.tmux.conf after your overrides
+                  </p>
+                  <code class="inline-code">run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
+                </div>
+              </div>
             </div>
           </div>
           <div class="install-step">

@@ -6,7 +6,7 @@ Chroma is a dependency-light tmux status theme for macOS and Linux.
 
 - `chroma.tmux`: executable TPM entrypoint and theme implementation.
 - `scripts/`: bundled CPU, memory, and disk status helpers.
-- `docs/index.html`: dependency-free GitHub Pages site and live preview.
+- `docs/index.html`: dependency-free GitHub Pages site and interactive preview.
 - `test/`: shell and live tmux regression tests.
 
 ## Commands
