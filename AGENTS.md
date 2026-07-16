@@ -45,3 +45,7 @@ make check
   origin.
 - Preserve keyboard focus, mobile overflow handling, and reduced-motion
   behavior when changing the site.
+- The site hides a preset gallery behind the tmux prefix: Ctrl-b or
+  Ctrl-q, then w (choose-window). It renders one status line per accent
+  and is used to screenshot the palette for the README. Keep it working
+  when changing status bar markup or styles.

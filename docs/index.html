@@ -594,6 +594,10 @@
       color: var(--accent-alt);
     }
 
+    .status-window .flag.is-alert {
+      color: var(--alert);
+    }
+
     .status-window:focus-visible {
       outline-offset: -2px;
     }
@@ -680,6 +684,54 @@
     .divider-tail {
       --divider-from: var(--panel-raised);
       --divider-to: var(--tail-color);
+    }
+
+    /* Preset gallery — hidden behind the tmux prefix (Ctrl-b or
+       Ctrl-q, then w, like choose-window). Renders one status line per
+       accent so the whole palette can be screenshotted for the README. */
+    .status-gallery {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background: rgba(6, 7, 10, 0.82);
+    }
+
+    .status-gallery[hidden] {
+      display: none;
+    }
+
+    .gallery-popup {
+      max-width: 100%;
+      max-height: 100%;
+      padding: 1.1rem 1.2rem 1.2rem;
+      overflow: auto;
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      outline: none;
+    }
+
+    .gallery-hint {
+      margin: 0 0 0.9rem;
+      font-size: 0.8rem;
+    }
+
+    .gallery-bars {
+      display: grid;
+      min-width: 740px;
+      gap: 7px;
+    }
+
+    .gallery-bar {
+      /* A real terminal renders the status line as a single compact
+         text cell; the taller dock height is a page-navigation
+         affordance the gallery doesn't need. */
+      --dock-height: 17px;
+
+      pointer-events: none;
     }
 
     @keyframes typing {
@@ -1008,6 +1060,22 @@ set -g @chroma_show_disk   <button
     <div class="statusbar boot" id="statusbar"></div>
   </nav>
 
+  <div
+    class="status-gallery"
+    id="gallery"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Every accent preset rendered as a status line"
+    hidden
+  >
+    <div class="gallery-popup" tabindex="-1">
+      <p class="comment gallery-hint">
+        # one status line per accent &middot; press q to close
+      </p>
+      <div class="gallery-bars" id="gallery-bars"></div>
+    </div>
+  </div>
+
   <script>
     const presets = [
       { name: 'blue', base: '#8aadf4' },
@@ -1163,7 +1231,7 @@ set -g @chroma_show_disk   <button
       return glyph;
     }
 
-    function appendDivider(className, direction, tailColor) {
+    function appendDivider(target, className, direction, tailColor) {
       const divider = makeElement(
         'powerline-divider is-' + direction + ' ' + className
       );
@@ -1175,7 +1243,7 @@ set -g @chroma_show_disk   <button
       if (tailColor) {
         divider.style.setProperty('--tail-color', tailColor);
       }
-      statusbar.appendChild(divider);
+      target.appendChild(divider);
     }
 
     function windowFlag(id) {
@@ -1197,7 +1265,7 @@ set -g @chroma_show_disk   <button
       ));
 
       if (powerline) {
-        appendDivider('divider-forward', 'forward');
+        appendDivider(statusbar, 'divider-forward', 'forward');
       }
 
       statusbar.appendChild(
@@ -1205,7 +1273,7 @@ set -g @chroma_show_disk   <button
       );
 
       if (powerline) {
-        appendDivider('divider-to-bar', 'forward');
+        appendDivider(statusbar, 'divider-to-bar', 'forward');
       }
 
       statusbar.appendChild(makeElement(
@@ -1259,7 +1327,7 @@ set -g @chroma_show_disk   <button
 
       if (metrics.length) {
         if (powerline) {
-          appendDivider('divider-metrics', 'reverse');
+          appendDivider(statusbar, 'divider-metrics', 'reverse');
         }
         const metricGroup = makeElement('status-segment status-metrics');
         metrics.forEach((metric, index) => {
@@ -1273,7 +1341,7 @@ set -g @chroma_show_disk   <button
 
       const tailColor = state.sync ? '#ed8796' : state.preset.base;
       if (powerline) {
-        appendDivider('divider-tail', 'reverse', tailColor);
+        appendDivider(statusbar, 'divider-tail', 'reverse', tailColor);
       }
       const tailBody = state.sync ? 'SYNC' : clock();
       statusbar.appendChild(makeElement(
@@ -1409,6 +1477,163 @@ set -g @chroma_show_disk   <button
           button.textContent = 'copy';
         }, 1600);
       });
+    });
+
+    // Easter egg: Ctrl-b or Ctrl-q arms the tmux prefix (the dock's ∙
+    // indicator lights up), then w — choose-window — opens a gallery
+    // with one status line per accent preset. The window list reuses
+    // the tab content from the original docs preview.
+    const gallery = document.getElementById('gallery');
+    const galleryBars = document.getElementById('gallery-bars');
+    const galleryPopup = gallery.querySelector('.gallery-popup');
+    const galleryWindows = [
+      ['1:zsh', '', false],
+      ['2:vim', '*', true],
+      ['3:ssh', '#', false],
+      ['4:htop', '!', false],
+      ['5:logs', '-', false],
+    ];
+    let prefixTimer = null;
+    let prefixRestore = false;
+    let galleryReturnFocus = null;
+
+    function buildGalleryBar(preset) {
+      const powerline = state.powerline;
+      const bar = makeElement('statusbar gallery-bar');
+      bar.style.setProperty('--accent', preset.base);
+      bar.style.setProperty(
+        '--accent-alt',
+        mixColor(preset.base, '#15181d', 60)
+      );
+      bar.appendChild(makeElement(
+        'status-segment status-host',
+        powerline ? '  ' + preset.name + ' ' : ' ' + preset.name + ' '
+      ));
+      if (powerline) {
+        appendDivider(bar, 'divider-forward', 'forward');
+      }
+      bar.appendChild(
+        makeElement('status-segment status-session', ' chroma ')
+      );
+      if (powerline) {
+        appendDivider(bar, 'divider-to-bar', 'forward');
+      }
+      bar.appendChild(makeElement(
+        'status-segment status-prefix' +
+          (powerline ? ' is-powerline' : ''),
+        '∙ '
+      ));
+      bar.appendChild(makeElement('status-spacer'));
+      const list = makeElement('status-segment status-windows');
+      galleryWindows.forEach(([name, flag, current]) => {
+        const item = makeElement(
+          'status-window' + (current ? ' is-current' : ''),
+          ' ' + name
+        );
+        if (flag) {
+          item.appendChild(makeElement(
+            'flag' + (flag === '!' ? ' is-alert' : ''),
+            flag
+          ));
+        }
+        item.append(' ');
+        list.appendChild(item);
+      });
+      bar.appendChild(list);
+      bar.appendChild(makeElement('status-spacer'));
+      if (powerline) {
+        appendDivider(bar, 'divider-metrics', 'reverse');
+      }
+      const metricGroup = makeElement('status-segment status-metrics');
+      ['CPU 12%', 'MEM 64%'].forEach((metric, index) => {
+        if (index > 0) {
+          metricGroup.appendChild(makeElement('metric-dot', '∙'));
+        }
+        metricGroup.appendChild(makeElement('', ' ' + metric + ' '));
+      });
+      bar.appendChild(metricGroup);
+      if (powerline) {
+        appendDivider(bar, 'divider-tail', 'reverse', preset.base);
+      }
+      bar.appendChild(makeElement(
+        'status-segment status-tail',
+        powerline ? ' ' + clock() + '  ' : ' ' + clock() + ' '
+      ));
+      return bar;
+    }
+
+    function openGallery() {
+      const sorted = [...presets].sort((first, second) => (
+        colorHue(first.base) - colorHue(second.base)
+      ));
+      galleryBars.replaceChildren();
+      sorted.forEach((preset) => {
+        galleryBars.appendChild(buildGalleryBar(preset));
+      });
+      galleryReturnFocus = document.activeElement;
+      gallery.hidden = false;
+      galleryPopup.focus();
+    }
+
+    function closeGallery() {
+      gallery.hidden = true;
+      if (galleryReturnFocus && galleryReturnFocus.focus) {
+        galleryReturnFocus.focus();
+      }
+      galleryReturnFocus = null;
+    }
+
+    function disarmPrefix() {
+      if (prefixTimer === null) {
+        return;
+      }
+      window.clearTimeout(prefixTimer);
+      prefixTimer = null;
+      state.prefix = prefixRestore;
+      renderStatus();
+    }
+
+    function armPrefix() {
+      if (prefixTimer === null) {
+        prefixRestore = state.prefix;
+      } else {
+        window.clearTimeout(prefixTimer);
+      }
+      state.prefix = true;
+      renderStatus();
+      prefixTimer = window.setTimeout(disarmPrefix, 1500);
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (!gallery.hidden && (event.key === 'Escape' ||
+          (event.key === 'q' && !event.ctrlKey && !event.metaKey &&
+            !event.altKey))) {
+        event.preventDefault();
+        closeGallery();
+        return;
+      }
+      if (event.target.closest &&
+          event.target.closest('input, textarea, select')) {
+        return;
+      }
+      if ((event.key === 'b' || event.key === 'q') && event.ctrlKey &&
+          !event.metaKey && !event.altKey && !event.shiftKey) {
+        event.preventDefault();
+        armPrefix();
+        return;
+      }
+      if (prefixTimer !== null && event.key === 'w' &&
+          !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        disarmPrefix();
+        openGallery();
+      }
+    });
+
+    gallery.addEventListener('click', (event) => {
+      if (event.target === gallery) {
+        closeGallery();
+      }
     });
 
     const spy = new IntersectionObserver((entries) => {

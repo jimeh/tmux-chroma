@@ -143,4 +143,16 @@ for fragment in \
   esac
 done
 
+for fragment in \
+  'id="gallery-bars"' \
+  'aria-modal="true"' \
+  'function buildGalleryBar(preset)' \
+  "'1:zsh'" \
+  "event.key === 'w'"; do
+  case "$(< "$SITE")" in
+    *"$fragment"*) ;;
+    *) fail 'prefix + w must open the preset gallery' ;;
+  esac
+done
+
 printf 'site: ok\n'
