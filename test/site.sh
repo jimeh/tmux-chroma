@@ -40,16 +40,16 @@ assert_block_excludes() {
 
 section_order="$(
   sed -n \
-    's/^    <section class="section shell" id="\([^"]*\)">/\1/p' \
+    's/^    <section class="window shell" id="\([^"]*\)".*/\1/p' \
     "$SITE"
 )"
-expected_order="$(printf '%s\n' palette behavior configure install)"
+expected_order="$(printf '%s\n' intro palette config install)"
 
 [ "$section_order" = "$expected_order" ] ||
-  fail 'palette must immediately follow the interactive preview'
+  fail 'sections must follow the status-line window order'
 
 manual_code_count="$(
-  sed -n '/<h3>Manually<\/h3>/,/<h3>Requirements<\/h3>/p' "$SITE" |
+  sed -n '/<h3>manually<\/h3>/,/<h3>requirements<\/h3>/p' "$SITE" |
     sed -n '/class="inline-code"/p' |
     wc -l |
     tr -d ' '
@@ -58,53 +58,39 @@ manual_code_count="$(
   fail 'manual installation must use separate shell and tmux snippets'
 
 for fragment in \
-  '<span class="wordmark-name">Chroma</span>' \
-  '<span class="wordmark-context">tmux theme</span>' \
-  '<p class="eyebrow">tmux status theme</p>' \
-  '<h1>Chroma</h1>' \
-  '<p class="hero-tagline">A different accent for every host.</p>' \
-  '<span id="demo-title">Interactive tmux preview</span>'; do
+  '<title>Chroma — a host-aware tmux theme</title>' \
+  '<p class="tagline hero-tagline">A different accent for every host.</p>' \
+  'aria-label="Sections, shown as a live Chroma status line"' \
+  'href="https://github.com/tmux-plugins/tpm"'; do
   case "$(< "$SITE")" in
     *"$fragment"*) ;;
     *) fail 'landing page must identify Chroma as a tmux theme' ;;
   esac
 done
 
+assert_block_contains ':root' '--dock-height: 28px;'
+assert_block_contains '.statusbar' 'height: var(--dock-height);'
+assert_block_contains '.statusbar' 'line-height: var(--dock-height);'
+assert_block_contains '.statusbar' 'white-space: pre;'
+assert_block_excludes '.status-dock' 'border-top'
 assert_block_contains '.status-prefix' 'background: var(--bar);'
-assert_block_contains '.hero-title' \
-  'grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.65fr);'
-assert_block_contains '.section' \
-  'grid-template-columns: 120px minmax(0, 1fr);'
-assert_block_contains '.section' 'gap: clamp(2rem, 4vw, 3rem);'
-assert_block_contains '.section-content' 'min-width: 0;'
-assert_block_contains '.install-step > div' 'min-width: 0;'
-assert_block_contains '.inline-code' 'max-width: 100%;'
-assert_block_contains '.statusbar' '--status-height: 24px;'
-assert_block_contains '.statusbar' 'height: var(--status-height);'
-assert_block_contains '.statusbar' 'line-height: var(--status-height);'
-assert_block_contains '.demo-preset-trigger' 'padding: 0.45rem 0.55rem;'
-assert_block_contains '.demo-preset-option' 'padding: 0.55rem 0.65rem;'
-assert_block_contains '.demo-preset-menu' \
-  'grid-template-columns: repeat(2, minmax(0, 1fr));'
-assert_block_contains '.demo-custom-color' 'grid-column: 1 / -1;'
-assert_block_contains '.powerline-glyph' 'width: 1ch;'
-assert_block_contains '.powerline-glyph' 'height: 100%;'
 assert_block_contains '.status-prefix.is-active' \
   'background: var(--panel-raised);'
 assert_block_contains '.status-prefix.is-powerline' \
   'background: var(--bar);'
 assert_block_contains '.divider-metrics' '--divider-from: var(--bar);'
+assert_block_contains '.powerline-glyph' 'height: 100%;'
 
+# Segment spacing must come from literal space characters in the format
+# strings, mirroring tmux cell geometry, never from CSS padding.
 for selector in \
   '.status-host' \
   '.status-session' \
-  '.status-window' \
   '.status-metrics' \
   '.status-tail'; do
   assert_block_excludes "$selector" 'padding'
 done
-assert_block_excludes '.status-prefix' 'width:'
-assert_block_excludes '.status-metrics' 'gap:'
+assert_block_contains '.status-window' 'padding: 0;'
 
 for fragment in \
   "makeElement('powerline-space is-before', ' ')" \
@@ -126,37 +112,35 @@ for fragment in \
   esac
 done
 
-for fragment in \
-  'id="demo-preset-control"' \
-  'id="demo-preset-label"' \
-  'id="demo-preset-menu"' \
-  'id="demo-custom-color"' \
-  'id="demo-custom-color-input"' \
-  'placeholder="#rrggbb"' \
-  'aria-label="Preview palette"' \
-  'aria-label="Custom accent color"' \
-  "const displayPresets = [...presets].sort" \
-  'colorHue(first.base) - colorHue(second.base)' \
-  'function normalizeHex(value)' \
-  "selectPreset({ name: 'custom', base: customBase })" \
-  "optionButton.style.setProperty('--swatch', preset.base)" \
-  "demoPresetLabel.textContent = preset.name + ' / ' + preset.base"; do
-  case "$(< "$SITE")" in
-    *"$fragment"*) ;;
-    *)
-      fail 'preview picker must support custom colors and sorted swatches'
-      ;;
-  esac
-done
-
 case "$(< "$SITE")" in
   *"makeElement('', ' ' + metric + ' ')"*) ;;
   *) fail 'metric spacing must use literal character cells' ;;
 esac
 
-case "$(< "$SITE")" in
-  *'segment-in'*) fail 'status preview changes must not animate' ;;
-  *) ;;
-esac
+for fragment in \
+  'id="statusbar"' \
+  'id="swatch-grid"' \
+  'id="custom-color-input"' \
+  'aria-label="Accent presets"' \
+  'function setupPalette()' \
+  'function normalizeHex(value)' \
+  "selectPreset({ name: 'custom', base: customBase })" \
+  'colorHue(first.base) - colorHue(second.base)' \
+  '@media (prefers-reduced-motion: reduce)'; do
+  case "$(< "$SITE")" in
+    *"$fragment"*) ;;
+    *) fail 'site must preserve preview and palette controls' ;;
+  esac
+done
+
+for fragment in \
+  'function seededPreset()' \
+  'preset: seededPreset(),' \
+  'now.getHours(),'; do
+  case "$(< "$SITE")" in
+    *"$fragment"*) ;;
+    *) fail 'default accent must be seeded from browser traits and time' ;;
+  esac
+done
 
 printf 'site: ok\n'

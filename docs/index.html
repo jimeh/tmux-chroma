@@ -23,17 +23,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&display=swap"
     rel="stylesheet"
   >
   <style>
     :root {
       color-scheme: dark;
-      --canvas: #0c0e11;
+      --canvas: #090a0d;
       --bar: #15181d;
       --panel: #181b20;
       --panel-raised: #20242b;
-      --line: #343a44;
+      --line: #2b313b;
       --text: #d7dde7;
       --muted: #8b96a8;
       --subtle: #6f7a8d;
@@ -42,9 +42,8 @@
       --dark: #101216;
       --accent: #8aadf4;
       --accent-alt: #5b719e;
-      --sans: "Space Grotesk", sans-serif;
-      --mono: "IBM Plex Mono", monospace;
-      --content: 1120px;
+      --mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+      --dock-height: 28px;
     }
 
     * {
@@ -57,30 +56,27 @@
 
     body {
       margin: 0;
-      background:
-        linear-gradient(var(--line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--line) 1px, transparent 1px),
-        var(--canvas);
-      background-position: center top;
-      background-size: 64px 64px;
+      padding-bottom: calc(var(--dock-height) + 5rem);
+      background: var(--canvas);
       color: var(--text);
-      font-family: var(--sans);
-      font-size: 16px;
-      line-height: 1.6;
+      font-family: var(--mono);
+      font-size: 15px;
+      line-height: 1.75;
     }
 
-    body::before {
-      position: fixed;
-      z-index: -1;
-      inset: 0;
-      background: rgba(12, 14, 17, 0.91);
-      content: "";
-      pointer-events: none;
+    ::selection {
+      background: var(--accent);
+      color: var(--dark);
     }
 
     a {
-      color: inherit;
-      text-underline-offset: 0.25em;
+      color: var(--accent);
+      text-decoration-color: var(--accent-alt);
+      text-underline-offset: 0.3em;
+    }
+
+    a:hover {
+      text-decoration-color: var(--accent);
     }
 
     button {
@@ -92,417 +88,472 @@
       outline-offset: 3px;
     }
 
-    .shell {
-      width: min(calc(100% - 40px), var(--content));
-      margin-inline: auto;
-    }
-
-    .site-nav {
-      display: flex;
-      min-height: 76px;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .wordmark {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.65rem;
-      font-family: var(--mono);
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-decoration: none;
-      text-transform: uppercase;
-    }
-
-    .wordmark-name {
-      font-size: 0.95rem;
-    }
-
-    .wordmark-context {
-      border-left: 1px solid var(--line);
-      padding-left: 0.65rem;
-      color: var(--muted);
-      font-size: 0.65rem;
-      font-weight: 500;
-    }
-
-    .wordmark-mark {
-      width: 0.72rem;
-      height: 0.72rem;
-      background: var(--accent);
-      box-shadow: 0 0 24px color-mix(in srgb, var(--accent), transparent 55%);
-      transition: background-color 180ms ease, box-shadow 180ms ease;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 1.4rem;
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 0.75rem;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-    }
-
-    .nav-links a:hover {
-      color: var(--text);
-    }
-
-    .hero {
-      padding: clamp(5rem, 10vw, 8rem) 0 4rem;
-    }
-
-    .eyebrow {
-      margin: 0 0 2rem;
-      color: var(--accent);
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      transition: color 180ms ease;
-    }
-
-    h1,
-    h2,
-    h3,
-    p {
-      margin-top: 0;
-    }
-
-    .hero-title {
-      display: grid;
-      grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.65fr);
-      align-items: end;
-      gap: clamp(2rem, 5vw, 4rem);
-      margin-bottom: clamp(2.5rem, 5vw, 4rem);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(5.5rem, 16vw, 12rem);
-      font-weight: 600;
-      letter-spacing: -0.075em;
-      line-height: 0.78;
+    .visually-hidden {
+      position: absolute;
+      overflow: hidden;
+      width: 1px;
+      height: 1px;
+      clip: rect(0 0 0 0);
       white-space: nowrap;
     }
 
-    h1::after {
-      display: inline-block;
-      width: 0.12em;
-      height: 0.12em;
-      margin-left: 0.06em;
-      background: var(--accent);
-      box-shadow: 0 0 30px color-mix(in srgb, var(--accent), transparent 65%);
-      content: "";
-      vertical-align: 0.08em;
+    .shell {
+      width: min(100% - 2.5rem, 880px);
+      margin-inline: auto;
     }
 
-    .hero-tagline {
-      max-width: 12ch;
-      margin: 0;
-      font-size: clamp(2rem, 4vw, 3.35rem);
-      font-weight: 500;
-      letter-spacing: -0.05em;
-      line-height: 0.98;
-      text-wrap: balance;
+    .window {
+      padding: clamp(3rem, 8vw, 5.5rem) 0;
+      scroll-margin-top: 1.25rem;
     }
 
-    .hero-copy {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.65fr);
-      gap: 3rem;
-      align-items: end;
-    }
-
-    .hero-copy > p {
-      max-width: 650px;
-      margin: 0;
+    .prompt-line {
+      margin: 0 0 clamp(2rem, 6vw, 3.5rem);
       color: var(--muted);
-      font-size: clamp(1.05rem, 2vw, 1.28rem);
+      font-size: 0.86rem;
+    }
+
+    .prompt-host {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .prompt-cmd {
+      display: inline-block;
+      overflow: hidden;
+      width: 21ch;
+      animation: typing 1.1s steps(21) backwards;
+      color: var(--text);
+      vertical-align: bottom;
+      white-space: nowrap;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 0.6em;
+      height: 1.05em;
+      animation: blink 1.1s step-end infinite;
+      background: var(--accent);
+      vertical-align: text-bottom;
+    }
+
+    .banner {
+      margin: 0 0 2rem;
+      animation: fade-up 700ms 1s backwards ease-out;
+      background: linear-gradient(
+        180deg,
+        var(--accent) 55%,
+        var(--accent-alt)
+      );
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      font-size: clamp(8px, 2.6vw, 16px);
+      font-weight: 400;
+      line-height: 1.16;
+      transition: background 180ms ease;
+    }
+
+    .tagline {
+      margin-bottom: 1.1rem;
+      animation: fade-up 700ms 1.15s backwards ease-out;
+      font-size: clamp(1.15rem, 3vw, 1.5rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .lede {
+      max-width: 62ch;
+      margin-bottom: 2.2rem;
+      color: var(--muted);
+    }
+
+    .hero-lede {
+      animation: fade-up 700ms 1.25s backwards ease-out;
+    }
+
+    .hero-tail {
+      animation: fade-up 700ms 1.35s backwards ease-out;
+    }
+
+    .comment {
+      color: var(--subtle);
     }
 
     .install-command {
       display: flex;
-      min-width: 0;
+      max-width: 480px;
       align-items: stretch;
       border: 1px solid var(--line);
-      background: var(--bar);
+      background: var(--panel);
     }
 
     .install-command code {
       min-width: 0;
       flex: 1;
-      padding: 0.9rem 1rem;
+      padding: 0.8rem 1rem;
       overflow: hidden;
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     .copy-button {
-      width: 56px;
+      padding-inline: 1rem;
       border: 0;
       border-left: 1px solid var(--line);
       background: var(--panel-raised);
       color: var(--muted);
       cursor: pointer;
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      text-transform: uppercase;
+      font-size: 0.7rem;
+      text-transform: lowercase;
     }
 
     .copy-button:hover {
       color: var(--accent);
     }
 
-    .demo {
-      margin-bottom: clamp(6rem, 12vw, 10rem);
-      border: 1px solid var(--line);
-      background: var(--canvas);
+    .hint {
+      margin-top: 2.2rem;
+      font-size: 0.8rem;
     }
 
-    .demo-heading {
+    .pane-border {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0.78rem 1rem;
-      border-bottom: 1px solid var(--line);
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .demo-preset-control {
-      position: relative;
-      color: var(--accent);
-    }
-
-    .demo-preset-trigger {
-      display: grid;
-      min-width: 11.75rem;
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-      gap: 0.6rem;
-      border: 1px solid transparent;
-      padding: 0.45rem 0.55rem;
-      background: transparent;
-      cursor: pointer;
-      font: inherit;
-      letter-spacing: inherit;
-      list-style: none;
-    }
-
-    .demo-preset-trigger::-webkit-details-marker {
-      display: none;
-    }
-
-    .demo-preset-trigger:hover,
-    .demo-preset-control[open] .demo-preset-trigger {
-      border-color: var(--line);
-      background: var(--panel);
-    }
-
-    .demo-preset-swatch,
-    .demo-preset-option-swatch,
-    .demo-custom-color-swatch {
-      width: 0.65rem;
-      height: 0.65rem;
-      flex: 0 0 auto;
-    }
-
-    .demo-preset-swatch {
-      background: var(--accent);
-    }
-
-    .demo-preset-label {
-      text-align: left;
-    }
-
-    .demo-preset-chevron {
-      width: 0.4rem;
-      height: 0.4rem;
-      border-right: 1px solid currentcolor;
-      border-bottom: 1px solid currentcolor;
-      pointer-events: none;
-      transform: translateY(-0.1rem) rotate(45deg);
-    }
-
-    .demo-preset-control[open] .demo-preset-chevron {
-      transform: translateY(0.1rem) rotate(225deg);
-    }
-
-    .demo-preset-menu {
-      position: absolute;
-      z-index: 10;
-      top: calc(100% + 0.45rem);
-      right: 0;
-      display: grid;
-      width: min(30rem, calc(100vw - 2rem));
-      max-height: min(29rem, 65vh);
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1px;
-      overflow-y: auto;
-      border: 1px solid var(--line);
-      padding: 0.35rem;
-      background: var(--bar);
-      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
-      scrollbar-color: var(--line) var(--bar);
-    }
-
-    .demo-preset-control:not([open]) .demo-preset-menu {
-      display: none;
-    }
-
-    .demo-custom-color {
-      --custom-swatch: var(--accent);
-
-      display: grid;
-      grid-column: 1 / -1;
-      grid-template-columns: auto auto minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 0.65rem;
-      border-bottom: 1px solid var(--line);
-      padding: 0.45rem 0.65rem 0.7rem;
-    }
-
-    .demo-custom-color label {
-      color: var(--muted);
-    }
-
-    .demo-custom-color-swatch {
-      background: var(--custom-swatch);
-    }
-
-    .demo-custom-color-input,
-    .demo-custom-color-submit {
-      border: 1px solid var(--line);
-      padding: 0.45rem 0.55rem;
-      background: var(--panel);
-      color: var(--text);
-      font: inherit;
-      letter-spacing: inherit;
-    }
-
-    .demo-custom-color-input {
-      width: 100%;
-      min-width: 0;
-      text-transform: lowercase;
-    }
-
-    .demo-custom-color-input::placeholder {
       color: var(--subtle);
+      font-size: 0.78rem;
+      user-select: none;
     }
 
-    .demo-custom-color-submit {
-      cursor: pointer;
+    .pane-border::before {
+      width: 2.25rem;
+      border-top: 1px solid var(--line);
+      content: "";
     }
 
-    .demo-custom-color-submit:hover {
-      color: var(--accent);
+    .pane-border::after {
+      flex: 1;
+      border-top: 1px solid var(--line);
+      content: "";
     }
 
-    .demo-preset-option {
+    h2 {
+      display: inline-block;
+      margin: 0 0 1.4rem;
+      padding: 0.12em 0.55em;
+      background: var(--accent);
+      color: var(--dark);
+      font-size: clamp(1.25rem, 3.2vw, 1.6rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      transition: background-color 180ms ease;
+    }
+
+    h3 {
+      margin: 2.6rem 0 0.9rem;
+      color: var(--subtle);
+      font-size: 0.86rem;
+      font-weight: 500;
+    }
+
+    h3::before {
+      content: "# ";
+    }
+
+    .swatch-grid {
       display: grid;
-      width: 100%;
-      grid-template-columns: auto 1fr auto auto;
-      align-items: center;
-      gap: 0.65rem;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 0.55rem;
+      margin-bottom: 2.2rem;
+    }
+
+    .swatch {
+      display: grid;
+      gap: 0.4rem;
+      padding: 0;
       border: 0;
-      padding: 0.55rem 0.65rem;
-      background: transparent;
-      color: var(--text);
+      background: none;
+      color: var(--subtle);
       cursor: pointer;
-      font: inherit;
-      letter-spacing: inherit;
+      font-size: 0.72rem;
       text-align: left;
-      text-transform: uppercase;
     }
 
-    .demo-preset-option:hover,
-    .demo-preset-option[aria-pressed="true"] {
-      background: color-mix(in srgb, var(--swatch), transparent 88%);
-    }
-
-    .demo-preset-option[aria-pressed="true"] {
-      color: var(--swatch);
-    }
-
-    .demo-preset-option-swatch {
+    .swatch-color {
+      height: 34px;
+      border: 1px solid transparent;
       background: var(--swatch);
     }
 
-    .demo-preset-option-hex {
+    .swatch:hover {
       color: var(--muted);
     }
 
-    .demo-preset-option::after {
-      width: 0.25rem;
-      height: 0.45rem;
-      border-right: 1px solid currentcolor;
-      border-bottom: 1px solid currentcolor;
-      content: "";
-      opacity: 0;
-      transform: translateY(-0.1rem) rotate(45deg);
+    .swatch[aria-pressed="true"] {
+      color: var(--text);
     }
 
-    .demo-preset-option[aria-pressed="true"]::after {
-      opacity: 1;
+    .swatch[aria-pressed="true"] .swatch-color {
+      border-color: var(--text);
+      box-shadow: 0 0 0 3px var(--canvas), 0 0 22px var(--swatch);
     }
 
-    .status-viewport {
-      padding: clamp(2rem, 5vw, 4.5rem) clamp(1rem, 3vw, 2rem);
+    .swatch[aria-pressed="true"] .swatch-name::after {
+      content: " *";
+    }
+
+    .custom-color {
+      --custom-swatch: var(--accent);
+
+      display: flex;
+      max-width: 480px;
+      align-items: stretch;
+      margin: 0 0 1.4rem;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .custom-color-swatch {
+      width: 0.9rem;
+      flex: 0 0 auto;
+      margin: 0.75rem 0 0.75rem 0.75rem;
+      background: var(--custom-swatch);
+    }
+
+    .custom-color-input {
+      min-width: 0;
+      flex: 1;
+      padding: 0.8rem 1rem 0.8rem 0.75rem;
+      border: 0;
+      background: none;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.8rem;
+      text-transform: lowercase;
+    }
+
+    .custom-color-input::placeholder {
+      color: var(--subtle);
+    }
+
+    .custom-color-submit {
+      padding-inline: 1rem;
+      border: 0;
+      border-left: 1px solid var(--line);
+      background: var(--panel-raised);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.7rem;
+      text-transform: lowercase;
+    }
+
+    .custom-color-submit:hover {
+      color: var(--accent);
+    }
+
+    .readout {
+      max-width: 480px;
+      margin: 0 0 1.4rem;
+      padding: 1.1rem 1.2rem;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      font-size: 0.8rem;
+      line-height: 2;
       overflow-x: auto;
-      scrollbar-color: var(--line) var(--bar);
+    }
+
+    .readout .chip {
+      display: inline-block;
+      width: 3.2ch;
+      height: 0.78em;
+    }
+
+    .readout .chip-bar {
+      background: var(--bar);
+    }
+
+    .conf-block {
+      margin: 0 0 1rem;
+      padding: 1.3rem 1.4rem;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      font-size: 0.82rem;
+      line-height: 2.1;
+      overflow-x: auto;
+    }
+
+    .conf-toggle {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: underline dotted;
+      text-underline-offset: 0.3em;
+    }
+
+    .conf-toggle:hover {
+      background: color-mix(in srgb, var(--accent), transparent 84%);
+    }
+
+    .conf-value {
+      color: var(--accent);
+    }
+
+    .key-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .key-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0.85rem;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.76rem;
+    }
+
+    .key-toggle kbd {
+      padding: 0.1rem 0.4rem;
+      border: 1px solid var(--line);
+      border-bottom-width: 2px;
+      background: var(--panel-raised);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.72rem;
+    }
+
+    .key-toggle[aria-pressed="true"] {
+      border-color: var(--accent-alt);
+      background: color-mix(in srgb, var(--accent), transparent 88%);
+      color: var(--text);
+    }
+
+    .option-list {
+      display: grid;
+      gap: 0.15rem;
+      max-width: 62ch;
+      margin: 0;
+      font-size: 0.84rem;
+    }
+
+    .option-list div {
+      display: grid;
+      grid-template-columns: 24ch minmax(0, 1fr);
+      gap: 1rem;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid var(--panel-raised);
+    }
+
+    .option-list dt {
+      color: var(--text);
+      overflow-wrap: break-word;
+    }
+
+    .option-list dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .step {
+      max-width: 66ch;
+      margin-bottom: 0.4rem;
+    }
+
+    .step p {
+      margin: 0 0 1rem;
+      color: var(--muted);
+    }
+
+    .step .code-label {
+      margin: 0 0 0.45rem;
+      color: var(--subtle);
+      font-size: 0.78rem;
+    }
+
+    .inline-code {
+      display: block;
+      max-width: 66ch;
+      margin-bottom: 1rem;
+      padding: 1rem 1.2rem;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      font-size: 0.78rem;
+      line-height: 1.9;
+      white-space: pre;
+    }
+
+    .see-also {
+      margin: 3.5rem 0 0;
+      padding-top: 1.6rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .see-also p {
+      margin: 0.2rem 0;
+    }
+
+    /* Status line — mirrors chroma.tmux output. Segment spacing comes
+       from literal space characters in the format strings (white-space:
+       pre), never CSS padding. Keep colors, spaces, and glyphs in sync
+       with the plugin and docs/index.html. */
+    .status-dock {
+      position: fixed;
+      z-index: 10;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      overflow-x: auto;
+      background: var(--bar);
+      scrollbar-width: thin;
     }
 
     .statusbar {
-      --status-height: 24px;
-
       display: flex;
-      min-width: 830px;
-      height: var(--status-height);
+      min-width: max-content;
+      height: var(--dock-height);
       align-items: stretch;
-      overflow: hidden;
       background: var(--bar);
-      box-shadow: 0 20px 55px rgba(0, 0, 0, 0.42);
       color: var(--text);
-      font-family: var(--mono);
       font-size: 12px;
-      line-height: var(--status-height);
+      line-height: var(--dock-height);
       white-space: pre;
     }
 
     .status-spacer {
-      min-width: 20px;
+      min-width: 12px;
       flex: 1;
     }
 
-    .status-segment {
-      display: inline-block;
+    .boot .status-segment {
+      animation: segment-in 500ms backwards cubic-bezier(0.2, 0.7, 0.2, 1);
     }
 
     .status-host {
       background: var(--accent);
       color: var(--dark);
+      animation-delay: 1.3s;
     }
 
     .status-session {
       background: var(--panel-raised);
+      animation-delay: 1.35s;
     }
 
     .status-prefix {
       background: var(--bar);
       color: var(--bar);
+      animation-delay: 1.4s;
     }
 
     .status-prefix.is-active {
@@ -517,10 +568,22 @@
     .status-windows {
       display: flex;
       align-items: stretch;
+      animation-delay: 1.45s;
     }
 
     .status-window {
+      padding: 0;
+      border: 0;
+      background: none;
       color: var(--subtle);
+      cursor: pointer;
+      font: inherit;
+      line-height: var(--dock-height);
+      white-space: pre;
+    }
+
+    .status-window:hover {
+      color: var(--muted);
     }
 
     .status-window.is-current {
@@ -531,14 +594,15 @@
       color: var(--accent-alt);
     }
 
-    .status-window .flag.is-alert {
-      color: var(--alert);
+    .status-window:focus-visible {
+      outline-offset: -2px;
     }
 
     .status-metrics {
       display: flex;
       align-items: center;
       background: var(--panel-raised);
+      animation-delay: 1.5s;
     }
 
     .metric-dot {
@@ -548,6 +612,7 @@
     .status-tail {
       background: var(--accent);
       color: var(--dark);
+      animation-delay: 1.55s;
     }
 
     .status-tail.is-sync {
@@ -561,6 +626,11 @@
       display: flex;
       flex: 0 0 auto;
       height: 100%;
+    }
+
+    .boot .powerline-divider {
+      animation: segment-in 500ms 1.35s backwards
+        cubic-bezier(0.2, 0.7, 0.2, 1);
     }
 
     .powerline-divider.is-reverse {
@@ -612,413 +682,58 @@
       --divider-to: var(--tail-color);
     }
 
-    .demo-controls {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      border-top: 1px solid var(--line);
+    @keyframes typing {
+      from {
+        width: 0;
+      }
     }
 
-    .control {
-      min-width: 0;
-      padding: 1rem;
-      border-right: 1px solid var(--line);
+    @keyframes blink {
+      50% {
+        opacity: 0;
+      }
     }
 
-    .control:last-child {
-      border-right: 0;
+    @keyframes fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(9px);
+      }
     }
 
-    .control-label {
-      display: block;
-      margin-bottom: 0.6rem;
-      color: var(--subtle);
-      font-family: var(--mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+    @keyframes segment-in {
+      from {
+        opacity: 0;
+        transform: translateY(7px);
+      }
     }
 
-    .toggle-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-    }
+    @media (max-width: 720px) {
+      .status-session,
+      .status-metrics,
+      .divider-to-bar,
+      .divider-metrics {
+        display: none;
+      }
 
-    .toggle {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 0.38rem 0.68rem;
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      font-family: var(--mono);
-      font-size: 0.65rem;
-    }
-
-    .toggle[aria-pressed="true"] {
-      border-color: var(--accent-alt);
-      background: color-mix(in srgb, var(--accent), transparent 86%);
-      color: var(--accent);
-    }
-
-    .section {
-      display: grid;
-      grid-template-columns: 120px minmax(0, 1fr);
-      gap: clamp(2rem, 4vw, 3rem);
-      padding: clamp(5rem, 10vw, 8rem) 0;
-      border-top: 1px solid var(--line);
-    }
-
-    .section-label {
-      color: var(--accent);
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .section-content {
-      min-width: 0;
-    }
-
-    .section-content h2 {
-      max-width: 760px;
-      margin-bottom: 1.5rem;
-      font-size: clamp(2.25rem, 5vw, 4.4rem);
-      font-weight: 500;
-      letter-spacing: -0.05em;
-      line-height: 1;
-    }
-
-    .section-lede {
-      max-width: 690px;
-      margin-bottom: 3.5rem;
-      color: var(--muted);
-      font-size: 1.1rem;
-    }
-
-    .signal-list {
-      border-top: 1px solid var(--line);
-    }
-
-    .signal {
-      display: grid;
-      grid-template-columns: 140px minmax(0, 1fr);
-      gap: 2rem;
-      padding: 1.6rem 0;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .signal dt {
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 0.78rem;
-    }
-
-    .signal dd {
-      margin: 0;
-      color: var(--muted);
-    }
-
-    .config-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
-      gap: 1px;
-      border: 1px solid var(--line);
-      background: var(--line);
-    }
-
-    .code-panel,
-    .option-panel {
-      min-width: 0;
-      padding: clamp(1.25rem, 4vw, 2rem);
-      background: var(--bar);
-    }
-
-    .code-panel pre {
-      margin: 0;
-      overflow-x: auto;
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      line-height: 1.85;
-    }
-
-    .code-comment {
-      color: var(--subtle);
-    }
-
-    .code-value {
-      color: var(--accent);
-    }
-
-    .option-list {
-      display: grid;
-      gap: 1.2rem;
-      margin: 0;
-    }
-
-    .option-list div {
-      display: grid;
-      gap: 0.24rem;
-    }
-
-    .option-list dt {
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 0.7rem;
-    }
-
-    .option-list dd {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.88rem;
-    }
-
-    .palette-toolbar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
-      gap: 0.48rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .swatch-button {
-      position: relative;
-      height: 44px;
-      border: 1px solid var(--line);
-      background: var(--swatch);
-      cursor: pointer;
-    }
-
-    .swatch-button::after {
-      position: absolute;
-      inset: 4px;
-      border: 1px solid transparent;
-      content: "";
-    }
-
-    .swatch-button[aria-pressed="true"]::after {
-      border-color: var(--dark);
-    }
-
-    .palette-detail {
-      display: grid;
-      grid-template-columns: minmax(220px, 0.65fr) minmax(0, 1fr);
-      min-height: 280px;
-      border: 1px solid var(--line);
-      background: var(--bar);
-    }
-
-    .palette-chip {
-      display: flex;
-      min-height: 280px;
-      align-items: flex-end;
-      padding: 1.5rem;
-      background: var(--accent);
-      color: var(--dark);
-      transition: background-color 180ms ease;
-    }
-
-    .palette-chip span {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .palette-data {
-      display: grid;
-      align-content: center;
-      padding: clamp(1.5rem, 5vw, 4rem);
-    }
-
-    .palette-name {
-      margin: 0 0 1rem;
-      font-size: clamp(2.8rem, 7vw, 5.5rem);
-      font-weight: 500;
-      letter-spacing: -0.055em;
-      line-height: 1;
-    }
-
-    .palette-values {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.7rem 1.5rem;
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 0.72rem;
-    }
-
-    .palette-values strong {
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    .install-steps {
-      display: grid;
-      gap: 2rem;
-    }
-
-    .install-step {
-      display: grid;
-      grid-template-columns: 160px minmax(0, 1fr);
-      gap: 2rem;
-      padding-bottom: 2rem;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .install-step > div {
-      min-width: 0;
-    }
-
-    .install-step h3 {
-      margin: 0;
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      font-weight: 500;
-    }
-
-    .install-step p {
-      max-width: 700px;
-      margin-bottom: 1rem;
-      color: var(--muted);
-    }
-
-    .install-command-group {
-      display: grid;
-      gap: 1.25rem;
-    }
-
-    .install-step .install-command-label {
-      margin-bottom: 0.55rem;
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 0.72rem;
-    }
-
-    .inline-code {
-      display: block;
-      width: 100%;
-      min-width: 0;
-      max-width: 100%;
-      padding: 1rem;
-      overflow-x: auto;
-      border: 1px solid var(--line);
-      background: var(--bar);
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 0.75rem;
-      white-space: pre;
-    }
-
-    .site-footer {
-      display: flex;
-      min-height: 120px;
-      align-items: center;
-      justify-content: space-between;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 0.68rem;
-    }
-
-    .site-footer p {
-      margin: 0;
-    }
-
-    @media (max-width: 800px) {
-      .hero-title,
-      .hero-copy,
-      .section,
-      .config-grid,
-      .palette-detail {
+      .option-list div {
         grid-template-columns: 1fr;
-      }
-
-      .hero-copy {
-        gap: 2rem;
-      }
-
-      .hero-title {
-        gap: 2rem;
-      }
-
-      .hero-tagline {
-        max-width: 16ch;
-      }
-
-      .demo-controls {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .control:nth-child(2) {
-        border-right: 0;
-      }
-
-      .control:nth-child(-n + 2) {
-        border-bottom: 1px solid var(--line);
-      }
-
-      .section {
-        gap: 1.5rem;
-      }
-
-      .palette-chip {
-        min-height: 150px;
+        gap: 0.1rem;
       }
     }
 
     @media (max-width: 560px) {
       .shell {
-        width: min(calc(100% - 28px), var(--content));
+        width: min(100% - 1.75rem, 880px);
       }
 
-      .site-nav {
-        min-height: 64px;
-      }
-
-      .nav-links a:not(:last-child) {
+      .prompt-line .prompt-path {
         display: none;
       }
 
-      .hero {
-        padding-top: 4rem;
-      }
-
-      h1 {
-        font-size: clamp(5rem, 24vw, 7rem);
-      }
-
-      .demo-controls {
-        grid-template-columns: 1fr;
-      }
-
-      .control {
-        border-right: 0;
-        border-bottom: 1px solid var(--line);
-      }
-
-      .control:last-child {
-        border-bottom: 0;
-      }
-
-      .signal,
-      .install-step {
-        grid-template-columns: 1fr;
-        gap: 0.6rem;
-      }
-
-      .inline-code {
-        overflow-wrap: anywhere;
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-
-      .site-footer {
-        display: grid;
-        gap: 0.5rem;
-        padding: 2rem 0;
+      /* Compact window list, like window-status-format '#I' */
+      .status-window-name {
+        display: none;
       }
     }
 
@@ -1034,361 +749,264 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
       }
+
+      .cursor {
+        animation: none;
+      }
     }
   </style>
 </head>
 <body>
-  <header class="shell">
-    <nav class="site-nav" aria-label="Main navigation">
-      <a class="wordmark" href="#top">
-        <span class="wordmark-mark" aria-hidden="true"></span>
-        <span class="wordmark-name">Chroma</span>
-        <span class="wordmark-context">tmux theme</span>
-      </a>
-      <div class="nav-links">
-        <a href="#configure">Configure</a>
-        <a href="#palette">Palette</a>
-        <a href="#install">Install</a>
-        <a href="https://github.com/jimeh/tmux-chroma">GitHub ↗</a>
+  <main>
+    <section class="window shell" id="intro" data-window="intro">
+      <p class="prompt-line">
+        <span class="prompt-host">jimeh@noct</span>
+        <span class="prompt-path">~</span>
+        <span aria-hidden="true">$</span>
+        <span class="prompt-cmd">tmux attach -t chroma</span>
+        <span class="cursor" aria-hidden="true"></span>
+      </p>
+      <h1 class="visually-hidden">
+        Chroma — a host-aware status theme for tmux
+      </h1>
+      <pre class="banner" aria-hidden="true">
+ ██████╗██╗  ██╗██████╗  ██████╗ ███╗   ███╗ █████╗
+██╔════╝██║  ██║██╔══██╗██╔═══██╗████╗ ████║██╔══██╗
+██║     ███████║██████╔╝██║   ██║██╔████╔██║███████║
+██║     ██╔══██║██╔══██╗██║   ██║██║╚██╔╝██║██╔══██║
+╚██████╗██║  ██║██║  ██║╚██████╔╝██║ ╚═╝ ██║██║  ██║
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝</pre>
+      <p class="tagline hero-tagline">A different accent for every host.</p>
+      <p class="lede hero-lede">
+        Chroma hashes each machine&rsquo;s short hostname into one of
+        twenty-two balanced accents. The same host always gets the same
+        color, so you know where you are before you read a single
+        character.
+      </p>
+      <div class="install-command hero-tail">
+        <code id="quick-install">set -g @plugin 'jimeh/tmux-chroma'</code>
+        <button
+          class="copy-button"
+          type="button"
+          data-copy="quick-install"
+          aria-label="Copy TPM configuration"
+        >copy</button>
       </div>
-    </nav>
-  </header>
-
-  <main id="top">
-    <section class="hero shell">
-      <p class="eyebrow">tmux status theme</p>
-      <div class="hero-title">
-        <h1>Chroma</h1>
-        <p class="hero-tagline">A different accent for every host.</p>
-      </div>
-      <div class="hero-copy">
-        <p>
-          Chroma is a tmux status theme that gives each machine a deterministic
-          accent, a focused status line, and useful system metrics—without
-          turning your terminal into a dashboard.
-        </p>
-        <div class="install-command">
-          <code id="quick-install">set -g @plugin 'jimeh/tmux-chroma'</code>
-          <button
-            class="copy-button"
-            type="button"
-            data-copy="quick-install"
-            aria-label="Copy TPM configuration"
-          >Copy</button>
-        </div>
-      </div>
+      <p class="hint comment hero-tail">
+        # this page is the session &mdash; navigate with the window list
+        in the status line below
+      </p>
     </section>
 
-    <section class="demo shell" aria-labelledby="demo-title">
-      <div class="demo-heading">
-        <span id="demo-title">Interactive tmux preview</span>
-        <details class="demo-preset-control" id="demo-preset-control">
-          <summary class="demo-preset-trigger">
-            <span class="demo-preset-swatch" aria-hidden="true"></span>
-            <span class="demo-preset-label" id="demo-preset-label">
-              blue / #8aadf4
-            </span>
-            <span class="demo-preset-chevron" aria-hidden="true"></span>
-          </summary>
-          <div
-            class="demo-preset-menu"
-            id="demo-preset-menu"
-            role="group"
-            aria-label="Preview palette"
-          >
-            <form
-              class="demo-custom-color"
-              id="demo-custom-color"
-              aria-label="Custom accent color"
-              novalidate
-            >
-              <label for="demo-custom-color-input">Custom</label>
-              <span
-                class="demo-custom-color-swatch"
-                aria-hidden="true"
-              ></span>
-              <input
-                class="demo-custom-color-input"
-                id="demo-custom-color-input"
-                type="text"
-                inputmode="text"
-                maxlength="7"
-                placeholder="#rrggbb"
-                autocomplete="off"
-                spellcheck="false"
-              >
-              <button class="demo-custom-color-submit" type="submit">
-                Apply
-              </button>
-            </form>
-          </div>
-        </details>
-      </div>
+    <div class="pane-border shell" aria-hidden="true">
+      <span>&#x2524; 2:palette &#x251C;</span>
+    </div>
+
+    <section class="window shell" id="palette" data-window="palette">
+      <h2>pick an accent</h2>
+      <p class="lede">
+        Click a swatch and the page re-themes the way a new host would.
+        The quieter companion color is derived by blending the accent
+        toward Chroma&rsquo;s bar background.
+      </p>
       <div
-        class="status-viewport"
-        tabindex="0"
-        aria-label="Interactive tmux status line preview"
+        class="swatch-grid"
+        id="swatch-grid"
+        role="group"
+        aria-label="Accent presets"
+      ></div>
+      <pre class="readout" aria-live="polite">name      <span
+        id="readout-name">blue</span>
+base      <span id="readout-base">#8aadf4</span>  <span
+        class="chip" id="chip-base"></span>
+base_alt  <span id="readout-alt">#5b719e</span>  <span
+        class="chip" id="chip-alt"></span>
+bar       #15181d  <span
+        class="chip chip-bar"></span></pre>
+      <div class="install-command">
+        <code id="preset-line">set -g @chroma_preset 'blue'</code>
+        <button
+          class="copy-button"
+          type="button"
+          data-copy="preset-line"
+          aria-label="Copy preset configuration"
+        >copy</button>
+      </div>
+
+      <h3>custom accent</h3>
+      <p class="lede">
+        Skip the presets entirely: apply any #rrggbb value and Chroma
+        derives the quieter companion shade the same way.
+      </p>
+      <form
+        class="custom-color"
+        id="custom-color"
+        aria-label="Custom accent color"
+        novalidate
       >
-        <div class="statusbar" id="statusbar"></div>
-      </div>
-      <div class="demo-controls">
-        <div class="control">
-          <span class="control-label">Mode</span>
-          <div class="toggle-group" data-control="mode">
-            <button
-              class="toggle"
-              type="button"
-              data-value="block"
-              aria-pressed="true"
-            >Block</button>
-            <button
-              class="toggle"
-              type="button"
-              data-value="powerline"
-              aria-pressed="false"
-            >Powerline</button>
-          </div>
-        </div>
-        <div class="control">
-          <span class="control-label">Prefix</span>
-          <div class="toggle-group" data-control="prefix">
-            <button
-              class="toggle"
-              type="button"
-              data-value="idle"
-              aria-pressed="true"
-            >Idle</button>
-            <button
-              class="toggle"
-              type="button"
-              data-value="active"
-              aria-pressed="false"
-            >Active</button>
-          </div>
-        </div>
-        <div class="control">
-          <span class="control-label">Tail</span>
-          <div class="toggle-group" data-control="tail">
-            <button
-              class="toggle"
-              type="button"
-              data-value="clock"
-              aria-pressed="true"
-            >Clock</button>
-            <button
-              class="toggle"
-              type="button"
-              data-value="sync"
-              aria-pressed="false"
-            >SYNC</button>
-          </div>
-        </div>
-        <div class="control">
-          <span class="control-label">Metrics</span>
-          <div class="toggle-group">
-            <button
-              class="toggle metric-toggle"
-              type="button"
-              data-value="cpu"
-              aria-pressed="true"
-            >CPU</button>
-            <button
-              class="toggle metric-toggle"
-              type="button"
-              data-value="memory"
-              aria-pressed="true"
-            >MEM</button>
-            <button
-              class="toggle metric-toggle"
-              type="button"
-              data-value="disk"
-              aria-pressed="false"
-            >Disk</button>
-          </div>
-        </div>
-      </div>
+        <span
+          class="custom-color-swatch"
+          aria-hidden="true"
+        ></span>
+        <label class="visually-hidden" for="custom-color-input">
+          Custom accent color
+        </label>
+        <input
+          class="custom-color-input"
+          id="custom-color-input"
+          type="text"
+          inputmode="text"
+          maxlength="7"
+          placeholder="#rrggbb"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <button class="custom-color-submit" type="submit">apply</button>
+      </form>
     </section>
 
-    <section class="section shell" id="palette">
-      <div class="section-label">Palette</div>
-      <div class="section-content">
-        <h2>Twenty-two signals. One steady foundation.</h2>
-        <p class="section-lede">
-          Select an accent to apply it across the page and the interactive
-          theme preview. Each quieter companion color is derived by blending
-          the accent toward Chroma’s bar background.
-        </p>
-        <div
-          class="palette-toolbar"
-          id="palette-toolbar"
-          role="group"
-          aria-label="Accent presets"
-        ></div>
-        <div class="palette-detail">
-          <div class="palette-chip">
-            <span>Selected accent</span>
-          </div>
-          <div class="palette-data" aria-live="polite">
-            <h3 class="palette-name" id="palette-name">blue</h3>
-            <div class="palette-values">
-              <span>base <strong id="palette-base">#8aadf4</strong></span>
-              <span>
-                base_alt
-                <strong id="palette-alt">#5b719e</strong>
-              </span>
-              <span>bar <strong>#15181d</strong></span>
-            </div>
-          </div>
-        </div>
+    <div class="pane-border shell" aria-hidden="true">
+      <span>&#x2524; 3:config &#x251C;</span>
+    </div>
+
+    <section class="window shell" id="config" data-window="config">
+      <h2>configure by clicking</h2>
+      <p class="lede">
+        This block is live. Click an underlined value and the status
+        line at the bottom of the page re-renders, exactly as tmux
+        would after a reload.
+      </p>
+      <pre class="conf-block"><span class="comment"># ~/.tmux.conf</span>
+set -g <span id="conf-preset-line">@chroma_preset      '<span
+  class="conf-value">blue</span>'</span>
+set -g @chroma_powerline   <button
+  class="conf-toggle" type="button" data-option="powerline"
+  aria-pressed="false">'off'</button>
+set -g @chroma_show_cpu    <button
+  class="conf-toggle" type="button" data-option="cpu"
+  aria-pressed="true">'on'</button>
+set -g @chroma_show_memory <button
+  class="conf-toggle" type="button" data-option="memory"
+  aria-pressed="true">'on'</button>
+set -g @chroma_show_disk   <button
+  class="conf-toggle" type="button" data-option="disk"
+  aria-pressed="false">'off'</button></pre>
+
+      <h3>runtime signals</h3>
+      <p class="lede">
+        Some state isn&rsquo;t config. Hold the prefix or synchronize
+        panes and Chroma surfaces it without shifting the window list.
+        Try both against the bar below.
+      </p>
+      <div class="key-row">
+        <button
+          class="key-toggle"
+          type="button"
+          data-runtime="prefix"
+          aria-pressed="false"
+        ><kbd>C-b</kbd> prefix held</button>
+        <button
+          class="key-toggle"
+          type="button"
+          data-runtime="sync"
+          aria-pressed="false"
+        ><kbd>:setw synchronize-panes</kbd> sync</button>
       </div>
+
+      <h3>more options</h3>
+      <dl class="option-list">
+        <div>
+          <dt>@chroma_base_color</dt>
+          <dd>Skip the presets with any #rrggbb accent.</dd>
+        </div>
+        <div>
+          <dt>@chroma_host_label</dt>
+          <dd>Show something other than the hostname.</dd>
+        </div>
+        <div>
+          <dt>@chroma_clock_format</dt>
+          <dd>Any strftime string for the right-hand clock.</dd>
+        </div>
+        <div>
+          <dt>@chroma_disk_path</dt>
+          <dd>Which mount the disk gauge reports on.</dd>
+        </div>
+        <div>
+          <dt>@chroma_left_extra</dt>
+          <dd>Your own content after the session name.</dd>
+        </div>
+        <div>
+          <dt>@chroma_right_extra</dt>
+          <dd>Your own content before the metrics.</dd>
+        </div>
+      </dl>
     </section>
 
-    <section class="section shell" id="behavior">
-      <div class="section-label">Behavior</div>
-      <div class="section-content">
-        <h2>Recognize the machine before reading its name.</h2>
-        <p class="section-lede">
-          Chroma hashes tmux’s short hostname into one of twenty-two balanced
-          accents. The result is stable on every reload and distinct across
-          the machines you use most.
+    <div class="pane-border shell" aria-hidden="true">
+      <span>&#x2524; 4:install &#x251C;</span>
+    </div>
+
+    <section class="window shell" id="install" data-window="install">
+      <h2>install</h2>
+      <p class="lede">
+        One plugin line with TPM, or a clone if you prefer to keep the
+        theme entirely transparent. Reload tmux and Chroma picks this
+        machine&rsquo;s color on its own.
+      </p>
+
+      <h3>with tpm</h3>
+      <div class="step">
+        <p>
+          Add Chroma before
+          <a href="https://github.com/tmux-plugins/tpm">TPM</a>&rsquo;s
+          initialization line, then press
+          <kbd>prefix</kbd> + <kbd>I</kbd>.
         </p>
-        <dl class="signal-list">
-          <div class="signal">
-            <dt>Host-seeded</dt>
-            <dd>
-              Zero configuration by default. The same host always resolves
-              to the same preset.
-            </dd>
-          </div>
-          <div class="signal">
-            <dt>Quiet context</dt>
-            <dd>
-              Prefix and synchronized-pane state become visible without
-              shifting the centered window list.
-            </dd>
-          </div>
-          <div class="signal">
-            <dt>Useful metrics</dt>
-            <dd>
-              CPU and memory are included. Disk is available when you want
-              it, with native implementations for macOS and Linux.
-            </dd>
-          </div>
-        </dl>
+        <code class="inline-code">set -g @plugin 'jimeh/tmux-chroma'</code>
       </div>
-    </section>
 
-    <section class="section shell" id="configure">
-      <div class="section-label">Configure</div>
-      <div class="section-content">
-        <h2>Start automatic. Override only what matters.</h2>
-        <p class="section-lede">
-          Set options before TPM initializes. Pin a preset, choose your own
-          accent, enable Powerline dividers, or change the information in
-          either side of the status bar.
+      <h3>manually</h3>
+      <div class="step">
+        <p>
+          Clone the repository and run the plugin after your own
+          overrides.
         </p>
-        <div class="config-grid">
-          <div class="code-panel">
-            <pre><span class="code-comment"># Optional overrides</span>
-set -g @chroma_preset <span class="code-value">'peach'</span>
-set -g @chroma_powerline <span class="code-value">'on'</span>
-set -g @chroma_show_disk <span class="code-value">'on'</span>
-set -g @chroma_disk_path <span class="code-value">'/'</span>
-
-<span class="code-comment"># Load with TPM</span>
-set -g @plugin <span class="code-value">'jimeh/tmux-chroma'</span>
-run <span class="code-value">'~/.tmux/plugins/tpm/tpm'</span></pre>
-          </div>
-          <div class="option-panel">
-            <dl class="option-list">
-              <div>
-                <dt>@chroma_preset</dt>
-                <dd>Use a named accent instead of the host seed.</dd>
-              </div>
-              <div>
-                <dt>@chroma_base_color</dt>
-                <dd>Supply any full #rrggbb accent value.</dd>
-              </div>
-              <div>
-                <dt>@chroma_powerline</dt>
-                <dd>Use Powerline dividers when your font supports them.</dd>
-              </div>
-              <div>
-                <dt>@chroma_left_extra / right_extra</dt>
-                <dd>Add your own compact status content.</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
+        <p class="code-label"># clone the plugin</p>
+        <code class="inline-code">git clone https://github.com/jimeh/tmux-chroma.git \
+  ~/.tmux/plugins/tmux-chroma</code>
+        <p class="code-label"># in ~/.tmux.conf, after your overrides</p>
+        <code class="inline-code">run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
       </div>
-    </section>
 
-    <section class="section shell" id="install">
-      <div class="section-label">Install</div>
-      <div class="section-content">
-        <h2>One plugin line, then reload tmux.</h2>
-        <p class="section-lede">
-          TPM is the simplest path. Manual installation works too, and keeps
-          the theme entirely transparent.
+      <h3>requirements</h3>
+      <div class="step">
+        <p>
+          tmux 3.2 or later on macOS or Linux. Linux needs Bash 4.2 or
+          later; the Bash included with macOS is supported. Powerline
+          mode also needs a font containing the divider glyphs.
         </p>
-        <div class="install-steps">
-          <div class="install-step">
-            <h3>With TPM</h3>
-            <div>
-              <p>
-                Add Chroma before TPM’s initialization line, then press
-                <strong>prefix + I</strong>.
-              </p>
-              <code class="inline-code">set -g @plugin 'jimeh/tmux-chroma'</code>
-            </div>
-          </div>
-          <div class="install-step">
-            <h3>Manually</h3>
-            <div>
-              <p>
-                Install Chroma in tmux’s plugin directory, then load it from
-                your configuration.
-              </p>
-              <div class="install-command-group">
-                <div>
-                  <p class="install-command-label">Clone the plugin</p>
-                  <code class="inline-code">git clone https://github.com/jimeh/tmux-chroma.git ~/.tmux/plugins/tmux-chroma</code>
-                </div>
-                <div>
-                  <p class="install-command-label">
-                    Add to ~/.tmux.conf after your overrides
-                  </p>
-                  <code class="inline-code">run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="install-step">
-            <h3>Requirements</h3>
-            <div>
-              <p>
-                Chroma supports macOS and Linux with tmux 3.2 or later. Linux
-                needs Bash 4.2 or later; the Bash included with macOS is
-                supported. Powerline mode also needs a font containing the
-                divider glyphs.
-              </p>
-              <a href="https://github.com/jimeh/tmux-chroma#options">
-                Read the full option reference ↗
-              </a>
-            </div>
-          </div>
-        </div>
+      </div>
+
+      <div class="see-also">
+        <p class="comment"># see also</p>
+        <p>
+          <a href="https://github.com/jimeh/tmux-chroma">
+            github.com/jimeh/tmux-chroma</a> &middot;
+          <a href="https://github.com/jimeh/tmux-chroma#options">
+            full option reference</a>
+        </p>
+        <p>
+          MIT licensed &middot; selected accents adapted from
+          <a href="https://catppuccin.com/palette">
+            Catppuccin Macchiato</a>
+        </p>
       </div>
     </section>
   </main>
 
-  <footer class="site-footer shell">
-    <p>Chroma for tmux · MIT licensed</p>
-    <p>
-      Selected accents adapted from
-      <a href="https://catppuccin.com/palette">Catppuccin Macchiato</a>.
-    </p>
-  </footer>
+  <nav class="status-dock" aria-label="Sections, shown as a live Chroma status line">
+    <div class="statusbar boot" id="statusbar"></div>
+  </nav>
 
   <script>
     const presets = [
@@ -1416,26 +1034,53 @@ run <span class="code-value">'~/.tmux/plugins/tpm/tpm'</span></pre>
       { name: 'cornflower', base: '#83baee' },
     ];
 
+    const windows = [
+      { id: 'intro', index: 1 },
+      { id: 'palette', index: 2 },
+      { id: 'config', index: 3 },
+      { id: 'install', index: 4 },
+    ];
+
+    // Mirrors seeded_preset in chroma.tmux: hash a seed, index into the
+    // preset list. Browser traits stand in for the hostname, and the
+    // date and hour are folded in so the default accent differs between
+    // visitors and drifts over the day.
+    function seededPreset() {
+      const now = new Date();
+      const seed = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + 'x' + screen.height,
+        window.devicePixelRatio,
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        now.getHours(),
+      ].join('|');
+      let sum = 5381;
+      for (let index = 0; index < seed.length; index += 1) {
+        sum = ((sum * 33) ^ seed.charCodeAt(index)) >>> 0;
+      }
+      return presets[sum % presets.length];
+    }
+
     const state = {
-      preset: presets[0],
-      mode: 'block',
-      prefix: 'idle',
-      tail: 'clock',
-      metrics: new Set(['cpu', 'memory']),
+      preset: seededPreset(),
+      powerline: false,
+      cpu: true,
+      memory: true,
+      disk: false,
+      prefix: false,
+      sync: false,
+      current: 'intro',
+      last: null,
     };
 
     const root = document.documentElement;
     const statusbar = document.getElementById('statusbar');
-    const paletteName = document.getElementById('palette-name');
-    const paletteBase = document.getElementById('palette-base');
-    const paletteAlt = document.getElementById('palette-alt');
-    const demoPresetControl = document.getElementById('demo-preset-control');
-    const demoPresetLabel = document.getElementById('demo-preset-label');
-    const demoPresetMenu = document.getElementById('demo-preset-menu');
-    const demoPresetTrigger = document.querySelector('.demo-preset-trigger');
-    const customColorForm = document.getElementById('demo-custom-color');
-    const customColorInput = document.getElementById(
-      'demo-custom-color-input'
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
     );
 
     function channel(color, index) {
@@ -1485,6 +1130,12 @@ run <span class="code-value">'~/.tmux/plugins/tpm/tpm'</span></pre>
       }).join('');
     }
 
+    function clock() {
+      const now = new Date();
+      return String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0');
+    }
+
     function makeElement(className, text) {
       const element = document.createElement('span');
       element.className = className;
@@ -1527,73 +1178,82 @@ run <span class="code-value">'~/.tmux/plugins/tpm/tpm'</span></pre>
       statusbar.appendChild(divider);
     }
 
+    function windowFlag(id) {
+      if (id === state.current) {
+        return '*';
+      }
+      if (id === state.last) {
+        return '-';
+      }
+      return '';
+    }
+
     function renderStatus() {
       statusbar.replaceChildren();
-      const powerline = state.mode === 'powerline';
-      const hostPadding = powerline ? '  noct ' : ' noct ';
-      const host = makeElement(
+      const powerline = state.powerline;
+      statusbar.appendChild(makeElement(
         'status-segment status-host',
-        hostPadding
-      );
-      statusbar.appendChild(host);
+        powerline ? '  noct ' : ' noct '
+      ));
 
       if (powerline) {
         appendDivider('divider-forward', 'forward');
       }
 
       statusbar.appendChild(
-        makeElement('status-segment status-session', ' main ')
+        makeElement('status-segment status-session', ' chroma ')
       );
 
       if (powerline) {
         appendDivider('divider-to-bar', 'forward');
       }
 
-      const prefix = makeElement(
+      statusbar.appendChild(makeElement(
         'status-segment status-prefix' +
-          (state.prefix === 'active' ? ' is-active' : '') +
+          (state.prefix ? ' is-active' : '') +
           (powerline ? ' is-powerline' : ''),
         '∙ '
-      );
-      statusbar.appendChild(prefix);
+      ));
 
       statusbar.appendChild(makeElement('status-spacer'));
 
-      const windows = makeElement('status-segment status-windows');
-      const windowData = [
-        ['1:zsh', '', false],
-        ['2:vim', '*', true],
-        ['3:ssh', '#', false],
-        ['4:htop', '!', false],
-        ['5:logs', '-', false],
-      ];
-      windowData.forEach(([name, flag, current]) => {
-        const windowElement = makeElement(
-          'status-window' + (current ? ' is-current' : ''),
-          ' ' + name
+      const list = makeElement('status-segment status-windows');
+      windows.forEach((item) => {
+        const button = document.createElement('button');
+        button.className = 'status-window' +
+          (item.id === state.current ? ' is-current' : '');
+        button.type = 'button';
+        button.textContent = ' ' + item.index;
+        button.appendChild(
+          makeElement('status-window-name', ':' + item.id)
         );
+        const flag = windowFlag(item.id);
         if (flag) {
-          const flagElement = makeElement(
-            'flag' + (flag === '!' ? ' is-alert' : ''),
-            flag
-          );
-          windowElement.appendChild(flagElement);
+          button.appendChild(makeElement('flag', flag));
         }
-        windowElement.append(' ');
-        windows.appendChild(windowElement);
+        button.append(' ');
+        if (item.id === state.current) {
+          button.setAttribute('aria-current', 'true');
+        }
+        button.addEventListener('click', () => {
+          document.getElementById(item.id).scrollIntoView({
+            behavior: reducedMotion.matches ? 'auto' : 'smooth',
+          });
+        });
+        list.appendChild(button);
       });
-      statusbar.appendChild(windows);
+      statusbar.appendChild(list);
 
       statusbar.appendChild(makeElement('status-spacer'));
 
       const metrics = [];
-      if (state.metrics.has('cpu')) {
+      if (state.cpu) {
         metrics.push('CPU 12%');
       }
-      if (state.metrics.has('memory')) {
+      if (state.memory) {
         metrics.push('MEM 64%');
       }
-      if (state.metrics.has('disk')) {
+      if (state.disk) {
         metrics.push('/ 238G');
       }
 
@@ -1601,53 +1261,47 @@ run <span class="code-value">'~/.tmux/plugins/tpm/tpm'</span></pre>
         if (powerline) {
           appendDivider('divider-metrics', 'reverse');
         }
-        const metricGroup = makeElement(
-          'status-segment status-metrics'
-        );
+        const metricGroup = makeElement('status-segment status-metrics');
         metrics.forEach((metric, index) => {
           if (index > 0) {
-            metricGroup.appendChild(
-              makeElement('metric-dot', '∙')
-            );
+            metricGroup.appendChild(makeElement('metric-dot', '∙'));
           }
           metricGroup.appendChild(makeElement('', ' ' + metric + ' '));
         });
         statusbar.appendChild(metricGroup);
       }
 
-      const tailColor = state.tail === 'sync'
-        ? '#ed8796'
-        : state.preset.base;
+      const tailColor = state.sync ? '#ed8796' : state.preset.base;
       if (powerline) {
         appendDivider('divider-tail', 'reverse', tailColor);
       }
-      const tailText = state.tail === 'sync'
-        ? (powerline ? ' SYNC  ' : ' SYNC ')
-        : (powerline ? ' 14:32  ' : ' 14:32 ');
-      const tail = makeElement(
-        'status-segment status-tail' +
-          (state.tail === 'sync' ? ' is-sync' : ''),
-        tailText
-      );
-      statusbar.appendChild(tail);
+      const tailBody = state.sync ? 'SYNC' : clock();
+      statusbar.appendChild(makeElement(
+        'status-segment status-tail' + (state.sync ? ' is-sync' : ''),
+        powerline ? ' ' + tailBody + '  ' : ' ' + tailBody + ' '
+      ));
     }
 
     function selectPreset(preset) {
       state.preset = preset;
+      const custom = preset.name === 'custom';
       const alt = mixColor(preset.base, '#15181d', 60);
       root.style.setProperty('--accent', preset.base);
       root.style.setProperty('--accent-alt', alt);
-      paletteName.textContent = preset.name;
-      paletteBase.textContent = preset.base;
-      paletteAlt.textContent = alt;
-      demoPresetLabel.textContent = preset.name + ' / ' + preset.base;
-      document.querySelectorAll('.demo-preset-option').forEach((button) => {
-        button.setAttribute(
-          'aria-pressed',
-          String(button.dataset.preset === preset.name)
-        );
-      });
-      document.querySelectorAll('.swatch-button').forEach((button) => {
+      document.getElementById('readout-name').textContent = preset.name;
+      document.getElementById('readout-base').textContent = preset.base;
+      document.getElementById('readout-alt').textContent = alt;
+      document.getElementById('chip-base').style.background = preset.base;
+      document.getElementById('chip-alt').style.background = alt;
+      document.getElementById('preset-line').textContent = custom
+        ? "set -g @chroma_base_color '" + preset.base + "'"
+        : "set -g @chroma_preset '" + preset.name + "'";
+      document.getElementById('conf-preset-line').replaceChildren(
+        custom ? "@chroma_base_color  '" : "@chroma_preset      '",
+        makeElement('conf-value', custom ? preset.base : preset.name),
+        "'"
+      );
+      document.querySelectorAll('.swatch').forEach((button) => {
         button.setAttribute(
           'aria-pressed',
           String(button.dataset.preset === preset.name)
@@ -1656,122 +1310,83 @@ run <span class="code-value">'~/.tmux/plugins/tpm/tpm'</span></pre>
       renderStatus();
     }
 
-    function setupPresetControls() {
-      const toolbar = document.getElementById('palette-toolbar');
+    function setupPalette() {
+      const grid = document.getElementById('swatch-grid');
       const displayPresets = [...presets].sort((first, second) => (
         colorHue(first.base) - colorHue(second.base)
       ));
       displayPresets.forEach((preset) => {
-        const optionButton = document.createElement('button');
-        const optionSwatch = makeElement('demo-preset-option-swatch');
-        const optionName = makeElement('demo-preset-option-name', preset.name);
-        const optionHex = makeElement('demo-preset-option-hex', preset.base);
         const button = document.createElement('button');
-
-        optionButton.className = 'demo-preset-option';
-        optionButton.type = 'button';
-        optionButton.dataset.preset = preset.name;
-        optionButton.style.setProperty('--swatch', preset.base);
-        optionButton.setAttribute(
-          'aria-pressed',
-          String(preset === state.preset)
-        );
-        optionButton.append(optionSwatch, optionName, optionHex);
-        optionButton.addEventListener('click', () => {
-          selectPreset(preset);
-          demoPresetControl.open = false;
-          demoPresetTrigger.focus();
-        });
-        demoPresetMenu.appendChild(optionButton);
-
-        button.className = 'swatch-button';
+        button.className = 'swatch';
         button.type = 'button';
         button.dataset.preset = preset.name;
-        button.style.setProperty('--swatch', preset.base);
-        button.setAttribute('aria-label', 'Use ' + preset.name + ' preset');
         button.setAttribute(
           'aria-pressed',
           String(preset === state.preset)
         );
-        button.addEventListener('click', () => selectPreset(preset));
-        toolbar.appendChild(button);
-      });
-
-      customColorInput.addEventListener('input', () => {
-        const customBase = normalizeHex(customColorInput.value);
-        customColorInput.setCustomValidity('');
-        customColorInput.removeAttribute('aria-invalid');
-        customColorForm.style.setProperty(
-          '--custom-swatch',
-          customBase || state.preset.base
+        button.setAttribute(
+          'aria-label',
+          'Use ' + preset.name + ' preset'
         );
-      });
-      customColorForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const customBase = normalizeHex(customColorInput.value);
-
-        if (!customBase) {
-          customColorInput.setCustomValidity(
-            'Enter a six-digit hex color, such as #83baee.'
-          );
-          customColorInput.setAttribute('aria-invalid', 'true');
-          customColorInput.reportValidity();
-          return;
-        }
-
-        customColorInput.setCustomValidity('');
-        customColorInput.removeAttribute('aria-invalid');
-        customColorInput.value = customBase;
-        customColorForm.style.setProperty('--custom-swatch', customBase);
-        selectPreset({ name: 'custom', base: customBase });
-        demoPresetControl.open = false;
-        demoPresetTrigger.focus();
-      });
-
-      demoPresetControl.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && demoPresetControl.open) {
-          demoPresetControl.open = false;
-          demoPresetTrigger.focus();
-        }
-      });
-      document.addEventListener('click', (event) => {
-        if (
-          demoPresetControl.open &&
-          !demoPresetControl.contains(event.target)
-        ) {
-          demoPresetControl.open = false;
-        }
+        const color = makeElement('swatch-color');
+        color.style.setProperty('--swatch', preset.base);
+        button.appendChild(color);
+        button.appendChild(makeElement('swatch-name', preset.name));
+        button.addEventListener('click', () => selectPreset(preset));
+        grid.appendChild(button);
       });
     }
 
-    document.querySelectorAll('[data-control]').forEach((group) => {
-      group.querySelectorAll('.toggle').forEach((button) => {
-        button.addEventListener('click', () => {
-          const control = group.dataset.control;
-          state[control] = button.dataset.value;
-          group.querySelectorAll('.toggle').forEach((peer) => {
-            peer.setAttribute(
-              'aria-pressed',
-              String(peer === button)
-            );
-          });
-          renderStatus();
-        });
+    const customColorForm = document.getElementById('custom-color');
+    const customColorInput = document.getElementById(
+      'custom-color-input'
+    );
+
+    customColorInput.addEventListener('input', () => {
+      const customBase = normalizeHex(customColorInput.value);
+      customColorInput.setCustomValidity('');
+      customColorInput.removeAttribute('aria-invalid');
+      customColorForm.style.setProperty(
+        '--custom-swatch',
+        customBase || state.preset.base
+      );
+    });
+
+    customColorForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const customBase = normalizeHex(customColorInput.value);
+
+      if (!customBase) {
+        customColorInput.setCustomValidity(
+          'Enter a six-digit hex color, such as #83baee.'
+        );
+        customColorInput.setAttribute('aria-invalid', 'true');
+        customColorInput.reportValidity();
+        return;
+      }
+
+      customColorInput.setCustomValidity('');
+      customColorInput.removeAttribute('aria-invalid');
+      customColorInput.value = customBase;
+      customColorForm.style.setProperty('--custom-swatch', customBase);
+      selectPreset({ name: 'custom', base: customBase });
+    });
+
+    document.querySelectorAll('.conf-toggle').forEach((button) => {
+      button.addEventListener('click', () => {
+        const option = button.dataset.option;
+        state[option] = !state[option];
+        button.textContent = state[option] ? "'on'" : "'off'";
+        button.setAttribute('aria-pressed', String(state[option]));
+        renderStatus();
       });
     });
 
-    document.querySelectorAll('.metric-toggle').forEach((button) => {
+    document.querySelectorAll('.key-toggle').forEach((button) => {
       button.addEventListener('click', () => {
-        const metric = button.dataset.value;
-        if (state.metrics.has(metric)) {
-          state.metrics.delete(metric);
-        } else {
-          state.metrics.add(metric);
-        }
-        button.setAttribute(
-          'aria-pressed',
-          String(state.metrics.has(metric))
-        );
+        const key = button.dataset.runtime;
+        state[key] = !state[key];
+        button.setAttribute('aria-pressed', String(state[key]));
         renderStatus();
       });
     });
@@ -1781,9 +1396,9 @@ run <span class="code-value">'~/.tmux/plugins/tpm/tpm'</span></pre>
         const target = document.getElementById(button.dataset.copy);
         try {
           await navigator.clipboard.writeText(target.textContent);
-          button.textContent = 'Done';
+          button.textContent = 'done';
         } catch (_error) {
-          button.textContent = 'Select';
+          button.textContent = 'select';
           const selection = window.getSelection();
           const range = document.createRange();
           range.selectNodeContents(target);
@@ -1791,13 +1406,41 @@ run <span class="code-value">'~/.tmux/plugins/tpm/tpm'</span></pre>
           selection.addRange(range);
         }
         window.setTimeout(() => {
-          button.textContent = 'Copy';
+          button.textContent = 'copy';
         }, 1600);
       });
     });
 
-    setupPresetControls();
-    renderStatus();
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+        const id = entry.target.dataset.window;
+        if (id !== state.current) {
+          state.last = state.current;
+          state.current = id;
+          renderStatus();
+        }
+      });
+    }, { rootMargin: '-45% 0px -45% 0px' });
+
+    document.querySelectorAll('[data-window]').forEach((section) => {
+      spy.observe(section);
+    });
+
+    window.setTimeout(() => {
+      statusbar.classList.remove('boot');
+    }, 2200);
+
+    window.setInterval(() => {
+      if (!state.sync) {
+        renderStatus();
+      }
+    }, 30000);
+
+    setupPalette();
+    selectPreset(state.preset);
   </script>
 </body>
 </html>
