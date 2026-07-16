@@ -110,11 +110,22 @@
       align-items: center;
       gap: 0.65rem;
       font-family: var(--mono);
-      font-size: 0.85rem;
       font-weight: 600;
       letter-spacing: 0.08em;
       text-decoration: none;
       text-transform: uppercase;
+    }
+
+    .wordmark-name {
+      font-size: 0.95rem;
+    }
+
+    .wordmark-context {
+      border-left: 1px solid var(--line);
+      padding-left: 0.65rem;
+      color: var(--muted);
+      font-size: 0.65rem;
+      font-weight: 500;
     }
 
     .wordmark-mark {
@@ -143,11 +154,11 @@
     }
 
     .hero {
-      padding: clamp(5rem, 12vw, 9rem) 0 4rem;
+      padding: clamp(5rem, 10vw, 8rem) 0 4rem;
     }
 
     .eyebrow {
-      margin: 0 0 1.4rem;
+      margin: 0 0 2rem;
       color: var(--accent);
       font-family: var(--mono);
       font-size: 0.72rem;
@@ -164,13 +175,42 @@
       margin-top: 0;
     }
 
+    .hero-title {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.65fr);
+      align-items: end;
+      gap: clamp(2rem, 5vw, 4rem);
+      margin-bottom: clamp(2.5rem, 5vw, 4rem);
+    }
+
     h1 {
-      max-width: 920px;
-      margin-bottom: 1.5rem;
-      font-size: clamp(3.5rem, 9vw, 7.6rem);
+      margin: 0;
+      font-size: clamp(5.5rem, 16vw, 12rem);
+      font-weight: 600;
+      letter-spacing: -0.075em;
+      line-height: 0.78;
+      white-space: nowrap;
+    }
+
+    h1::after {
+      display: inline-block;
+      width: 0.12em;
+      height: 0.12em;
+      margin-left: 0.06em;
+      background: var(--accent);
+      box-shadow: 0 0 30px color-mix(in srgb, var(--accent), transparent 65%);
+      content: "";
+      vertical-align: 0.08em;
+    }
+
+    .hero-tagline {
+      max-width: 12ch;
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.35rem);
       font-weight: 500;
-      letter-spacing: -0.065em;
-      line-height: 0.91;
+      letter-spacing: -0.05em;
+      line-height: 0.98;
+      text-wrap: balance;
     }
 
     .hero-copy {
@@ -865,6 +905,7 @@
     }
 
     @media (max-width: 800px) {
+      .hero-title,
       .hero-copy,
       .section,
       .config-grid,
@@ -874,6 +915,14 @@
 
       .hero-copy {
         gap: 2rem;
+      }
+
+      .hero-title {
+        gap: 2rem;
+      }
+
+      .hero-tagline {
+        max-width: 16ch;
       }
 
       .demo-controls {
@@ -915,7 +964,7 @@
       }
 
       h1 {
-        font-size: clamp(3rem, 17vw, 5rem);
+        font-size: clamp(5rem, 24vw, 7rem);
       }
 
       .demo-controls {
@@ -964,7 +1013,8 @@
     <nav class="site-nav" aria-label="Main navigation">
       <a class="wordmark" href="#top">
         <span class="wordmark-mark" aria-hidden="true"></span>
-        chroma
+        <span class="wordmark-name">Chroma</span>
+        <span class="wordmark-context">tmux theme</span>
       </a>
       <div class="nav-links">
         <a href="#configure">Configure</a>
@@ -977,13 +1027,16 @@
 
   <main id="top">
     <section class="hero shell">
-      <p class="eyebrow">Host-aware tmux status theme</p>
-      <h1>A different accent for every host.</h1>
+      <p class="eyebrow">tmux status theme</p>
+      <div class="hero-title">
+        <h1>Chroma</h1>
+        <p class="hero-tagline">A different accent for every host.</p>
+      </div>
       <div class="hero-copy">
         <p>
-          Chroma gives each machine a deterministic color, a focused status
-          line, and useful system metrics—without turning tmux into a
-          dashboard.
+          Chroma is a tmux status theme that gives each machine a deterministic
+          accent, a focused status line, and useful system metrics—without
+          turning your terminal into a dashboard.
         </p>
         <div class="install-command">
           <code id="quick-install">set -g @plugin 'jimeh/tmux-chroma'</code>
