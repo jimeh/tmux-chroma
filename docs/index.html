@@ -830,10 +830,10 @@
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝</pre>
       <p class="tagline hero-tagline">A different accent for every host.</p>
       <p class="lede hero-lede">
-        Chroma hashes each machine&rsquo;s short hostname into one of
-        twenty-two balanced accents. The same host always gets the same
-        color, so you know where you are before you read a single
-        character.
+        Chroma is a tmux theme that hashes each machine&rsquo;s short
+        hostname into one of twenty-two balanced accents. The same host
+        always gets the same color, so you know where you are before
+        you read a single character.
       </p>
       <div class="install-command hero-tail">
         <code id="quick-install">set -g @plugin 'jimeh/tmux-chroma'</code>
@@ -1642,23 +1642,45 @@ set -g @chroma_show_disk   <button
       }
     });
 
-    const spy = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) {
-          return;
-        }
-        const id = entry.target.dataset.window;
-        if (id !== state.current) {
-          state.last = state.current;
-          state.current = id;
-          renderStatus();
+    // The scroll spy computes the active window directly from scroll
+    // position: within the top of the page the first window wins (in a
+    // tall viewport the intro section can end above any viewport-based
+    // marker even at scroll 0), and below that the last section whose
+    // top has passed the viewport middle is current. Deterministic in
+    // both directions, unlike observer enter events, which never fire
+    // for sections already inside the observed band on load.
+    const sectionElements = Array.from(
+      document.querySelectorAll('[data-window]')
+    );
+
+    function currentWindowId() {
+      if (window.scrollY <= 160) {
+        return windows[0].id;
+      }
+      const middle = window.scrollY + window.innerHeight / 2;
+      let id = windows[0].id;
+      sectionElements.forEach((section) => {
+        const top = section.getBoundingClientRect().top + window.scrollY;
+        if (top <= middle) {
+          id = section.dataset.window;
         }
       });
-    }, { rootMargin: '-45% 0px -45% 0px' });
+      return id;
+    }
 
-    document.querySelectorAll('[data-window]').forEach((section) => {
-      spy.observe(section);
+    function updateCurrentWindow() {
+      const id = currentWindowId();
+      if (id !== state.current) {
+        state.last = state.current;
+        state.current = id;
+        renderStatus();
+      }
+    }
+
+    window.addEventListener('scroll', updateCurrentWindow, {
+      passive: true,
     });
+    updateCurrentWindow();
 
     window.setTimeout(() => {
       statusbar.classList.remove('boot');
