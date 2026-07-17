@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15181d">
+  <!-- The page manages its own dark/light theming; ask Dark Reader
+       and similar extensions to leave it alone. -->
+  <meta name="darkreader-lock" content="">
   <script>
     // Resolve the persisted @chroma_background before the
     // stylesheet paints: 'dark' (the default), 'light', or a custom
@@ -111,8 +114,10 @@
         <span class="prompt-host">jimeh@noct</span>
         <span class="prompt-path">~</span>
         <span aria-hidden="true">$</span>
-        <span class="prompt-cmd">tmux attach -t chroma</span>
-        <span class="cursor" aria-hidden="true"></span>
+        <span class="prompt-cmd">tmux attach -t chroma</span><span
+          class="cursor"
+          aria-hidden="true"
+        ></span>
       </p>
       <h1 class="visually-hidden">
         Chroma — a host-aware status theme for tmux
@@ -248,7 +253,9 @@
           initialization line, then press
           <kbd>prefix</kbd> + <kbd>I</kbd>.
         </p>
-        <code class="inline-code">set -g @plugin 'jimeh/tmux-chroma'</code>
+        <div class="inline-code">
+          <code class="block-scroll">set -g @plugin 'jimeh/tmux-chroma'</code>
+        </div>
       </div>
 
       <h3>manually</h3>
@@ -258,10 +265,14 @@
           overrides.
         </p>
         <p class="code-label"># clone the plugin</p>
-        <code class="inline-code">git clone https://github.com/jimeh/tmux-chroma.git \
+        <div class="inline-code">
+          <code class="block-scroll">git clone https://github.com/jimeh/tmux-chroma.git \
   ~/.tmux/plugins/tmux-chroma</code>
+        </div>
         <p class="code-label"># in ~/.tmux.conf, after your overrides</p>
-        <code class="inline-code">run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
+        <div class="inline-code">
+          <code class="block-scroll">run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
+        </div>
       </div>
 
       <h3>requirements</h3>

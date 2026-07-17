@@ -203,10 +203,14 @@ button {
   white-space: nowrap;
 }
 
+/* Copy/apply/clear are small inset chips with equal margins to
+   their container's edges. In flex rows the chip's own margins set
+   the row height, which makes the top, right, and bottom gaps the
+   same 0.6rem by construction. */
 .copy-button {
-  padding-inline: 1rem;
-  border: 0;
-  border-left: 1px solid var(--line);
+  height: 2rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--line);
   background: var(--panel-raised);
   color: var(--muted);
   cursor: pointer;
@@ -216,6 +220,11 @@ button {
 
 .copy-button:hover {
   color: var(--accent);
+}
+
+.install-command .copy-button {
+  align-self: center;
+  margin: 0.6rem;
 }
 
 .hint {
@@ -370,10 +379,13 @@ h3::before {
   color: var(--subtle);
 }
 
-.custom-color-submit {
-  padding-inline: 1rem;
-  border: 0;
-  border-left: 1px solid var(--line);
+.custom-color-submit,
+.custom-color-clear {
+  height: 2rem;
+  align-self: center;
+  margin: 0.6rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--line);
   background: var(--panel-raised);
   color: var(--muted);
   cursor: pointer;
@@ -381,7 +393,8 @@ h3::before {
   text-transform: lowercase;
 }
 
-.custom-color-submit:hover {
+.custom-color-submit:hover,
+.custom-color-clear:hover {
   color: var(--accent);
 }
 
@@ -396,21 +409,47 @@ h3::before {
   outline-offset: 3px;
 }
 
-/* When the apply button holds focus its own ring is the accurate
-   one; drop the container ring where :has() is supported. */
-.custom-color:has(.custom-color-submit:focus-visible) {
+/* When the apply or clear button holds focus its own ring is the
+   accurate one; drop the container ring where :has() is supported. */
+.custom-color:has(.custom-color-submit:focus-visible),
+.custom-color:has(.custom-color-clear:focus-visible) {
   outline: none;
 }
 
+/* Bordered code blocks are a shell (border, background) around an
+   inner .block-scroll region that does the horizontal scrolling
+   with the same background. iOS paints a scroll container's
+   background on the moving content layer, so overscroll in any
+   direction reveals the identical shell color instead of the page
+   behind the block. */
 .readout {
   max-width: var(--measure);
   margin: 0 0 1.4rem;
-  padding: 1.1rem 1.2rem;
   border: 1px solid var(--line);
   background: var(--panel);
   font-size: 0.8rem;
   line-height: 2;
+}
+
+.block-scroll {
+  display: block;
+  margin: 0;
+  background: var(--panel);
   overflow-x: auto;
+  overflow-y: hidden;
+  white-space: pre;
+}
+
+.readout > .block-scroll {
+  padding: 1.1rem 1.2rem;
+}
+
+.conf-block > .block-scroll {
+  padding: 1.3rem 1.4rem;
+}
+
+.inline-code > .block-scroll {
+  padding: 1rem 1.2rem;
 }
 
 .readout .chip {
@@ -420,14 +459,13 @@ h3::before {
 }
 
 .conf-block {
+  position: relative;
   max-width: var(--measure);
   margin: 0 0 1rem;
-  padding: 1.3rem 1.4rem;
   border: 1px solid var(--line);
   background: var(--panel);
   font-size: 0.82rem;
   line-height: 2.1;
-  overflow-x: auto;
 }
 
 .conf-toggle {
@@ -444,45 +482,106 @@ h3::before {
   background: color-mix(in srgb, var(--accent), transparent 84%);
 }
 
-/* A conf value that opens a native dropdown. The visible text is a
-   plain span styled like .conf-toggle, so selecting and copying the
-   block reads exactly as rendered; the select itself is stretched
-   invisibly over it as the actual control and excluded from text
-   selection. Its focus ring lands on the wrapper, where it is
-   visible. */
+/* Appears in the conf block only while some value is non-default;
+   reads as one more comment line. */
+.conf-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--subtle);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.3em;
+}
+
+.conf-reset:hover {
+  color: var(--alert);
+}
+
+/* A conf value that opens a custom dropdown so each option can show
+   a color swatch. The button reads exactly like .conf-toggle (and
+   copies as plain text); the popup is position: fixed so the conf
+   block's horizontal scroll clipping cannot cut it off. */
 .conf-select-wrap {
   position: relative;
   display: inline-block;
 }
 
-.conf-select-wrap:hover {
-  background: color-mix(in srgb, var(--accent), transparent 84%);
-}
-
-.conf-select-wrap:focus-within {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-.conf-select-value {
+.conf-select-button {
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--accent);
+  cursor: pointer;
+  font: inherit;
   text-decoration: underline dotted;
   text-underline-offset: 0.3em;
 }
 
-.conf-select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  appearance: none;
-  background: none;
-  cursor: pointer;
-  font: inherit;
-  opacity: 0;
+.conf-select-button:hover,
+.conf-select-button[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--accent), transparent 84%);
+}
+
+/* Inherits the conf block's font metrics so the selected option's
+   text can sit exactly over the button text when the popup opens
+   aligned to it, native-select style. */
+.conf-select-popup {
+  position: fixed;
+  z-index: 30;
+  max-width: calc(100vw - 16px);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 25%);
+}
+
+/* The scrolling happens one level inside the bordered popup: iOS
+   paints a scroll container's background on the moving content
+   layer, so overscroll reveals the identical popup background
+   instead of the page behind it. contain keeps list overscroll
+   from rubber-banding the page. */
+.conf-select-scroll {
+  min-width: 18ch;
+  padding: 0.3rem 0;
+  background: var(--panel);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.conf-option-group {
+  padding: 0.15rem 0.7rem 0;
+  color: var(--subtle);
+  font-size: 0.72rem;
   user-select: none;
+}
+
+.conf-option {
+  display: flex;
+  align-items: center;
+  gap: 0.8ch;
+  padding: 0 0.7rem;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.conf-option.is-active {
+  background: color-mix(in srgb, var(--accent), transparent 84%);
+  color: var(--text);
+}
+
+.conf-option[aria-selected="true"] {
+  color: var(--accent);
+}
+
+/* The chip's color arrives as an inline background: an accent for
+   presets, the theme's background seed for backgrounds. */
+.conf-option-swatch {
+  width: 2.2ch;
+  height: 0.78em;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
 }
 
 .key-row {
@@ -562,17 +661,37 @@ h3::before {
   font-size: 0.78rem;
 }
 
+/* The shell must not preserve whitespace itself, or the markup's
+   newlines around the inner code render as blank lines. */
 .inline-code {
-  display: block;
+  position: relative;
   max-width: var(--measure);
   margin-bottom: 1rem;
-  padding: 1rem 1.2rem;
-  overflow-x: auto;
   border: 1px solid var(--line);
   background: var(--panel);
   font-size: 0.78rem;
   line-height: 1.9;
-  white-space: pre;
+}
+
+/* The copy button floats over the block rather than consuming a
+   rail, so the scroll region keeps the full width; long lines pass
+   underneath its solid background. Single-line snippets center it
+   vertically and give the right edge the same gap the centering
+   yields above and below; multi-line blocks pin it to the corner
+   with the chips' standard margin on both edges. */
+.inline-code-copy {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+}
+
+.inline-code-copy.is-corner,
+.conf-block > .copy-button {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  transform: none;
 }
 
 .see-also {
@@ -597,8 +716,14 @@ h3::before {
   right: 0;
   bottom: 0;
   left: 0;
-  overflow-x: auto;
   background: var(--bar);
+}
+
+/* Same shell-and-scroll split as .block-scroll, in the bar color. */
+.status-dock-scroll {
+  background: var(--bar);
+  overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: thin;
 }
 
@@ -619,25 +744,26 @@ h3::before {
   flex: 1;
 }
 
-.boot .status-segment {
+/* The bar boots in as one element, immediately. Per-segment
+   animations once staggered here, but the animation shorthand
+   silently reset the segment delays while the powerline dividers
+   kept theirs, so the dividers arrived visibly late. */
+.boot {
   animation: segment-in 500ms backwards cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .status-host {
   background: var(--accent);
   color: var(--ink);
-  animation-delay: 1.3s;
 }
 
 .status-session {
   background: var(--panel-raised);
-  animation-delay: 1.35s;
 }
 
 .status-prefix {
   background: var(--bar);
   color: var(--bar);
-  animation-delay: 1.4s;
 }
 
 .status-prefix.is-active {
@@ -668,7 +794,6 @@ h3::before {
 .status-windows {
   display: flex;
   align-items: stretch;
-  animation-delay: 1.45s;
 }
 
 .status-window {
@@ -706,7 +831,6 @@ h3::before {
   display: flex;
   align-items: center;
   background: var(--panel-raised);
-  animation-delay: 1.5s;
 }
 
 .metric-dot {
@@ -716,7 +840,6 @@ h3::before {
 .status-tail {
   background: var(--accent);
   color: var(--ink);
-  animation-delay: 1.55s;
 }
 
 .status-tail.is-sync {
@@ -730,11 +853,6 @@ h3::before {
   display: flex;
   flex: 0 0 auto;
   height: 100%;
-}
-
-.boot .powerline-divider {
-  animation: segment-in 500ms 1.35s backwards
-    cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .powerline-divider.is-reverse {
@@ -805,6 +923,7 @@ h3::before {
   max-height: 100%;
   padding: 1.1rem 1.2rem 1.2rem;
   overflow: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--line);
   background: var(--canvas);
   outline: none;

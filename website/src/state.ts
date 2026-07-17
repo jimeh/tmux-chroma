@@ -5,6 +5,7 @@ import {
   namedBackgroundSeed,
   presetAccent,
   presetForHost,
+  presets,
   seededPreset,
   type Preset,
   type ThemeMode,
@@ -24,34 +25,45 @@ export const windows: PageWindow[] = [
   { id: 'install', index: 4 },
 ];
 
-// The page mirrors @chroma_background: 'dark' (the default),
-// 'light', a named theme background, or a custom #rrggbb terminal
-// background classified by luma like the plugin. The choice
-// persists, and the same resolution runs in an inline <head> script
-// so the first paint is already themed; keep the two in sync.
+// Every value the conf block renders (plus the auto-host preview)
+// persists across visits under a chroma-* key, stored only while it
+// differs from its default — so reset is just clearing the keys.
+// The background resolution also runs in an inline <head> script so
+// the first paint is already themed; keep the two in sync.
 const backgroundStorageKey = 'chroma-background';
 
-function storedBackground(): string {
+function storedValue(key: string): string {
   try {
-    const value = localStorage.getItem(backgroundStorageKey) ?? '';
-    return value === 'light' || value === 'dark' ||
-        namedBackgroundSeed(value) || normalizeHex(value)
-      ? value
-      : 'dark';
+    return localStorage.getItem(key) ?? '';
   } catch (_error) {
-    return 'dark';
+    return '';
   }
+}
+
+function persistValue(key: string, value: string | null): void {
+  try {
+    if (value === null) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, value);
+    }
+  } catch (_error) {
+    // Private browsing without storage: choices last the visit.
+  }
+}
+
+function storedBackground(): string {
+  const value = storedValue(backgroundStorageKey);
+  return value === 'light' || value === 'dark' ||
+      namedBackgroundSeed(value) || normalizeHex(value)
+    ? value
+    : 'dark';
 }
 
 export const background = signal<string>(storedBackground());
 
 export function setBackground(next: string): void {
   background.value = next;
-  try {
-    localStorage.setItem(backgroundStorageKey, next);
-  } catch (_error) {
-    // Private browsing without storage: the choice lasts the visit.
-  }
 }
 
 export const backgroundSeed = computed<string | null>(() => {
@@ -115,20 +127,87 @@ export const barColor = computed(() => (
   surfaces.value?.bar ?? anchors[theme.value].bg
 ));
 
-export const preset = signal<Preset>(seededPreset());
-export const auto = signal(true);
-export const powerline = signal(false);
-export const showCpu = signal(true);
-export const showMemory = signal(true);
-export const showDisk = signal(false);
+// A persisted accent choice survives reloads: a preset name, a
+// custom #rrggbb, or the auto default (seeded by a persisted host
+// when one was typed).
+function initialAccent(): { auto: boolean; preset: Preset } {
+  const stored = storedValue('chroma-preset');
+  const named = presets.find((item) => item.name === stored);
+  if (named) {
+    return { auto: false, preset: named };
+  }
+  const hex = normalizeHex(stored);
+  if (hex) {
+    return { auto: false, preset: { name: 'custom', base: hex } };
+  }
+  const host = storedValue('chroma-host').trim();
+  return { auto: true, preset: host ? presetForHost(host) : seededPreset() };
+}
+
+const initial = initialAccent();
+export const preset = signal<Preset>(initial.preset);
+export const auto = signal(initial.auto);
+export const powerline = signal(storedValue('chroma-powerline') === 'on');
+export const showCpu = signal(storedValue('chroma-show-cpu') !== 'off');
+export const showMemory = signal(
+  storedValue('chroma-show-memory') !== 'off'
+);
+export const showDisk = signal(storedValue('chroma-show-disk') === 'on');
 export const prefix = signal(false);
 export const sync = signal(false);
 export const currentWindow = signal(windows[0].id);
 export const lastWindow = signal<string | null>(null);
 export const galleryOpen = signal(false);
 export const booting = signal(true);
-export const autoHost = signal('');
+export const autoHost = signal(storedValue('chroma-host'));
 export const clockText = signal(formatClock());
+
+// Persist each conf value only while it differs from its default.
+effect(() => {
+  persistValue(backgroundStorageKey,
+    background.value === 'dark' ? null : background.value);
+});
+effect(() => {
+  persistValue('chroma-preset',
+    auto.value
+      ? null
+      : preset.value.name === 'custom'
+        ? preset.value.base
+        : preset.value.name);
+});
+effect(() => {
+  persistValue('chroma-host', autoHost.value.trim() || null);
+});
+effect(() => {
+  persistValue('chroma-powerline', powerline.value ? 'on' : null);
+});
+effect(() => {
+  persistValue('chroma-show-cpu', showCpu.value ? null : 'off');
+});
+effect(() => {
+  persistValue('chroma-show-memory', showMemory.value ? null : 'off');
+});
+effect(() => {
+  persistValue('chroma-show-disk', showDisk.value ? 'on' : null);
+});
+
+// True while any persisted conf value differs from its default;
+// the conf block offers a reset link only then.
+export const configDirty = computed(() => (
+  background.value !== 'dark' || !auto.value ||
+  autoHost.value.trim() !== '' || powerline.value ||
+  !showCpu.value || !showMemory.value || showDisk.value
+));
+
+export function resetConfig(): void {
+  background.value = 'dark';
+  powerline.value = false;
+  showCpu.value = true;
+  showMemory.value = true;
+  showDisk.value = false;
+  autoHost.value = '';
+  selectAuto();
+}
 
 // The accent the current mode resolves to: the light column in
 // light mode, base otherwise, exactly like the plugin.

@@ -9,6 +9,7 @@ import { Dock } from './components/Dock.tsx';
 import { Gallery } from './components/Gallery.tsx';
 import {
   AutoHostPreview,
+  CopyButton,
   CustomColor,
   InstallCommand,
   PresetLine,
@@ -93,6 +94,30 @@ mount(<CustomColor />, 'custom-color');
 mount(<ConfBlock />, 'conf-block');
 mount(<CustomBackground />, 'custom-background');
 mount(<KeyRow />, 'key-row');
+
+// The install snippets stay static HTML so they render without
+// JavaScript; their copy buttons are progressive enhancement,
+// mounted beside each code region.
+document.querySelectorAll('.inline-code').forEach((block) => {
+  const code = block.querySelector('.block-scroll');
+  if (!code) {
+    return;
+  }
+  const holder = document.createElement('span');
+  // Single-line snippets center the button vertically (equal top
+  // and bottom margins); multi-line ones pin it to the top corner.
+  const multiline = (code.textContent ?? '').trim().includes('\n');
+  holder.className = 'inline-code-copy' + (multiline ? ' is-corner' : '');
+  block.appendChild(holder);
+  render(
+    <CopyButton
+      copyLabel="Copy this snippet"
+      getText={() => code.textContent ?? ''}
+      getElement={() => code}
+    />,
+    holder
+  );
+});
 
 // Prefix easter egg: Ctrl-b or Ctrl-q, then w (choose-window),
 // opens the preset gallery. Plain q only closes when not typing

@@ -14,8 +14,92 @@ import {
   theme,
 } from '../state.ts';
 
-// A one-line config snippet with a copy button; falls back to
-// selecting the text where the clipboard API is unavailable.
+// The clipboard API needs a secure context; where it is missing or
+// refuses, copy through a transient textarea and execCommand, which
+// works everywhere a paste target exists.
+function fallbackCopy(text: string): boolean {
+  const active = document.activeElement;
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.position = 'fixed';
+  area.style.top = '0';
+  area.style.opacity = '0';
+  document.body.appendChild(area);
+  area.select();
+  let copied = false;
+  try {
+    copied = document.execCommand('copy');
+  } catch (_error) {
+    copied = false;
+  }
+  area.remove();
+  if (active instanceof HTMLElement) {
+    active.focus();
+  }
+  return copied;
+}
+
+// A copy-to-clipboard tail button; as a last resort it selects the
+// source element so a manual copy still works.
+export function CopyButton({
+  copyLabel,
+  getText,
+  getElement,
+}: {
+  copyLabel: string;
+  getText: () => string;
+  getElement?: () => Element | null;
+}) {
+  const timerRef = useRef<number | undefined>(undefined);
+  const [label, setLabel] = useState('copy');
+
+  async function copy(): Promise<void> {
+    const text = getText();
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    } catch (_error) {
+      copied = false;
+    }
+    if (!copied) {
+      copied = fallbackCopy(text);
+    }
+    if (copied) {
+      setLabel('done');
+    } else {
+      const element = getElement?.();
+      if (element) {
+        setLabel('select');
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      } else {
+        setLabel('failed');
+      }
+    }
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
+      setLabel('copy');
+    }, 1600);
+  }
+
+  return (
+    <button
+      class="copy-button"
+      type="button"
+      aria-label={copyLabel}
+      onClick={copy}
+    >
+      {label}
+    </button>
+  );
+}
+
+// A one-line config snippet with a copy button.
 export function InstallCommand({
   text,
   copyLabel,
@@ -26,44 +110,16 @@ export function InstallCommand({
   class?: string;
 }) {
   const codeRef = useRef<HTMLElement>(null);
-  const timerRef = useRef<number | undefined>(undefined);
-  const [label, setLabel] = useState('copy');
-
-  async function copy(): Promise<void> {
-    const code = codeRef.current;
-    if (!code) {
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(code.textContent ?? '');
-      setLabel('done');
-    } catch (_error) {
-      setLabel('select');
-      const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(code);
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-    }
-    window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => {
-      setLabel('copy');
-    }, 1600);
-  }
-
   return (
     <div
       class={'install-command' + (extraClass ? ' ' + extraClass : '')}
     >
       <code ref={codeRef}>{text}</code>
-      <button
-        class="copy-button"
-        type="button"
-        aria-label={copyLabel}
-        onClick={copy}
-      >
-        {label}
-      </button>
+      <CopyButton
+        copyLabel={copyLabel}
+        getText={() => codeRef.current?.textContent ?? ''}
+        getElement={() => codeRef.current}
+      />
     </div>
   );
 }
@@ -146,15 +202,17 @@ export function Readout() {
     ['ink', mode.ink],
   ];
   return (
-    <pre class="readout" aria-live="polite">
-      {'name      ' + name}
-      {rows.map(([label, value]) => (
-        <>
-          {'\n' + label.padEnd(10) + value + '  '}
-          <span class="chip" style={{ background: value }} />
-        </>
-      ))}
-    </pre>
+    <div class="readout">
+      <pre class="block-scroll" aria-live="polite">
+        {'name      ' + name}
+        {rows.map(([label, value]) => (
+          <>
+            {'\n' + label.padEnd(10) + value + '  '}
+            <span class="chip" style={{ background: value }} />
+          </>
+        ))}
+      </pre>
+    </div>
   );
 }
 
@@ -184,6 +242,21 @@ export function AutoHostPreview() {
           selectAuto();
         }}
       />
+      {autoHost.value
+        ? (
+          <button
+            class="custom-color-clear"
+            type="button"
+            aria-label="Clear the hostname"
+            onClick={() => {
+              autoHost.value = '';
+              selectAuto();
+            }}
+          >
+            clear
+          </button>
+        )
+        : null}
     </div>
   );
 }

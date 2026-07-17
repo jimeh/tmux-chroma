@@ -58,15 +58,19 @@ export function Dock() {
   // this "session's" machine, so the bar shows it like #H would.
   const host = autoHost.value.trim() || 'noct';
 
+  // The bar scrolls in an inner region sharing the dock background,
+  // so iOS overscroll cannot reveal the page behind the fixed dock.
   return (
-    <StatusBar
-      class={booting.value ? 'boot' : ''}
-      host={host}
-      powerline={powerline.value}
-      prefixActive={prefix.value}
-      syncActive={sync.value}
-      metrics={metrics}
-      windows={items}
-    />
+    <div class="status-dock-scroll">
+      <StatusBar
+        class={booting.value ? 'boot' : ''}
+        host={host}
+        powerline={powerline.value}
+        prefixActive={prefix.value}
+        syncActive={sync.value}
+        metrics={metrics}
+        windows={items}
+      />
+    </div>
   );
 }

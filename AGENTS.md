@@ -97,6 +97,18 @@ bun run build
   origin.
 - Preserve keyboard focus, mobile overflow handling, and reduced-motion
   behavior when changing the site.
+- iOS Safari paints a scroll container's background on the moving
+  content layer, so rubber-band overscroll reveals whatever sits
+  behind the element. Every scrolling region therefore lives inside
+  a shell that carries the same background: `.block-scroll` inside
+  the bordered code blocks, `.status-dock-scroll` inside the dock,
+  and `.conf-select-scroll` inside the dropdown popup. Keep the
+  shells non-scrolling.
+- Conf-block values and the auto-host preview persist in
+  localStorage under `chroma-*` keys, written only while
+  non-default; the conf block shows a `# reset to defaults` line
+  while anything differs. Runtime signals (prefix, sync) stay
+  session-only by design.
 - The site hides a preset gallery behind the tmux prefix: Ctrl-b or
   Ctrl-q, then w (choose-window). It renders one status line per accent
   and is used to screenshot the palette for the README. Keep it working
