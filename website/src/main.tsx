@@ -1,8 +1,8 @@
 import { effect } from '@preact/signals';
-import { render } from 'preact';
-import { ConfBlock, KeyRow } from './components/Config.jsx';
-import { Dock } from './components/Dock.jsx';
-import { Gallery } from './components/Gallery.jsx';
+import { render, type ComponentChild } from 'preact';
+import { ConfBlock, KeyRow } from './components/Config.tsx';
+import { Dock } from './components/Dock.tsx';
+import { Gallery } from './components/Gallery.tsx';
 import {
   AutoHostPreview,
   CustomColor,
@@ -10,7 +10,7 @@ import {
   PresetLine,
   Readout,
   SwatchGrid,
-} from './components/Palette.jsx';
+} from './components/Palette.tsx';
 import {
   accentAlt,
   armPrefix,
@@ -23,7 +23,7 @@ import {
   preset,
   tickClock,
   windows,
-} from './state.js';
+} from './state.ts';
 import './style.css';
 
 // Re-theming is page-wide: the accent pair lives on :root so the CSS
@@ -35,11 +35,17 @@ effect(() => {
   root.style.setProperty('--accent-alt', accentAlt.value);
 });
 
-function mount(component, id) {
-  render(component, document.getElementById(id));
+function mount(component: ComponentChild, id: string): void {
+  const target = document.getElementById(id);
+  if (target) {
+    render(component, target);
+  }
 }
 
-render(<Dock />, document.querySelector('.status-dock'));
+const dock = document.querySelector('.status-dock');
+if (dock) {
+  render(<Dock />, dock);
+}
 mount(<Gallery />, 'gallery');
 mount(
   <InstallCommand
@@ -60,8 +66,8 @@ mount(<KeyRow />, 'key-row');
 // opens the preset gallery. Plain q only closes when not typing
 // into a field; Escape closes regardless, like any dialog.
 document.addEventListener('keydown', (event) => {
-  const typing = Boolean(event.target.closest &&
-    event.target.closest('input, textarea, select'));
+  const target = event.target instanceof Element ? event.target : null;
+  const typing = Boolean(target?.closest('input, textarea, select'));
   if (galleryOpen.value && (event.key === 'Escape' ||
       (event.key === 'q' && !typing && !event.ctrlKey &&
         !event.metaKey && !event.altKey))) {
@@ -94,10 +100,10 @@ document.addEventListener('keydown', (event) => {
 // both directions, unlike observer enter events, which never fire
 // for sections already inside the observed band on load.
 const sectionElements = Array.from(
-  document.querySelectorAll('[data-window]')
+  document.querySelectorAll<HTMLElement>('[data-window]')
 );
 
-function currentWindowId() {
+function currentWindowId(): string {
   if (window.scrollY <= 160) {
     return windows[0].id;
   }
@@ -105,14 +111,14 @@ function currentWindowId() {
   let id = windows[0].id;
   sectionElements.forEach((section) => {
     const top = section.getBoundingClientRect().top + window.scrollY;
-    if (top <= middle) {
+    if (top <= middle && section.dataset.window) {
       id = section.dataset.window;
     }
   });
   return id;
 }
 
-function updateCurrentWindow() {
+function updateCurrentWindow(): void {
   const id = currentWindowId();
   if (id !== currentWindow.value) {
     lastWindow.value = currentWindow.value;

@@ -6,11 +6,12 @@ Chroma is a dependency-light tmux status theme for macOS and Linux.
 
 - `chroma.tmux`: executable TPM entrypoint and theme implementation.
 - `scripts/`: bundled CPU, memory, and disk status helpers.
-- `website/`: Vite + Preact source for the GitHub Pages site and
-  interactive preview; terminal-session layout where the fixed status-line
-  dock doubles as page navigation. Static prose lives in
+- `website/`: Vite + Preact TypeScript source for the GitHub Pages site
+  and interactive preview; terminal-session layout where the fixed
+  status-line dock doubles as page navigation. Static prose lives in
   `website/index.html`; interactive islands mount from
-  `website/src/main.jsx` and share state through `@preact/signals`.
+  `website/src/main.tsx` and share state through `@preact/signals`. Bun
+  is the package manager and script runner (`bun install`, `bun run`).
 - `test/`: shell and live tmux regression tests.
 
 The site is built and deployed by `.github/workflows/pages.yml`; the
@@ -20,10 +21,11 @@ add build artifacts or vendored dependencies to it.
 
 ## Commands
 
-Tool versions (node, shellcheck, shfmt, markdownlint-cli2, html-validate)
-are pinned in `mise.toml` and installed with `mise install`; CI uses the
-same pins through `jdx/mise-action`. Bump versions there, not in the
-Makefile or workflows.
+Tool versions (bun, shellcheck, shfmt) are pinned in `mise.toml` and
+installed with `mise install`; CI uses the same pins through
+`jdx/mise-action`. markdownlint-cli2 and html-validate are pinned in the
+Makefile and run through `bunx --bun`. There is no Node dependency; bun
+is the only JS runtime, including for `test/palette-sync.sh`.
 
 ```sh
 mise install
@@ -36,9 +38,10 @@ make check
 Website (from `website/`):
 
 ```sh
-npm ci
-npm run dev
-npm run build
+bun install
+bun run dev
+bun run typecheck
+bun run build
 ```
 
 ## Conventions
@@ -53,16 +56,18 @@ npm run build
   preserve divider glyphs in a plain `C` locale.
 - The website duplicates preset names, base colors, the `base_alt` mix
   formula, and the POSIX `cksum` hash from `chroma.tmux`
-  (`website/src/presets.js`, `website/src/state.js`). Update them together
+  (`website/src/presets.ts`, `website/src/state.ts`). Update them together
   and run `make test`; `test/palette-sync.sh` diffs the palettes and runs
   the JS cksum port against `cksum(1)`.
 - Keep website dependencies minimal: `preact` and `@preact/signals` at
-  runtime, `vite` for the build, nothing else. Prose stays as static HTML
-  in `website/index.html` so content renders without JavaScript;
+  runtime; `vite`, `@preact/preset-vite`, and `typescript` for the
+  build, nothing else. Source is strict TypeScript (`bun run
+  typecheck` must pass). Prose stays as static HTML in
+  `website/index.html` so content renders without JavaScript;
   components own only the interactive islands.
 - The preview status bar mirrors tmux cell geometry: segment spacing comes
   from literal space characters in the format strings under
-  `white-space: pre` (`website/src/components/StatusBar.jsx`), never CSS
+  `white-space: pre` (`website/src/components/StatusBar.tsx`), never CSS
   padding. The fixed dock scrolls horizontally instead of wrapping on
   narrow viewports. `test/site.sh` enforces the no-padding rule.
 - One `StatusBar` component renders both the dock and the gallery bars;

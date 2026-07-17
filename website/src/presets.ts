@@ -1,9 +1,14 @@
-import { colorHue } from './color.js';
+import { colorHue } from './color.ts';
+
+export interface Preset {
+  name: string;
+  base: string;
+}
 
 // Preset names, base colors, and the base_alt mix formula are
 // duplicated from chroma.tmux. Update them together and run
 // `make test`; test/palette-sync.sh diffs the two lists.
-export const presets = [
+export const presets: Preset[] = [
   { name: 'blue', base: '#8aadf4' },
   { name: 'peach', base: '#f5a97f' },
   { name: 'teal', base: '#8bd5ca' },
@@ -30,15 +35,15 @@ export const presets = [
 
 // The swatch grid and gallery show presets in hue order, not the
 // hash-index order the plugin stores them in.
-export const displayPresets = [...presets].sort((first, second) => (
-  colorHue(first.base) - colorHue(second.base)
-));
+export const displayPresets: Preset[] = [...presets].sort(
+  (first, second) => colorHue(first.base) - colorHue(second.base)
+);
 
 // Mirrors seeded_preset in chroma.tmux: hash a seed, index into the
 // preset list. Browser traits stand in for the hostname, and the
 // date and hour are folded in so the default accent differs between
 // visitors and drifts over the day.
-export function seededPreset() {
+export function seededPreset(): Preset {
   const now = new Date();
   const seed = [
     navigator.userAgent,
@@ -64,10 +69,10 @@ export function seededPreset() {
 // the cksum call in seeded_preset in chroma.tmux exactly, so a
 // hostname typed into the auto preview lands on the same preset
 // the plugin picks.
-export function cksum(text) {
+export function cksum(text: string): number {
   const bytes = new TextEncoder().encode(text);
   let crc = 0;
-  const feed = (byte) => {
+  const feed = (byte: number): void => {
     crc = (crc ^ (byte << 24)) >>> 0;
     for (let bit = 0; bit < 8; bit += 1) {
       crc = crc & 0x80000000
@@ -84,7 +89,7 @@ export function cksum(text) {
 
 // Mirrors seeded_preset: hash the short hostname (up to the
 // first dot, like hostname -s) and index into the preset list.
-export function presetForHost(host) {
+export function presetForHost(host: string): Preset {
   const short = host.split('.')[0];
   return presets[cksum(short) % presets.length];
 }

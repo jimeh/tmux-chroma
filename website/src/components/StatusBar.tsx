@@ -1,10 +1,34 @@
-import { clockText } from '../state.js';
+import type { JSX } from 'preact';
+import type { Preset } from '../presets.ts';
+import { clockText } from '../state.ts';
 
 // Segment spacing comes from literal space characters in the strings
 // below (white-space: pre), never CSS padding, mirroring tmux cell
 // geometry. Keep colors, spaces, and glyphs in sync with chroma.tmux.
 
-function DividerGlyph({ direction }) {
+export interface StatusWindowItem {
+  key: string;
+  text: string;
+  nameSuffix?: string;
+  flag?: string;
+  alert?: boolean;
+  current?: boolean;
+  onSelect?: () => void;
+}
+
+export interface StatusBarProps {
+  host: string;
+  preset: Preset;
+  powerline: boolean;
+  prefixActive: boolean;
+  syncActive: boolean;
+  metrics: string[];
+  windows: StatusWindowItem[];
+  class?: string;
+  style?: JSX.CSSProperties;
+}
+
+function DividerGlyph({ direction }: { direction: 'forward' | 'reverse' }) {
   // The triangle keeps its full-height base on the viewport edge
   // and extends a rectangle past it, clipped away. Painted exactly
   // on the edge, the base antialiases against the glyph background
@@ -29,11 +53,19 @@ function DividerGlyph({ direction }) {
 
 // Powerline dividers occupy three character cells: a space in the
 // leading segment's color, the glyph, a space in the trailing one.
-function Divider({ name, direction, tailColor }) {
+function Divider({
+  name,
+  direction,
+  tailColor,
+}: {
+  name: string;
+  direction: 'forward' | 'reverse';
+  tailColor?: string;
+}) {
   return (
     <span
       class={'powerline-divider is-' + direction + ' ' + name}
-      style={tailColor ? { '--tail-color': tailColor } : null}
+      style={tailColor ? { '--tail-color': tailColor } : undefined}
     >
       <span class="powerline-space is-before">{' '}</span>
       <DividerGlyph direction={direction} />
@@ -44,7 +76,7 @@ function Divider({ name, direction, tailColor }) {
 
 // One window entry; the dock passes onSelect and renders buttons,
 // the gallery leaves it unset and renders inert spans.
-function WindowItem({ item }) {
+function WindowItem({ item }: { item: StatusWindowItem }) {
   const className = 'status-window' + (item.current ? ' is-current' : '');
   const content = (
     <>
@@ -92,7 +124,7 @@ export function StatusBar({
   windows,
   class: extraClass,
   style,
-}) {
+}: StatusBarProps) {
   const tail = syncActive ? 'SYNC' : clockText.value;
   const tailColor = syncActive ? '#ed8796' : preset.base;
   return (

@@ -12,7 +12,7 @@ if [ -z "$shell_presets" ]; then
   exit 1
 fi
 
-site="$ROOT/website/src/presets.js"
+site="$ROOT/website/src/presets.ts"
 site_presets="$(
   sed -n "s/^[[:space:]]*{ name: '\([a-z][a-z]*\)', base: '\(#[0-9a-fA-F]*\)' },/\1=\2/p" "$site"
 )"
@@ -29,7 +29,7 @@ if [ "$shell_presets" != "$site_presets" ]; then
   exit 1
 fi
 
-site_state="$ROOT/website/src/state.js"
+site_state="$ROOT/website/src/state.ts"
 if ! sed -n "/mixColor(preset.value.base, '#15181d', 60)/p" \
   "$site_state" | read -r _; then
   printf '%s base_alt mix formula changed\n' "$site_state" >&2
@@ -48,7 +48,7 @@ fi
 # preset as seeded_preset in chroma.tmux. Run the extracted JS
 # implementation against the system cksum the plugin actually calls.
 js_cksum="$(
-  sed -n '/^export function cksum(text) {$/,/^}$/p' "$site" |
+  sed -n '/^export function cksum(text: string): number {$/,/^}$/p' "$site" |
     sed 's/^export //'
 )"
 if [ -z "$js_cksum" ]; then
@@ -64,7 +64,7 @@ shell_sums="$(
 )"
 # shellcheck disable=SC2086 # word splitting passes one host per arg
 js_sums="$(
-  node -e "$js_cksum
+  bun -e "$js_cksum
 for (const host of process.argv.slice(1)) {
   console.log(cksum(host));
 }" $sample_hosts

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'preact/hooks';
-import { normalizeHex } from '../color.js';
-import { displayPresets } from '../presets.js';
+import { normalizeHex } from '../color.ts';
+import { displayPresets } from '../presets.ts';
 import {
   accentAlt,
   auto,
@@ -9,26 +9,38 @@ import {
   preset,
   selectAuto,
   selectPreset,
-} from '../state.js';
+} from '../state.ts';
 
 // A one-line config snippet with a copy button; falls back to
 // selecting the text where the clipboard API is unavailable.
-export function InstallCommand({ text, copyLabel, class: extraClass }) {
-  const codeRef = useRef(null);
-  const timerRef = useRef(null);
+export function InstallCommand({
+  text,
+  copyLabel,
+  class: extraClass,
+}: {
+  text: string;
+  copyLabel: string;
+  class?: string;
+}) {
+  const codeRef = useRef<HTMLElement>(null);
+  const timerRef = useRef<number | undefined>(undefined);
   const [label, setLabel] = useState('copy');
 
-  async function copy() {
+  async function copy(): Promise<void> {
+    const code = codeRef.current;
+    if (!code) {
+      return;
+    }
     try {
-      await navigator.clipboard.writeText(codeRef.current.textContent);
+      await navigator.clipboard.writeText(code.textContent ?? '');
       setLabel('done');
     } catch (_error) {
       setLabel('select');
       const selection = window.getSelection();
       const range = document.createRange();
-      range.selectNodeContents(codeRef.current);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      range.selectNodeContents(code);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
     }
     window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => {
@@ -55,7 +67,7 @@ export function InstallCommand({ text, copyLabel, class: extraClass }) {
 
 // The config snippets show what ~/.tmux.conf would say: 'auto'
 // stays 'auto' even while a typed hostname previews its result.
-export function presetConfig() {
+export function presetConfig(): { option: string; value: string } {
   const current = preset.value;
   const custom = current.name === 'custom';
   return {
@@ -157,28 +169,32 @@ export function AutoHostPreview() {
 }
 
 export function CustomColor() {
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState('');
   const [invalid, setInvalid] = useState(false);
   const customBase = normalizeHex(value);
 
-  function submit(event) {
+  function submit(event: Event): void {
     event.preventDefault();
+    const input = inputRef.current;
+    if (!input) {
+      return;
+    }
     // Read the input directly: a submit can land before a pending
     // re-render syncs the value state.
-    const customBase = normalizeHex(inputRef.current.value);
-    if (!customBase) {
-      inputRef.current.setCustomValidity(
+    const submitted = normalizeHex(input.value);
+    if (!submitted) {
+      input.setCustomValidity(
         'Enter a six-digit hex color, such as #83baee.'
       );
       setInvalid(true);
-      inputRef.current.reportValidity();
+      input.reportValidity();
       return;
     }
-    inputRef.current.setCustomValidity('');
+    input.setCustomValidity('');
     setInvalid(false);
-    setValue(customBase);
-    selectPreset({ name: 'custom', base: customBase });
+    setValue(submitted);
+    selectPreset({ name: 'custom', base: submitted });
   }
 
   return (

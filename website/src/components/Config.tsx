@@ -1,3 +1,4 @@
+import type { Signal } from '@preact/signals';
 import {
   powerline,
   prefix,
@@ -5,10 +6,10 @@ import {
   showDisk,
   showMemory,
   sync,
-} from '../state.js';
-import { presetConfig } from './Palette.jsx';
+} from '../state.ts';
+import { presetConfig } from './Palette.tsx';
 
-function ConfToggle({ option }) {
+function ConfToggle({ option }: { option: Signal<boolean> }) {
   const on = option.value;
   return (
     <button

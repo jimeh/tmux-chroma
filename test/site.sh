@@ -5,14 +5,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HTML="$ROOT/website/index.html"
 CSS="$ROOT/website/src/style.css"
-MAIN="$ROOT/website/src/main.jsx"
-PRESETS="$ROOT/website/src/presets.js"
-COLOR="$ROOT/website/src/color.js"
-STATE="$ROOT/website/src/state.js"
-STATUSBAR="$ROOT/website/src/components/StatusBar.jsx"
-DOCK="$ROOT/website/src/components/Dock.jsx"
-PALETTE="$ROOT/website/src/components/Palette.jsx"
-GALLERY="$ROOT/website/src/components/Gallery.jsx"
+MAIN="$ROOT/website/src/main.tsx"
+PRESETS="$ROOT/website/src/presets.ts"
+COLOR="$ROOT/website/src/color.ts"
+STATE="$ROOT/website/src/state.ts"
+STATUSBAR="$ROOT/website/src/components/StatusBar.tsx"
+DOCK="$ROOT/website/src/components/Dock.tsx"
+PALETTE="$ROOT/website/src/components/Palette.tsx"
+GALLERY="$ROOT/website/src/components/Gallery.tsx"
 
 fail() {
   printf 'site: %s\n' "$1" >&2
@@ -170,9 +170,9 @@ assert_file_contains "$PALETTE" 'aria-label="Accent presets"' \
 assert_file_contains "$PALETTE" 'id="custom-color-input"' \
   'site must preserve preview and palette controls'
 assert_file_contains "$PALETTE" \
-  "selectPreset({ name: 'custom', base: customBase })" \
+  "selectPreset({ name: 'custom', base: submitted })" \
   'site must preserve preview and palette controls'
-assert_file_contains "$COLOR" 'function normalizeHex(value)' \
+assert_file_contains "$COLOR" 'function normalizeHex(value: string)' \
   'site must preserve preview and palette controls'
 assert_file_contains "$PRESETS" \
   'colorHue(first.base) - colorHue(second.base)' \
@@ -188,15 +188,15 @@ for fragment in \
   assert_file_contains "$PRESETS" "$fragment" \
     'default accent must be seeded from browser traits and time'
 done
-assert_file_contains "$STATE" 'signal(seededPreset())' \
+assert_file_contains "$STATE" 'signal<Preset>(seededPreset())' \
   'default accent must be seeded from browser traits and time'
 
 # The default is the auto preset: browser-seeded on this page, with a
 # hostname input that reuses the plugin's exact cksum hash to preview
 # the accent any host would get.
 for fragment in \
-  'function cksum(text)' \
-  'function presetForHost(host)'; do
+  'function cksum(text: string)' \
+  'function presetForHost(host: string)'; do
   assert_file_contains "$PRESETS" "$fragment" \
     'auto preset must hash hostnames like the plugin'
 done

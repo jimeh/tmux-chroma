@@ -1,7 +1,7 @@
 SHELL_FILES := chroma.tmux scripts/cpu scripts/disk scripts/memory \
 	test/palette-sync.sh test/site.sh test/smoke.sh
-MARKDOWNLINT ?= markdownlint-cli2
-HTMLVALIDATE ?= html-validate
+MARKDOWNLINT ?= bunx --bun markdownlint-cli2@0.23.0
+HTMLVALIDATE ?= bunx --bun html-validate@10.3.0
 HTML_FILES := website/index.html
 
 .PHONY: format

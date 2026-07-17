@@ -10,14 +10,14 @@ import {
   showMemory,
   sync,
   windows,
-} from '../state.js';
-import { StatusBar } from './StatusBar.jsx';
+} from '../state.ts';
+import { StatusBar, type StatusWindowItem } from './StatusBar.tsx';
 
 const reducedMotion = window.matchMedia(
   '(prefers-reduced-motion: reduce)'
 );
 
-function windowFlag(id) {
+function windowFlag(id: string): string {
   if (id === currentWindow.value) {
     return '*';
   }
@@ -30,7 +30,7 @@ function windowFlag(id) {
 // The fixed dock at the bottom of the page: a live Chroma status
 // line whose window list doubles as section navigation.
 export function Dock() {
-  const metrics = [];
+  const metrics: string[] = [];
   if (showCpu.value) {
     metrics.push('CPU 12%');
   }
@@ -41,14 +41,14 @@ export function Dock() {
     metrics.push('/ 238G');
   }
 
-  const items = windows.map((item) => ({
+  const items: StatusWindowItem[] = windows.map((item) => ({
     key: item.id,
     text: String(item.index),
     nameSuffix: ':' + item.id,
     flag: windowFlag(item.id),
     current: item.id === currentWindow.value,
     onSelect: () => {
-      document.getElementById(item.id).scrollIntoView({
+      document.getElementById(item.id)?.scrollIntoView({
         behavior: reducedMotion.matches ? 'auto' : 'smooth',
       });
     },

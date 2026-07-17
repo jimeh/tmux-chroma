@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'preact/hooks';
-import { mixColor } from '../color.js';
-import { displayPresets } from '../presets.js';
-import { galleryOpen, powerline } from '../state.js';
-import { StatusBar } from './StatusBar.jsx';
+import { mixColor } from '../color.ts';
+import { displayPresets } from '../presets.ts';
+import { galleryOpen, powerline } from '../state.ts';
+import { StatusBar, type StatusWindowItem } from './StatusBar.tsx';
 
 // Easter egg: Ctrl-b or Ctrl-q arms the tmux prefix (the dock's ∙
 // indicator lights up), then w — choose-window — opens a gallery
 // with one status line per accent preset, used to screenshot the
 // palette for the README. The window list reuses the tab content
 // from the original docs preview.
-const galleryWindows = [
+const galleryWindows: StatusWindowItem[] = [
   { key: 'zsh', text: '1:zsh' },
   { key: 'vim', text: '2:vim', flag: '*', current: true },
   { key: 'ssh', text: '3:ssh', flag: '#' },
@@ -19,7 +19,7 @@ const galleryWindows = [
 
 export function Gallery() {
   const open = galleryOpen.value;
-  const popupRef = useRef(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   // aria-modal promises the page behind the overlay is unreachable;
   // inert makes it true by removing it from tab order and focus.
@@ -32,17 +32,17 @@ export function Gallery() {
     const regions = [
       document.querySelector('main'),
       document.querySelector('.status-dock'),
-    ];
+    ].filter((region): region is HTMLElement => region instanceof HTMLElement);
     const returnFocus = document.activeElement;
     regions.forEach((region) => {
       region.inert = true;
     });
-    popupRef.current.focus();
+    popupRef.current?.focus();
     return () => {
       regions.forEach((region) => {
         region.inert = false;
       });
-      if (returnFocus && returnFocus.isConnected) {
+      if (returnFocus instanceof HTMLElement && returnFocus.isConnected) {
         returnFocus.focus();
       }
     };
