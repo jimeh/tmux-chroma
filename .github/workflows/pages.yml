@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - website/**
+      - mise.toml
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -24,11 +25,7 @@ jobs:
         working-directory: website
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: website/package-lock.json
+      - uses: jdx/mise-action@v4
       - run: npm ci
       - run: npm run build
       - uses: actions/configure-pages@v5

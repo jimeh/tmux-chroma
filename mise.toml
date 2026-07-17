@@ -1,0 +1,14 @@
+# Tool versions for contributors, agents, and CI (via jdx/mise-action).
+# Run `mise install` once; the Makefile then finds everything on PATH.
+# Versions match what make lint and the website build expect; bump them
+# here so local runs and CI stay in sync.
+
+[settings]
+minimum_release_age = "7d"
+
+[tools]
+node = "22"
+shellcheck = "0.11"
+shfmt = "3.13.1"
+"npm:markdownlint-cli2" = "0.23.0"
+"npm:html-validate" = "10.3.0"

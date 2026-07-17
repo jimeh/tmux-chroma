@@ -20,7 +20,13 @@ add build artifacts or vendored dependencies to it.
 
 ## Commands
 
+Tool versions (node, shellcheck, shfmt, markdownlint-cli2, html-validate)
+are pinned in `mise.toml` and installed with `mise install`; CI uses the
+same pins through `jdx/mise-action`. Bump versions there, not in the
+Makefile or workflows.
+
 ```sh
+mise install
 make format
 make lint
 make test
