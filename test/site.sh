@@ -81,6 +81,13 @@ assert_block_contains '.status-prefix.is-powerline' \
 assert_block_contains '.divider-metrics' '--divider-from: var(--bar);'
 assert_block_contains '.powerline-glyph' 'height: 100%;'
 
+# Text inputs sit inside bordered containers; the focus ring moves to
+# the container so it aligns with the visible box, and must not be
+# suppressed without that replacement.
+assert_block_contains '.custom-color:focus-within' \
+  'outline: 2px solid var(--accent);'
+assert_block_contains '.custom-color-input:focus-visible' 'outline: none;'
+
 # Narrow viewports hide the session and metrics segments; the
 # surviving forward and tail dividers must retarget their hidden
 # endpoints to the bar color or they paint stranded raised cells.

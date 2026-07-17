@@ -369,6 +369,23 @@
       color: var(--accent);
     }
 
+    /* The visible box is the container, not the inner input, so the
+       focus ring belongs on the container or it lands mid-box. */
+    .custom-color-input:focus-visible {
+      outline: none;
+    }
+
+    .custom-color:focus-within {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    /* When the apply button holds focus its own ring is the accurate
+       one; drop the container ring where :has() is supported. */
+    .custom-color:has(.custom-color-submit:focus-visible) {
+      outline: none;
+    }
+
     .readout {
       max-width: 480px;
       margin: 0 0 1.4rem;
