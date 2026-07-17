@@ -78,6 +78,41 @@ resolve_preset() {
   seeded_preset "$host"
 }
 
+# Background seeds for popular terminal themes. A name resolves to
+# that theme's background color and then flows through the same
+# luma classification and surface blending as a literal #rrggbb.
+# The site duplicates this table; test/palette-sync.sh diffs them.
+named_background() {
+  local seed=''
+
+  case "$1" in
+    solarized-light) seed='#fdf6e3' ;;
+    solarized-dark) seed='#002b36' ;;
+    tomorrow) seed='#ffffff' ;;
+    tomorrow-night) seed='#1d1f21' ;;
+    gruvbox-light) seed='#fbf1c7' ;;
+    gruvbox-dark) seed='#282828' ;;
+    one-light) seed='#fafafa' ;;
+    one-dark) seed='#282c34' ;;
+    catppuccin-latte) seed='#eff1f5' ;;
+    catppuccin-frappe) seed='#303446' ;;
+    catppuccin-macchiato) seed='#24273a' ;;
+    catppuccin-mocha) seed='#1e1e2e' ;;
+    everforest-light) seed='#fdf6e0' ;;
+    everforest-dark) seed='#2d353b' ;;
+    rose-pine-dawn) seed='#faf4ed' ;;
+    rose-pine) seed='#191724' ;;
+    github-light) seed='#ffffff' ;;
+    github-dark) seed='#0d1117' ;;
+    dracula) seed='#282a36' ;;
+    nord) seed='#2e3440' ;;
+    monokai) seed='#272822' ;;
+    tokyo-night) seed='#1a1b26' ;;
+  esac
+
+  printf '%s\n' "$seed"
+}
+
 mix_color() {
   local c1="${1#\#}" c2="${2#\#}" pct="$3"
   local r g b
@@ -102,11 +137,13 @@ apply_preset() {
   local subtle='#6f7a8d'
   local border='#343a44'
   local base='#8aadf4'
-  local light='#1e66f5'
+  local light='#3f68bb'
   local base_alt
   local warn='#eed49f'
   local alert='#ed8796'
   local ink='#101216'
+  local muted_mix=60
+  local subtle_mix=45
 
   case "$background" in
     light) mode='light' ;;
@@ -117,7 +154,7 @@ apply_preset() {
       g=$((16#${hex:2:2}))
       b=$((16#${hex:4:2}))
       luma=$(((299 * r + 587 * g + 114 * b) / 1000))
-      if [ "$luma" -ge 128 ]; then
+      if [ "$luma" -ge 130 ]; then
         mode='light'
       fi
       ;;
@@ -130,40 +167,48 @@ apply_preset() {
     muted='#5c6678'
     subtle='#767f93'
     border='#c4cad6'
-    warn='#df8e1d'
-    alert='#d20f39'
+    warn='#b89651'
+    alert='#ad4352'
     ink='#f4f6fa'
+    muted_mix=80
+    subtle_mix=62
   fi
 
   if [ -n "$seed" ]; then
     bg="$(mix_color "$fg" "$seed" 10)"
     bg_alt="$(mix_color "$fg" "$seed" 16)"
     border="$(mix_color "$fg" "$seed" 27)"
+    # Text tones keep their contrast against any seed: fg stays the
+    # mode anchor, and the quieter tones blend it toward the seed at
+    # the per-mode ratios the anchors sit at over the default
+    # surfaces (light mode needs a stronger fg share).
+    muted="$(mix_color "$fg" "$seed" "$muted_mix")"
+    subtle="$(mix_color "$fg" "$seed" "$subtle_mix")"
   fi
 
   case "$preset" in
-    blue) base='#8aadf4' light='#1e66f5' ;;
-    peach) base='#f5a97f' light='#fe640b' ;;
-    teal) base='#8bd5ca' light='#179299' ;;
-    mauve) base='#c6a0f6' light='#8839ef' ;;
-    green) base='#a6da95' light='#40a02b' ;;
-    lavender) base='#b7bdf8' light='#7287fd' ;;
-    sapphire) base='#7dc4e4' light='#209fb5' ;;
-    pink) base='#f5bde6' light='#ea76cb' ;;
-    yellow) base='#eed49f' light='#df8e1d' ;;
-    maroon) base='#ee99a0' light='#e64553' ;;
-    lime) base='#c8dd88' light='#7ba013' ;;
-    ash) base='#a5adcb' light='#6f7d9c' ;;
-    red) base='#ed8796' light='#d20f39' ;;
-    orchid) base='#e38dcd' light='#c13da6' ;;
-    jade) base='#8cd9b3' light='#179b6e' ;;
-    plum) base='#d290df' light='#a640b8' ;;
-    purple) base='#ba91d8' light='#7b52ab' ;;
-    rosewater) base='#f4dbd6' light='#dc8a78' ;;
-    flamingo) base='#f0c6c6' light='#dd7878' ;;
-    sky) base='#91d7e3' light='#04a5e5' ;;
-    gold) base='#efbc88' light='#b0771c' ;;
-    cornflower) base='#83baee' light='#3d74d8' ;;
+    blue) base='#8aadf4' light='#3f68bb' ;;
+    peach) base='#f5a97f' light='#b5663a' ;;
+    teal) base='#8bd5ca' light='#4f8d83' ;;
+    mauve) base='#c6a0f6' light='#824ec3' ;;
+    green) base='#a6da95' light='#649753' ;;
+    lavender) base='#b7bdf8' light='#616bc9' ;;
+    sapphire) base='#7dc4e4' light='#437f9a' ;;
+    pink) base='#f5bde6' light='#c569ac' ;;
+    yellow) base='#eed49f' light='#b89651' ;;
+    maroon) base='#ee99a0' light='#b74b54' ;;
+    lime) base='#c8dd88' light='#83964b' ;;
+    ash) base='#a5adcb' light='#636b89' ;;
+    red) base='#ed8796' light='#ad4352' ;;
+    orchid) base='#e38dcd' light='#a04b8b' ;;
+    jade) base='#8cd9b3' light='#4e9271' ;;
+    plum) base='#d290df' light='#8f4e9c' ;;
+    purple) base='#ba91d8' light='#775293' ;;
+    rosewater) base='#f4dbd6' light='#bc8176' ;;
+    flamingo) base='#f0c6c6' light='#bd7575' ;;
+    sky) base='#91d7e3' light='#4d96a2' ;;
+    gold) base='#efbc88' light='#b17a42' ;;
+    cornflower) base='#83baee' light='#4078ac' ;;
   esac
 
   if [ "$mode" = 'light' ]; then
@@ -245,7 +290,12 @@ main() {
   case "$background" in
     dark | light) ;;
     '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) ;;
-    *) background='dark' ;;
+    *)
+      # A theme name resolves to its background seed; anything
+      # unknown falls back to the dark default.
+      background="$(named_background "$background")"
+      [ -n "$background" ] || background='dark'
+      ;;
   esac
 
   apply_preset "$preset" "$base_color" "$background"

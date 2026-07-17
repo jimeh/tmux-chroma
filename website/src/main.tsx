@@ -1,6 +1,10 @@
 import { effect } from '@preact/signals';
 import { render, type ComponentChild } from 'preact';
-import { ConfBlock, KeyRow } from './components/Config.tsx';
+import {
+  ConfBlock,
+  CustomBackground,
+  KeyRow,
+} from './components/Config.tsx';
 import { Dock } from './components/Dock.tsx';
 import { Gallery } from './components/Gallery.tsx';
 import {
@@ -12,27 +16,54 @@ import {
   SwatchGrid,
 } from './components/Palette.tsx';
 import {
+  accent,
   accentAlt,
   armPrefix,
+  barColor,
   booting,
   currentWindow,
   disarmPrefix,
   galleryOpen,
   lastWindow,
   prefixArmed,
-  preset,
+  surfaces,
+  theme,
   tickClock,
   windows,
 } from './state.ts';
 import './style.css';
 
-// Re-theming is page-wide: the accent pair lives on :root so the CSS
-// can restyle prose, headings, and the dock without any component
-// touching elements it does not own.
+// Re-theming is page-wide: the theme attribute, accent pair, and
+// any custom-seed surfaces live on :root so the CSS can restyle
+// prose, headings, and the dock without any component touching
+// elements it does not own. For the named modes the surface
+// variables are cleared so the stylesheet's own blocks apply. The
+// theme-color meta follows the active bar so the browser chrome
+// matches.
 const root = document.documentElement;
+const themeMeta = document.querySelector('meta[name="theme-color"]');
 effect(() => {
-  root.style.setProperty('--accent', preset.value.base);
+  root.dataset.theme = theme.value;
+  const custom = surfaces.value;
+  const surfaceVars = {
+    '--canvas': custom?.canvas,
+    '--bar': custom?.bar,
+    '--panel': custom?.panel,
+    '--panel-raised': custom?.panelRaised,
+    '--line': custom?.line,
+    '--muted': custom?.muted,
+    '--subtle': custom?.subtle,
+  };
+  Object.entries(surfaceVars).forEach(([name, value]) => {
+    if (value) {
+      root.style.setProperty(name, value);
+    } else {
+      root.style.removeProperty(name);
+    }
+  });
+  root.style.setProperty('--accent', accent.value);
   root.style.setProperty('--accent-alt', accentAlt.value);
+  themeMeta?.setAttribute('content', barColor.value);
 });
 
 function mount(component: ComponentChild, id: string): void {
@@ -60,6 +91,7 @@ mount(<PresetLine />, 'preset-line');
 mount(<AutoHostPreview />, 'auto-host');
 mount(<CustomColor />, 'custom-color');
 mount(<ConfBlock />, 'conf-block');
+mount(<CustomBackground />, 'custom-background');
 mount(<KeyRow />, 'key-row');
 
 // Prefix easter egg: Ctrl-b or Ctrl-q, then w (choose-window),

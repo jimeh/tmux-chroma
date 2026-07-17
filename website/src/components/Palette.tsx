@@ -1,7 +1,8 @@
 import { useRef, useState } from 'preact/hooks';
 import { normalizeHex } from '../color.ts';
-import { displayPresets } from '../presets.ts';
+import { anchors, displayPresets, presetAccent } from '../presets.ts';
 import {
+  accent,
   accentAlt,
   auto,
   autoHost,
@@ -9,6 +10,8 @@ import {
   preset,
   selectAuto,
   selectPreset,
+  surfaces,
+  theme,
 } from '../state.ts';
 
 // A one-line config snippet with a copy button; falls back to
@@ -109,7 +112,10 @@ export function SwatchGrid() {
           aria-label={'Use ' + item.name + ' preset'}
           onClick={() => selectPreset(item)}
         >
-          <span class="swatch-color" style={{ '--swatch': item.base }} />
+          <span
+            class="swatch-color"
+            style={{ '--swatch': presetAccent(item, theme.value) }}
+          />
           <span class="swatch-name">{item.name}</span>
         </button>
       ))}
@@ -118,22 +124,36 @@ export function SwatchGrid() {
 }
 
 export function Readout() {
-  const current = preset.value;
-  const alt = accentAlt.value;
   const name = auto.value
-    ? 'auto (' + current.name + ')'
-    : current.name;
+    ? 'auto (' + preset.value.name + ')'
+    : preset.value.name;
+  // Every color the plugin would export for this configuration,
+  // under its @chroma_* option names: the mode's anchors, with the
+  // custom-seed derivations swapped in where they apply.
+  const mode = anchors[theme.value];
+  const custom = surfaces.value;
+  const rows: Array<[string, string]> = [
+    ['base', accent.value],
+    ['base_alt', accentAlt.value],
+    ['bg', custom?.bar ?? mode.bg],
+    ['bg_alt', custom?.panelRaised ?? mode.bgAlt],
+    ['fg', mode.fg],
+    ['muted', custom?.muted ?? mode.muted],
+    ['subtle', custom?.subtle ?? mode.subtle],
+    ['border', custom?.line ?? mode.border],
+    ['warn', mode.warn],
+    ['alert', mode.alert],
+    ['ink', mode.ink],
+  ];
   return (
     <pre class="readout" aria-live="polite">
-      {'name      ' + name + '\n'}
-      {'base      ' + current.base + '  '}
-      <span class="chip" style={{ background: current.base }} />
-      {'\n'}
-      {'base_alt  ' + alt + '  '}
-      <span class="chip" style={{ background: alt }} />
-      {'\n'}
-      {'bar       #15181d  '}
-      <span class="chip chip-bar" />
+      {'name      ' + name}
+      {rows.map(([label, value]) => (
+        <>
+          {'\n' + label.padEnd(10) + value + '  '}
+          <span class="chip" style={{ background: value }} />
+        </>
+      ))}
     </pre>
   );
 }
@@ -202,7 +222,7 @@ export function CustomColor() {
       class="custom-color"
       aria-label="Custom accent color"
       novalidate
-      style={{ '--custom-swatch': customBase || preset.value.base }}
+      style={{ '--custom-swatch': customBase || accent.value }}
       onSubmit={submit}
     >
       <span class="custom-color-swatch" aria-hidden="true" />

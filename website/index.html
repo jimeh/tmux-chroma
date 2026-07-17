@@ -4,6 +4,83 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15181d">
+  <script>
+    // Resolve the persisted @chroma_background before the
+    // stylesheet paints: 'dark' (the default), 'light', or a custom
+    // #rrggbb seed classified by luma and blended into surfaces
+    // exactly like chroma.tmux. src/state.ts repeats this
+    // resolution for the live controls.
+    (function () {
+      var stored = null;
+      try {
+        stored = localStorage.getItem('chroma-background');
+      } catch (error) {
+        // Storage may be unavailable; fall back to the dark default.
+      }
+      var root = document.documentElement;
+      if (stored === 'light' || stored === 'dark') {
+        root.dataset.theme = stored;
+        return;
+      }
+      var named = {
+        'solarized-light': '#fdf6e3',
+        'solarized-dark': '#002b36',
+        'tomorrow': '#ffffff',
+        'tomorrow-night': '#1d1f21',
+        'gruvbox-light': '#fbf1c7',
+        'gruvbox-dark': '#282828',
+        'one-light': '#fafafa',
+        'one-dark': '#282c34',
+        'catppuccin-latte': '#eff1f5',
+        'catppuccin-frappe': '#303446',
+        'catppuccin-macchiato': '#24273a',
+        'catppuccin-mocha': '#1e1e2e',
+        'everforest-light': '#fdf6e0',
+        'everforest-dark': '#2d353b',
+        'rose-pine-dawn': '#faf4ed',
+        'rose-pine': '#191724',
+        'github-light': '#ffffff',
+        'github-dark': '#0d1117',
+        'dracula': '#282a36',
+        'nord': '#2e3440',
+        'monokai': '#272822',
+        'tokyo-night': '#1a1b26'
+      };
+      if (Object.prototype.hasOwnProperty.call(named, stored || '')) {
+        stored = named[stored];
+      }
+      if (!/^#[0-9a-f]{6}$/.test(stored || '')) {
+        root.dataset.theme = 'dark';
+        return;
+      }
+      var seed = [1, 3, 5].map(function (offset) {
+        return parseInt(stored.slice(offset, offset + 2), 16);
+      });
+      var luma = Math.floor(
+        (299 * seed[0] + 587 * seed[1] + 114 * seed[2]) / 1000
+      );
+      var mode = luma >= 130 ? 'light' : 'dark';
+      var fg = mode === 'light' ? [60, 67, 84] : [215, 221, 231];
+      var mutedMix = mode === 'light' ? 80 : 60;
+      var subtleMix = mode === 'light' ? 62 : 45;
+      var mix = function (pct) {
+        return '#' + seed.map(function (channel, index) {
+          var value = Math.floor(
+            (fg[index] * pct + channel * (100 - pct)) / 100
+          );
+          return (value < 16 ? '0' : '') + value.toString(16);
+        }).join('');
+      };
+      root.dataset.theme = mode;
+      root.style.setProperty('--canvas', stored);
+      root.style.setProperty('--bar', mix(10));
+      root.style.setProperty('--panel', mix(13));
+      root.style.setProperty('--panel-raised', mix(16));
+      root.style.setProperty('--line', mix(27));
+      root.style.setProperty('--muted', mix(mutedMix));
+      root.style.setProperty('--subtle', mix(subtleMix));
+    })();
+  </script>
   <meta
     name="description"
     content="Chroma is a minimal, host-aware tmux status theme."
@@ -104,6 +181,15 @@
         would after a reload.
       </p>
       <div id="conf-block"></div>
+
+      <h3>custom background</h3>
+      <p class="lede">
+        Match any terminal: apply a #rrggbb background and Chroma
+        classifies it as dark or light by perceived luma, then blends
+        the bar surfaces toward it &mdash; exactly what the plugin
+        does with your terminal&rsquo;s background color.
+      </p>
+      <div id="custom-background"></div>
 
       <h3>runtime signals</h3>
       <p class="lede">
@@ -211,6 +297,6 @@
 
   <div id="gallery"></div>
 
-  <script type="module" src="/src/main.jsx"></script>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

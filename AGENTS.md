@@ -54,13 +54,28 @@ bun run build
   insufficient for status-format behavior.
 - Run Powerline assertions under a UTF-8 locale. Older tmux versions do not
   preserve divider glyphs in a plain `C` locale.
-- `chroma.tmux` carries dark and light palettes. The website duplicates
-  preset names, base colors, the `base_alt` mix formula, and the POSIX
-  `cksum` hash from `chroma.tmux` (`website/src/presets.ts`,
-  `website/src/state.ts`); the site currently mirrors only the dark
-  column. Update them together and run `make test`;
-  `test/palette-sync.sh` diffs the palettes and runs the JS cksum port
-  against `cksum(1)`.
+- `chroma.tmux` carries dark and light palettes, and the website
+  duplicates both: preset names with both accent columns and the
+  `base_alt` mix formula (`website/src/presets.ts`,
+  `website/src/state.ts`), the neutral anchors of both modes (in
+  `website/src/style.css` for styling and the `anchors` object in
+  `website/src/presets.ts` for the readout and seed derivation), and
+  the POSIX `cksum` hash. Update them
+  together and run `make test`; `test/palette-sync.sh` diffs the
+  palettes and anchors and runs the JS cksum port against `cksum(1)`.
+- The site has one theme control, the `@chroma_background` dropdown
+  in the live conf block (plus a custom background input): the page,
+  dock, and gallery re-theme together. Dark is the default regardless
+  of the system color scheme; the persisted choice — 'dark', 'light',
+  a named theme background, or a custom `#rrggbb` seed classified and
+  blended like the plugin (surfaces and the muted/subtle text tones
+  both derive from the seed) — is resolved by an inline script in
+  `website/index.html` before the stylesheet paints. Keep that script
+  in sync with the same resolution in `website/src/state.ts`; the
+  named-background table lives in `chroma.tmux`,
+  `website/src/presets.ts`, and that inline script, and
+  `test/palette-sync.sh` diffs all three. Dark stays the README
+  screenshot source.
 - Keep website dependencies minimal: `preact` and `@preact/signals` at
   runtime; `vite`, `@preact/preset-vite`, and `typescript` for the
   build, nothing else. Source is strict TypeScript (`bun run

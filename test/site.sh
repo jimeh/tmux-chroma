@@ -13,6 +13,7 @@ STATUSBAR="$ROOT/website/src/components/StatusBar.tsx"
 DOCK="$ROOT/website/src/components/Dock.tsx"
 PALETTE="$ROOT/website/src/components/Palette.tsx"
 GALLERY="$ROOT/website/src/components/Gallery.tsx"
+CONFIG="$ROOT/website/src/components/Config.tsx"
 
 fail() {
   printf 'site: %s\n' "$1" >&2
@@ -116,7 +117,9 @@ assert_block_contains '.custom-color-input:focus-visible' 'outline: none;'
 
 # Narrow viewports hide the session and metrics segments; the
 # surviving forward and tail dividers must retarget their hidden
-# endpoints to the bar color or they paint stranded raised cells.
+# endpoints to the bar color or they paint stranded raised cells,
+# and a literal-space gap cell must stand in for the hidden session
+# segment between the host block and the prefix indicator.
 narrow_block="$(
   sed -n '/^@media (max-width: 720px) {$/,/^}$/p' "$CSS"
 )"
@@ -124,12 +127,18 @@ for fragment in \
   '.divider-forward' \
   '--divider-to: var(--bar);' \
   '.divider-tail' \
-  '--divider-from: var(--bar);'; do
+  '--divider-from: var(--bar);' \
+  '.status-session-gap'; do
   case "$narrow_block" in
     *"$fragment"*) ;;
     *) fail 'narrow viewport must retarget surviving dividers to the bar' ;;
   esac
 done
+assert_file_contains "$STATUSBAR" "'status-session-gap'" \
+  'the narrow session gap must be a literal space cell'
+assert_block_contains '.status-session-gap' 'background: var(--bar);'
+assert_block_contains '.status-session-gap.is-active' \
+  'background: var(--panel-raised);'
 
 # Segment spacing must come from literal space characters in the format
 # strings, mirroring tmux cell geometry, never from CSS padding.
@@ -181,6 +190,41 @@ assert_block_contains '@media (prefers-reduced-motion: reduce)' \
   'animation-duration: 0.01ms !important;'
 assert_file_contains "$DOCK" 'prefers-reduced-motion' \
   'dock navigation must honor reduced motion'
+
+# One theme control drives the whole page: an inline head script
+# resolves the persisted @chroma_background choice (dark by default,
+# regardless of the system scheme) before the stylesheet paints, the
+# CSS overrides its dark defaults under data-theme='light', and the
+# live conf block hosts the toggle plus a custom background input.
+assert_file_contains "$HTML" "localStorage.getItem('chroma-background')" \
+  'theme must resolve before the first paint'
+assert_block_contains ":root\[data-theme='light'\]" 'color-scheme: light;'
+assert_file_contains "$CONFIG" '@chroma_background' \
+  'the conf block must host the theme control'
+assert_file_contains "$CONFIG" 'class="conf-select"' \
+  'the background value must open a dropdown of every option'
+assert_file_contains "$CONFIG" 'ariaLabel="@chroma_preset value"' \
+  'the preset value must open a dropdown of every preset'
+
+# Copying the conf block must read exactly as rendered: the visible
+# value is a plain span, and the overlaid select is invisible and
+# excluded from text selection.
+assert_file_contains "$CONFIG" 'class="conf-select-value"' \
+  'conf dropdown values must copy as plain text'
+assert_block_contains '.conf-select' 'opacity: 0;'
+assert_block_contains '.conf-select' 'user-select: none;'
+
+assert_file_contains "$DOCK" 'autoHost' \
+  'the dock hostname must follow the typed auto host'
+for fragment in "'dark themes'" "'light themes'" \
+  'colorLuma(entry.seed)'; do
+  assert_file_contains "$CONFIG" "$fragment" \
+    'themes must group by their seed luma classification'
+done
+assert_file_contains "$CONFIG" 'id="custom-background-input"' \
+  'the config section must accept a custom background seed'
+assert_file_contains "$STATE" "localStorage.setItem(backgroundStorageKey" \
+  'a manual background choice must persist'
 
 for fragment in \
   'function seededPreset()' \

@@ -1,10 +1,10 @@
 import {
+  autoHost,
   booting,
   currentWindow,
   lastWindow,
   powerline,
   prefix,
-  preset,
   showCpu,
   showDisk,
   showMemory,
@@ -54,11 +54,14 @@ export function Dock() {
     },
   }));
 
+  // A hostname typed into the palette section's auto preview is
+  // this "session's" machine, so the bar shows it like #H would.
+  const host = autoHost.value.trim() || 'noct';
+
   return (
     <StatusBar
       class={booting.value ? 'boot' : ''}
-      host="noct"
-      preset={preset.value}
+      host={host}
       powerline={powerline.value}
       prefixActive={prefix.value}
       syncActive={sync.value}

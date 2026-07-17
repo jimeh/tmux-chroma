@@ -10,9 +10,10 @@
   --subtle: #6f7a8d;
   --warn: #eed49f;
   --alert: #ed8796;
-  --dark: #101216;
+  --ink: #101216;
   --accent: #8aadf4;
   --accent-alt: #5b719e;
+  --scrim: rgba(6, 7, 10, 0.82);
   --mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
   --dock-height: 28px;
 
@@ -21,6 +22,30 @@
      Fixed px rather than ch, which would resolve against each
      block's own font size and drift between blocks. */
   --measure: 720px;
+}
+
+/* Light mode mirrors chroma.tmux's light palette: the bar surfaces,
+   text tones, alerts, and ink come verbatim from the plugin's light
+   neutral anchors, while the page-only surfaces (canvas, panel,
+   line) keep the dark theme's luminance ordering around them. The
+   accent pair is themed from src/state.ts. An inline script in
+   index.html sets data-theme before this sheet paints. */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --canvas: #f6f8fb;
+  --bar: #e9ecf2;
+  --panel: #e4e8ef;
+  --panel-raised: #dde1e9;
+  --line: #c7cedb;
+  --text: #3c4354;
+  --muted: #5c6678;
+  --subtle: #767f93;
+  --warn: #b89651;
+  --alert: #ad4352;
+  --ink: #f4f6fa;
+  --accent: #3f68bb;
+  --accent-alt: #839cd1;
+  --scrim: rgba(23, 27, 34, 0.45);
 }
 
 * {
@@ -43,7 +68,7 @@ body {
 
 ::selection {
   background: var(--accent);
-  color: var(--dark);
+  color: var(--ink);
 }
 
 a {
@@ -223,7 +248,7 @@ h2 {
   margin: 0 0 1.4rem;
   padding: 0.12em 0.55em;
   background: var(--accent);
-  color: var(--dark);
+  color: var(--ink);
   font-size: clamp(1.25rem, 3.2vw, 1.6rem);
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -297,6 +322,17 @@ h3::before {
     #a6da95,
     #eed49f,
     #ed8796
+  );
+}
+
+/* The same four presets, from the light accent column. */
+:root[data-theme='light'] .swatch-auto .swatch-color {
+  background: linear-gradient(
+    90deg,
+    #3f68bb,
+    #649753,
+    #b89651,
+    #ad4352
   );
 }
 
@@ -383,10 +419,6 @@ h3::before {
   height: 0.78em;
 }
 
-.readout .chip-bar {
-  background: var(--bar);
-}
-
 .conf-block {
   max-width: var(--measure);
   margin: 0 0 1rem;
@@ -412,8 +444,45 @@ h3::before {
   background: color-mix(in srgb, var(--accent), transparent 84%);
 }
 
-.conf-value {
+/* A conf value that opens a native dropdown. The visible text is a
+   plain span styled like .conf-toggle, so selecting and copying the
+   block reads exactly as rendered; the select itself is stretched
+   invisibly over it as the actual control and excluded from text
+   selection. Its focus ring lands on the wrapper, where it is
+   visible. */
+.conf-select-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.conf-select-wrap:hover {
+  background: color-mix(in srgb, var(--accent), transparent 84%);
+}
+
+.conf-select-wrap:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.conf-select-value {
   color: var(--accent);
+  text-decoration: underline dotted;
+  text-underline-offset: 0.3em;
+}
+
+.conf-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  appearance: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  opacity: 0;
+  user-select: none;
 }
 
 .key-row {
@@ -521,7 +590,7 @@ h3::before {
 /* Status line — mirrors chroma.tmux output. Segment spacing comes
    from literal space characters in the format strings (white-space:
    pre), never CSS padding. Keep colors, spaces, and glyphs in sync
-   with the plugin; the strings live in src/components/StatusBar.jsx. */
+   with the plugin; the strings live in src/components/StatusBar.tsx. */
 .status-dock {
   position: fixed;
   z-index: 10;
@@ -556,7 +625,7 @@ h3::before {
 
 .status-host {
   background: var(--accent);
-  color: var(--dark);
+  color: var(--ink);
   animation-delay: 1.3s;
 }
 
@@ -578,6 +647,22 @@ h3::before {
 
 .status-prefix.is-powerline {
   background: var(--bar);
+}
+
+/* Part of the prefix indicator on narrow viewports, where the
+   session segment it normally sits against is hidden: a literal
+   space cell, not padding. Like the placeholder dot it stays
+   invisible bar-on-bar until the prefix is held — always occupying
+   its cell so the centred window list never shifts — and lights up
+   in the raised color so the dot joins it as one block. Powerline
+   mode keeps its divider spacing instead. */
+.status-session-gap {
+  display: none;
+  background: var(--bar);
+}
+
+.status-session-gap.is-active {
+  background: var(--panel-raised);
 }
 
 .status-windows {
@@ -630,7 +715,7 @@ h3::before {
 
 .status-tail {
   background: var(--accent);
-  color: var(--dark);
+  color: var(--ink);
   animation-delay: 1.55s;
 }
 
@@ -712,7 +797,7 @@ h3::before {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(6, 7, 10, 0.82);
+  background: var(--scrim);
 }
 
 .gallery-popup {
@@ -789,6 +874,10 @@ h3::before {
 
   .divider-tail {
     --divider-from: var(--bar);
+  }
+
+  .status-session-gap {
+    display: block;
   }
 
   .option-list div {

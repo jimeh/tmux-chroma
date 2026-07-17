@@ -66,7 +66,7 @@ Set options before Chroma loads:
 | --- | --- | --- |
 | `@chroma_preset` | `auto` | Preset name below, or `auto` for host-seeded |
 | `@chroma_base_color` | unset | Full `#rrggbb` accent override |
-| `@chroma_background` | `dark` | Terminal background: dark, light, or #rrggbb |
+| `@chroma_background` | `dark` | Background: dark, light, a theme name, or #rrggbb |
 | `@chroma_clock_format` | `%H:%M` | Clock `strftime` format |
 | `@chroma_clock_min_width` | `91` | Minimum client width for the clock |
 | `@chroma_powerline` | `off` | Powerline section dividers |
@@ -115,7 +115,14 @@ blend of `base` toward the bar background, including when
 Set `@chroma_background` to `light` for a curated light palette. Every preset
 has a light variant. A `#rrggbb` value classifies the background as light or
 dark by perceived luma, then blends the status-bar surfaces toward that
-terminal background.
+terminal background. Popular themes are also available by name — each resolves
+to that theme's background color and is treated like the matching `#rrggbb`:
+
+`solarized-light`, `solarized-dark`, `tomorrow`, `tomorrow-night`,
+`gruvbox-light`, `gruvbox-dark`, `one-light`, `one-dark`, `catppuccin-latte`,
+`catppuccin-frappe`, `catppuccin-macchiato`, `catppuccin-mocha`,
+`everforest-light`, `everforest-dark`, `rose-pine-dawn`, `rose-pine`,
+`github-light`, `github-dark`, `dracula`, `nord`, `monokai`, `tokyo-night`
 
 `@chroma_base_color` is used verbatim in both modes, so choose a
 light-appropriate custom accent yourself. Tmux cannot reliably query the
