@@ -11,6 +11,10 @@ Chroma is a dependency-light tmux status theme for macOS and Linux.
   as page navigation.
 - `test/`: shell and live tmux regression tests.
 
+`docs/index-old.html` and the numbered `docs/index*.html` files are retired
+design explorations awaiting deletion. Treat them as if they do not exist:
+never edit, lint, test, or link to them.
+
 ## Commands
 
 ```sh
