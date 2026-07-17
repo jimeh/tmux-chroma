@@ -44,6 +44,12 @@
       --accent-alt: #5b719e;
       --mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
       --dock-height: 28px;
+
+      /* One shared 80-column measure for prose and code blocks:
+         80 × the 0.6em Geist Mono advance at the 15px body size.
+         Fixed px rather than ch, which would resolve against each
+         block's own font size and drift between blocks. */
+      --measure: 720px;
     }
 
     * {
@@ -163,7 +169,7 @@
     }
 
     .lede {
-      max-width: 80ch;
+      max-width: var(--measure);
       margin-bottom: 2.2rem;
       color: var(--muted);
     }
@@ -182,7 +188,7 @@
 
     .install-command {
       display: flex;
-      max-width: 480px;
+      max-width: var(--measure);
       align-items: stretch;
       border: 1px solid var(--line);
       background: var(--panel);
@@ -324,7 +330,7 @@
       --custom-swatch: var(--accent);
 
       display: flex;
-      max-width: 480px;
+      max-width: var(--measure);
       align-items: stretch;
       margin: 0 0 1.4rem;
       border: 1px solid var(--line);
@@ -387,7 +393,7 @@
     }
 
     .readout {
-      max-width: 480px;
+      max-width: var(--measure);
       margin: 0 0 1.4rem;
       padding: 1.1rem 1.2rem;
       border: 1px solid var(--line);
@@ -408,6 +414,7 @@
     }
 
     .conf-block {
+      max-width: var(--measure);
       margin: 0 0 1rem;
       padding: 1.3rem 1.4rem;
       border: 1px solid var(--line);
@@ -473,7 +480,7 @@
     .option-list {
       display: grid;
       gap: 0.15rem;
-      max-width: 80ch;
+      max-width: var(--measure);
       margin: 0;
       font-size: 0.84rem;
     }
@@ -497,7 +504,7 @@
     }
 
     .step {
-      max-width: 80ch;
+      max-width: var(--measure);
       margin-bottom: 0.4rem;
     }
 
@@ -514,7 +521,7 @@
 
     .inline-code {
       display: block;
-      max-width: 80ch;
+      max-width: var(--measure);
       margin-bottom: 1rem;
       padding: 1rem 1.2rem;
       overflow-x: auto;

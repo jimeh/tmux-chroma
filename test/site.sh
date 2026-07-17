@@ -69,6 +69,14 @@ for fragment in \
 done
 
 assert_block_contains ':root' '--dock-height: 28px;'
+
+# Prose and code blocks share one 80-column measure; per-element ch
+# values would drift with each block's font size.
+assert_block_contains ':root' '--measure: 720px;'
+for selector in '.lede' '.inline-code' '.conf-block' '.readout' \
+  '.install-command' '.custom-color'; do
+  assert_block_contains "$selector" 'max-width: var(--measure);'
+done
 assert_block_contains '.statusbar' 'height: var(--dock-height);'
 assert_block_contains '.statusbar' 'line-height: var(--dock-height);'
 assert_block_contains '.statusbar' 'white-space: pre;'
