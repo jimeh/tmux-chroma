@@ -55,14 +55,17 @@ run_theme() {
 }
 
 tmux -L "$SOCKET" -f /dev/null new-session -d -s chroma
-tmux -L "$SOCKET" set-option -g @chroma_preset ember
+tmux -L "$SOCKET" set-option -g @chroma_preset peach
 run_theme
 
-assert_option @chroma_current_preset ember
+assert_option @chroma_current_preset peach
 assert_option @chroma_base '#f5a97f'
 assert_option @chroma_base_alt '#9b6f57'
 assert_option @chroma_plugin_dir "$ROOT"
-assert_contains "$(option @chroma_preset_names)" 'fuchsia'
+assert_contains "$(option @chroma_preset_names)" 'purple'
+assert_contains "$(option @chroma_preset_names)" 'gold'
+assert_contains "$(option @chroma_preset_names)" 'cornflower'
+assert_contains "$(option @chroma_preset_names)" 'rosewater'
 
 left_before="$(option status-left)"
 right_before="$(option status-right)"
@@ -84,7 +87,31 @@ assert_not_contains "$(option @chroma_base)" 'invalid'
 assert_contains "$(option @chroma_preset_names)" \
   "$(option @chroma_current_preset)"
 
-tmux -L "$SOCKET" set-option -g @chroma_preset aurora
+tmux -L "$SOCKET" set-option -g @chroma_preset purple
+run_theme
+assert_option @chroma_current_preset purple
+assert_option @chroma_base '#ba91d8'
+
+tmux -L "$SOCKET" set-option -g @chroma_preset cornflower
+run_theme
+assert_option @chroma_current_preset cornflower
+assert_option @chroma_base '#83baee'
+
+tmux -L "$SOCKET" set-option -g @chroma_preset sky
+run_theme
+assert_option @chroma_current_preset sky
+assert_option @chroma_base '#91d7e3'
+
+# 'auto' must land on the same preset the seeded hash picks for the
+# host, mirroring seeded_preset: cksum(host_short) % preset count.
+tmux -L "$SOCKET" set-option -g @chroma_preset auto
+run_theme
+host="$(tmux -L "$SOCKET" display-message -p '#{host_short}')"
+sum="$(printf '%s' "$host" | cksum | awk '{ print $1 }')"
+read -ra names <<< "$(option @chroma_preset_names)"
+assert_option @chroma_current_preset "${names[sum % ${#names[@]}]}"
+
+tmux -L "$SOCKET" set-option -g @chroma_preset blue
 tmux -L "$SOCKET" set-option -g @chroma_powerline on
 tmux -L "$SOCKET" set-option -g @chroma_show_cpu off
 tmux -L "$SOCKET" set-option -g @chroma_show_memory off

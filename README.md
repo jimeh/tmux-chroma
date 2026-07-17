@@ -14,7 +14,7 @@ Explore every preset and status mode on the
 
 ## Features
 
-- Stable, host-seeded accent colors with 17 included presets.
+- Stable, host-seeded accent colors with 22 included presets.
 - Optional Powerline dividers.
 - Prefix-key and synchronized-pane indicators.
 - Bundled CPU and memory metrics for macOS and Linux.
@@ -64,7 +64,7 @@ Set options before Chroma loads:
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `@chroma_preset` | host-seeded | Preset name from the list below |
+| `@chroma_preset` | `auto` | Preset name below, or `auto` for host-seeded |
 | `@chroma_base_color` | unset | Full `#rrggbb` accent override |
 | `@chroma_clock_format` | `%H:%M` | Clock `strftime` format |
 | `@chroma_clock_min_width` | `91` | Minimum client width for the clock |
@@ -81,7 +81,7 @@ Set options before Chroma loads:
 For example:
 
 ```tmux
-set -g @chroma_preset 'ember'
+set -g @chroma_preset 'peach'
 set -g @chroma_powerline 'on'
 set -g @chroma_show_disk 'on'
 set -g @chroma_disk_path "${HOME}"
@@ -90,16 +90,19 @@ set -g @plugin 'jimeh/tmux-chroma'
 run "${HOME}/.tmux/plugins/tpm/tpm"
 ```
 
-An invalid preset falls back to the host-seeded selection. An invalid custom
-base color is ignored.
+The default `auto` hashes the machine's short hostname into a stable preset,
+so every host keeps its own accent without per-machine configuration. An
+invalid preset behaves like `auto`. An invalid custom base color is ignored.
 
 ## Presets
 
 Chroma includes:
 
 ```text
-aurora  ember  lagoon  violet  moss  slate  sky  rose  sand
-coral   lime   ash     cherry  orchid jade   plum fuchsia
+blue        peach       teal        mauve       green       lavender
+sapphire    pink        yellow      maroon      lime        ash
+red         orchid      jade        plum        purple      rosewater
+flamingo    sky         gold        cornflower
 ```
 
 The selected preset supplies `base`. Chroma derives `base_alt` as a 60%
