@@ -1275,6 +1275,14 @@ set -g @chroma_show_disk   <button
     }
 
     function renderStatus() {
+      // Rebuilding the dock destroys a focused window button, dropping
+      // keyboard focus to the body; remember it and re-focus its
+      // replacement after the rebuild.
+      const active = document.activeElement;
+      const focusedWindow = active && statusbar.contains(active) &&
+        active.classList.contains('status-window')
+        ? active.dataset.window
+        : null;
       statusbar.replaceChildren();
       const powerline = state.powerline;
       statusbar.appendChild(makeElement(
@@ -1309,6 +1317,7 @@ set -g @chroma_show_disk   <button
         button.className = 'status-window' +
           (item.id === state.current ? ' is-current' : '');
         button.type = 'button';
+        button.dataset.window = item.id;
         button.textContent = ' ' + item.index;
         button.appendChild(
           makeElement('status-window-name', ':' + item.id)
@@ -1329,6 +1338,15 @@ set -g @chroma_show_disk   <button
         list.appendChild(button);
       });
       statusbar.appendChild(list);
+
+      if (focusedWindow) {
+        const replacement = list.querySelector(
+          '[data-window="' + focusedWindow + '"]'
+        );
+        if (replacement) {
+          replacement.focus({ preventScroll: true });
+        }
+      }
 
       statusbar.appendChild(makeElement('status-spacer'));
 
