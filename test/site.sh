@@ -165,7 +165,9 @@ for fragment in \
   'aria-modal="true"' \
   'function buildGalleryBar(preset)' \
   "'1:zsh'" \
-  "event.key === 'w'"; do
+  "event.key === 'w'" \
+  'region.inert = true;' \
+  'region.inert = false;'; do
   case "$(< "$SITE")" in
     *"$fragment"*) ;;
     *) fail 'prefix + w must open the preset gallery' ;;

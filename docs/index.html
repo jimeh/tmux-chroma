@@ -1522,6 +1522,12 @@ set -g @chroma_show_disk   <button
     const gallery = document.getElementById('gallery');
     const galleryBars = document.getElementById('gallery-bars');
     const galleryPopup = gallery.querySelector('.gallery-popup');
+    // aria-modal promises the page behind the overlay is unreachable;
+    // inert makes it true by removing it from tab order and focus.
+    const galleryInertRegions = [
+      document.querySelector('main'),
+      document.querySelector('.status-dock'),
+    ];
     const galleryWindows = [
       ['1:zsh', '', false],
       ['2:vim', '*', true],
@@ -1607,14 +1613,30 @@ set -g @chroma_show_disk   <button
         galleryBars.appendChild(buildGalleryBar(preset));
       });
       galleryReturnFocus = document.activeElement;
+      galleryInertRegions.forEach((region) => {
+        region.inert = true;
+      });
       gallery.hidden = false;
       galleryPopup.focus();
     }
 
     function closeGallery() {
       gallery.hidden = true;
-      if (galleryReturnFocus && galleryReturnFocus.focus) {
-        galleryReturnFocus.focus();
+      galleryInertRegions.forEach((region) => {
+        region.inert = false;
+      });
+      // A dock re-render (prefix disarm, clock tick) while the gallery
+      // was open detaches the remembered button; focus its rebuilt
+      // equivalent instead.
+      let returnTarget = galleryReturnFocus;
+      if (returnTarget && !returnTarget.isConnected &&
+          returnTarget.dataset && returnTarget.dataset.window) {
+        returnTarget = statusbar.querySelector(
+          '[data-window="' + returnTarget.dataset.window + '"]'
+        );
+      }
+      if (returnTarget && returnTarget.focus) {
+        returnTarget.focus();
       }
       galleryReturnFocus = null;
     }
@@ -1641,15 +1663,18 @@ set -g @chroma_show_disk   <button
     }
 
     document.addEventListener('keydown', (event) => {
+      // Plain q only closes when not typing into a field; Escape
+      // closes regardless, like any dialog.
+      const typing = Boolean(event.target.closest &&
+        event.target.closest('input, textarea, select'));
       if (!gallery.hidden && (event.key === 'Escape' ||
-          (event.key === 'q' && !event.ctrlKey && !event.metaKey &&
-            !event.altKey))) {
+          (event.key === 'q' && !typing && !event.ctrlKey &&
+            !event.metaKey && !event.altKey))) {
         event.preventDefault();
         closeGallery();
         return;
       }
-      if (event.target.closest &&
-          event.target.closest('input, textarea, select')) {
+      if (typing) {
         return;
       }
       if ((event.key === 'b' || event.key === 'q') && event.ctrlKey &&
