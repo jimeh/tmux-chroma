@@ -6,14 +6,17 @@ Chroma is a dependency-light tmux status theme for macOS and Linux.
 
 - `chroma.tmux`: executable TPM entrypoint and theme implementation.
 - `scripts/`: bundled CPU, memory, and disk status helpers.
-- `docs/index.html`: dependency-free GitHub Pages site and interactive
-  preview; terminal-session layout where the fixed status-line dock doubles
-  as page navigation.
+- `website/`: Vite + Preact source for the GitHub Pages site and
+  interactive preview; terminal-session layout where the fixed status-line
+  dock doubles as page navigation. Static prose lives in
+  `website/index.html`; interactive islands mount from
+  `website/src/main.jsx` and share state through `@preact/signals`.
 - `test/`: shell and live tmux regression tests.
 
-`docs/index-old.html` and the numbered `docs/index*.html` files are retired
-design explorations awaiting deletion. Treat them as if they do not exist:
-never edit, lint, test, or link to them.
+The site is built and deployed by `.github/workflows/pages.yml`; the
+`website/dist` output is gitignored and must never be committed. TPM
+installs clone this whole repository, so keep `website/` small and never
+add build artifacts or vendored dependencies to it.
 
 ## Commands
 
@@ -22,6 +25,14 @@ make format
 make lint
 make test
 make check
+```
+
+Website (from `website/`):
+
+```sh
+npm ci
+npm run dev
+npm run build
 ```
 
 ## Conventions
@@ -34,14 +45,23 @@ make check
   insufficient for status-format behavior.
 - Run Powerline assertions under a UTF-8 locale. Older tmux versions do not
   preserve divider glyphs in a plain `C` locale.
-- The HTML docs duplicate preset names, base colors, and the `base_alt` mix
-  formula from `chroma.tmux`. Update them together and run `make test`.
-- Keep the GitHub Pages site static and usable without a build step.
+- The website duplicates preset names, base colors, the `base_alt` mix
+  formula, and the POSIX `cksum` hash from `chroma.tmux`
+  (`website/src/presets.js`, `website/src/state.js`). Update them together
+  and run `make test`; `test/palette-sync.sh` diffs the palettes and runs
+  the JS cksum port against `cksum(1)`.
+- Keep website dependencies minimal: `preact` and `@preact/signals` at
+  runtime, `vite` for the build, nothing else. Prose stays as static HTML
+  in `website/index.html` so content renders without JavaScript;
+  components own only the interactive islands.
 - The preview status bar mirrors tmux cell geometry: segment spacing comes
   from literal space characters in the format strings under
-  `white-space: pre`, never CSS padding. The fixed dock scrolls
-  horizontally instead of wrapping on narrow viewports. `test/site.sh`
-  enforces the no-padding rule.
+  `white-space: pre` (`website/src/components/StatusBar.jsx`), never CSS
+  padding. The fixed dock scrolls horizontally instead of wrapping on
+  narrow viewports. `test/site.sh` enforces the no-padding rule.
+- One `StatusBar` component renders both the dock and the gallery bars;
+  keyed window items keep focused dock buttons attached across re-renders,
+  which the gallery's focus restore relies on.
 - Use `https://jimeh.github.io/tmux-chroma/` as the canonical site URL.
   The personal site runs on Cloudflare Workers, so keep the legacy
   `jimeh/jimeh.github.io` Pages custom domain and `CNAME` unset; otherwise

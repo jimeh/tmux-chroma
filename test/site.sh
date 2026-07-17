@@ -3,11 +3,31 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SITE="$ROOT/docs/index.html"
+HTML="$ROOT/website/index.html"
+CSS="$ROOT/website/src/style.css"
+MAIN="$ROOT/website/src/main.jsx"
+PRESETS="$ROOT/website/src/presets.js"
+COLOR="$ROOT/website/src/color.js"
+STATE="$ROOT/website/src/state.js"
+STATUSBAR="$ROOT/website/src/components/StatusBar.jsx"
+DOCK="$ROOT/website/src/components/Dock.jsx"
+PALETTE="$ROOT/website/src/components/Palette.jsx"
+GALLERY="$ROOT/website/src/components/Gallery.jsx"
 
 fail() {
   printf 'site: %s\n' "$1" >&2
   exit 1
+}
+
+assert_file_contains() {
+  local file="$1"
+  local fragment="$2"
+  local message="$3"
+
+  case "$(< "$file")" in
+    *"$fragment"*) ;;
+    *) fail "$message" ;;
+  esac
 }
 
 assert_block_contains() {
@@ -16,7 +36,7 @@ assert_block_contains() {
   local block
 
   block="$(
-    sed -n "/^    ${selector} {\$/,/^    }\$/p" "$SITE"
+    sed -n "/^${selector} {\$/,/^}\$/p" "$CSS"
   )"
   case "$block" in
     *"$declaration"*) ;;
@@ -30,7 +50,7 @@ assert_block_excludes() {
   local block
 
   block="$(
-    sed -n "/^    ${selector} {\$/,/^    }\$/p" "$SITE"
+    sed -n "/^${selector} {\$/,/^}\$/p" "$CSS"
   )"
   case "$block" in
     *"$declaration"*) fail "$selector must not contain $declaration" ;;
@@ -41,7 +61,7 @@ assert_block_excludes() {
 section_order="$(
   sed -n \
     's/^    <section class="window shell" id="\([^"]*\)".*/\1/p' \
-    "$SITE"
+    "$HTML"
 )"
 expected_order="$(printf '%s\n' intro palette config install)"
 
@@ -49,7 +69,7 @@ expected_order="$(printf '%s\n' intro palette config install)"
   fail 'sections must follow the status-line window order'
 
 manual_code_count="$(
-  sed -n '/<h3>manually<\/h3>/,/<h3>requirements<\/h3>/p' "$SITE" |
+  sed -n '/<h3>manually<\/h3>/,/<h3>requirements<\/h3>/p' "$HTML" |
     sed -n '/class="inline-code"/p' |
     wc -l |
     tr -d ' '
@@ -62,10 +82,8 @@ for fragment in \
   '<p class="tagline hero-tagline">A different accent for every host.</p>' \
   'aria-label="Sections, shown as a live Chroma status line"' \
   'href="https://github.com/tmux-plugins/tpm"'; do
-  case "$(< "$SITE")" in
-    *"$fragment"*) ;;
-    *) fail 'landing page must identify Chroma as a tmux theme' ;;
-  esac
+  assert_file_contains "$HTML" "$fragment" \
+    'landing page must identify Chroma as a tmux theme'
 done
 
 assert_block_contains ':root' '--dock-height: 28px;'
@@ -100,7 +118,7 @@ assert_block_contains '.custom-color-input:focus-visible' 'outline: none;'
 # surviving forward and tail dividers must retarget their hidden
 # endpoints to the bar color or they paint stranded raised cells.
 narrow_block="$(
-  sed -n '/^    @media (max-width: 720px) {$/,/^    }$/p' "$SITE"
+  sed -n '/^@media (max-width: 720px) {$/,/^}$/p' "$CSS"
 )"
 for fragment in \
   '.divider-forward' \
@@ -125,83 +143,78 @@ done
 assert_block_contains '.status-window' 'padding: 0;'
 
 for fragment in \
-  "makeElement('powerline-space is-before', ' ')" \
-  'makeDividerGlyph(direction)' \
-  "makeElement('powerline-space is-after', ' ')"; do
-  case "$(< "$SITE")" in
-    *"$fragment"*) ;;
-    *) fail 'Powerline dividers must use space, glyph, and space cells' ;;
-  esac
+  "class=\"powerline-space is-before\">{' '}" \
+  '<DividerGlyph direction={direction} />' \
+  "class=\"powerline-space is-after\">{' '}"; do
+  assert_file_contains "$STATUSBAR" "$fragment" \
+    'Powerline dividers must use space, glyph, and space cells'
 done
 
 for fragment in \
-  "glyph.setAttribute('viewBox', '0 0 1 1')" \
+  'viewBox="0 0 1 1"' \
   "'-0.1,0 0,0 1,0.5 0,1 -0.1,1'" \
   "'1.1,0 1,0 0,0.5 1,1 1.1,1'"; do
-  case "$(< "$SITE")" in
-    *"$fragment"*) ;;
-    *) fail 'Powerline SVGs must fill one normalized character cell' ;;
-  esac
+  assert_file_contains "$STATUSBAR" "$fragment" \
+    'Powerline SVGs must fill one normalized character cell'
 done
 
-case "$(< "$SITE")" in
-  *"makeElement('', ' ' + metric + ' ')"*) ;;
-  *) fail 'metric spacing must use literal character cells' ;;
-esac
+assert_file_contains "$STATUSBAR" "{' ' + metric + ' '}" \
+  'metric spacing must use literal character cells'
 
-for fragment in \
-  'id="statusbar"' \
-  'id="swatch-grid"' \
-  'id="custom-color-input"' \
-  'aria-label="Accent presets"' \
-  'function setupPalette()' \
-  'function normalizeHex(value)' \
+assert_file_contains "$HTML" 'class="status-dock"' \
+  'site must render the status-line dock'
+assert_file_contains "$HTML" 'id="swatch-grid"' \
+  'site must preserve preview and palette controls'
+assert_file_contains "$PALETTE" 'aria-label="Accent presets"' \
+  'site must preserve preview and palette controls'
+assert_file_contains "$PALETTE" 'id="custom-color-input"' \
+  'site must preserve preview and palette controls'
+assert_file_contains "$PALETTE" \
   "selectPreset({ name: 'custom', base: customBase })" \
+  'site must preserve preview and palette controls'
+assert_file_contains "$COLOR" 'function normalizeHex(value)' \
+  'site must preserve preview and palette controls'
+assert_file_contains "$PRESETS" \
   'colorHue(first.base) - colorHue(second.base)' \
-  '@media (prefers-reduced-motion: reduce)'; do
-  case "$(< "$SITE")" in
-    *"$fragment"*) ;;
-    *) fail 'site must preserve preview and palette controls' ;;
-  esac
-done
+  'swatches and gallery must sort presets by hue'
+assert_block_contains '@media (prefers-reduced-motion: reduce)' \
+  'animation-duration: 0.01ms !important;'
+assert_file_contains "$DOCK" 'prefers-reduced-motion' \
+  'dock navigation must honor reduced motion'
 
 for fragment in \
   'function seededPreset()' \
-  'preset: seededPreset(),' \
   'now.getHours(),'; do
-  case "$(< "$SITE")" in
-    *"$fragment"*) ;;
-    *) fail 'default accent must be seeded from browser traits and time' ;;
-  esac
+  assert_file_contains "$PRESETS" "$fragment" \
+    'default accent must be seeded from browser traits and time'
 done
+assert_file_contains "$STATE" 'signal(seededPreset())' \
+  'default accent must be seeded from browser traits and time'
 
 # The default is the auto preset: browser-seeded on this page, with a
 # hostname input that reuses the plugin's exact cksum hash to preview
 # the accent any host would get.
 for fragment in \
   'function cksum(text)' \
-  'function presetForHost(host)' \
-  'id="auto-host-input"' \
-  "dataset.preset = 'auto'" \
-  'selectAuto();'; do
-  case "$(< "$SITE")" in
-    *"$fragment"*) ;;
-    *) fail 'auto preset must hash hostnames like the plugin' ;;
-  esac
+  'function presetForHost(host)'; do
+  assert_file_contains "$PRESETS" "$fragment" \
+    'auto preset must hash hostnames like the plugin'
 done
+assert_file_contains "$PALETTE" 'id="auto-host-input"' \
+  'auto preset must hash hostnames like the plugin'
+assert_file_contains "$PALETTE" 'onClick={selectAuto}' \
+  'auto preset must hash hostnames like the plugin'
 
 for fragment in \
-  'id="gallery-bars"' \
+  'class="gallery-bars"' \
   'aria-modal="true"' \
-  'function buildGalleryBar(preset)' \
   "'1:zsh'" \
-  "event.key === 'w'" \
   'region.inert = true;' \
   'region.inert = false;'; do
-  case "$(< "$SITE")" in
-    *"$fragment"*) ;;
-    *) fail 'prefix + w must open the preset gallery' ;;
-  esac
+  assert_file_contains "$GALLERY" "$fragment" \
+    'prefix + w must open the preset gallery'
 done
+assert_file_contains "$MAIN" "event.key === 'w'" \
+  'prefix + w must open the preset gallery'
 
 printf 'site: ok\n'

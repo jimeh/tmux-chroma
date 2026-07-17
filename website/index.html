@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15181d">
+  <meta
+    name="description"
+    content="Chroma is a minimal, host-aware tmux status theme."
+  >
+  <meta property="og:title" content="Chroma for tmux">
+  <meta
+    property="og:description"
+    content="A different accent for every host."
+  >
+  <meta property="og:type" content="website">
+  <meta
+    property="og:image"
+    content="https://jimeh.github.io/tmux-chroma/preview.png"
+  >
+  <title>Chroma — a host-aware tmux theme</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  >
+</head>
+<body>
+  <main>
+    <section class="window shell" id="intro" data-window="intro">
+      <p class="prompt-line">
+        <span class="prompt-host">jimeh@noct</span>
+        <span class="prompt-path">~</span>
+        <span aria-hidden="true">$</span>
+        <span class="prompt-cmd">tmux attach -t chroma</span>
+        <span class="cursor" aria-hidden="true"></span>
+      </p>
+      <h1 class="visually-hidden">
+        Chroma — a host-aware status theme for tmux
+      </h1>
+      <pre class="banner" aria-hidden="true">
+ ██████╗██╗  ██╗██████╗  ██████╗ ███╗   ███╗ █████╗
+██╔════╝██║  ██║██╔══██╗██╔═══██╗████╗ ████║██╔══██╗
+██║     ███████║██████╔╝██║   ██║██╔████╔██║███████║
+██║     ██╔══██║██╔══██╗██║   ██║██║╚██╔╝██║██╔══██║
+╚██████╗██║  ██║██║  ██║╚██████╔╝██║ ╚═╝ ██║██║  ██║
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝</pre>
+      <p class="tagline hero-tagline">A different accent for every host.</p>
+      <p class="lede hero-lede">
+        Chroma is a tmux theme that hashes each machine&rsquo;s short
+        hostname into one of twenty-two balanced accents. The same host
+        always gets the same color, so you know where you are before
+        you read a single character.
+      </p>
+      <div class="hero-tail" id="quick-install"></div>
+      <p class="hint comment hero-tail">
+        # this page is the session &mdash; navigate with the window list
+        in the status line below
+      </p>
+    </section>
+
+    <div class="pane-border shell" aria-hidden="true">
+      <span>&#x2524; 2:palette &#x251C;</span>
+    </div>
+
+    <section class="window shell" id="palette" data-window="palette">
+      <h2>pick an accent</h2>
+      <p class="lede">
+        Click a swatch and the page re-themes the way a new host would.
+        The quieter companion color is derived by blending the accent
+        toward Chroma&rsquo;s bar background.
+      </p>
+      <div id="swatch-grid"></div>
+      <div id="readout"></div>
+      <div id="preset-line"></div>
+
+      <h3>auto by hostname</h3>
+      <p class="lede">
+        The default 'auto' preset hashes each machine&rsquo;s short
+        hostname &mdash; this page seeded itself from your browser
+        instead. Type a hostname to preview the accent it would get.
+      </p>
+      <div id="auto-host"></div>
+
+      <h3>custom accent</h3>
+      <p class="lede">
+        Skip the presets entirely: apply any #rrggbb value and Chroma
+        derives the quieter companion shade the same way.
+      </p>
+      <div id="custom-color"></div>
+    </section>
+
+    <div class="pane-border shell" aria-hidden="true">
+      <span>&#x2524; 3:config &#x251C;</span>
+    </div>
+
+    <section class="window shell" id="config" data-window="config">
+      <h2>configure by clicking</h2>
+      <p class="lede">
+        This block is live. Click an underlined value and the status
+        line at the bottom of the page re-renders, exactly as tmux
+        would after a reload.
+      </p>
+      <div id="conf-block"></div>
+
+      <h3>runtime signals</h3>
+      <p class="lede">
+        Some state isn&rsquo;t config. Hold the prefix or synchronize
+        panes and Chroma surfaces it without shifting the window list.
+        Try both against the bar below.
+      </p>
+      <div id="key-row"></div>
+
+      <h3>more options</h3>
+      <dl class="option-list">
+        <div>
+          <dt>@chroma_base_color</dt>
+          <dd>Skip the presets with any #rrggbb accent.</dd>
+        </div>
+        <div>
+          <dt>@chroma_host_label</dt>
+          <dd>Show something other than the hostname.</dd>
+        </div>
+        <div>
+          <dt>@chroma_clock_format</dt>
+          <dd>Any strftime string for the right-hand clock.</dd>
+        </div>
+        <div>
+          <dt>@chroma_disk_path</dt>
+          <dd>Which mount the disk gauge reports on.</dd>
+        </div>
+        <div>
+          <dt>@chroma_left_extra</dt>
+          <dd>Your own content after the session name.</dd>
+        </div>
+        <div>
+          <dt>@chroma_right_extra</dt>
+          <dd>Your own content before the metrics.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <div class="pane-border shell" aria-hidden="true">
+      <span>&#x2524; 4:install &#x251C;</span>
+    </div>
+
+    <section class="window shell" id="install" data-window="install">
+      <h2>install</h2>
+      <p class="lede">
+        One plugin line with TPM, or a clone if you prefer to keep the
+        theme entirely transparent. Reload tmux and Chroma picks this
+        machine&rsquo;s color on its own.
+      </p>
+
+      <h3>with tpm</h3>
+      <div class="step">
+        <p>
+          Add Chroma before
+          <a href="https://github.com/tmux-plugins/tpm">TPM</a>&rsquo;s
+          initialization line, then press
+          <kbd>prefix</kbd> + <kbd>I</kbd>.
+        </p>
+        <code class="inline-code">set -g @plugin 'jimeh/tmux-chroma'</code>
+      </div>
+
+      <h3>manually</h3>
+      <div class="step">
+        <p>
+          Clone the repository and run the plugin after your own
+          overrides.
+        </p>
+        <p class="code-label"># clone the plugin</p>
+        <code class="inline-code">git clone https://github.com/jimeh/tmux-chroma.git \
+  ~/.tmux/plugins/tmux-chroma</code>
+        <p class="code-label"># in ~/.tmux.conf, after your overrides</p>
+        <code class="inline-code">run-shell "${HOME}/.tmux/plugins/tmux-chroma/chroma.tmux"</code>
+      </div>
+
+      <h3>requirements</h3>
+      <div class="step">
+        <p>
+          tmux 3.2 or later on macOS or Linux. Linux needs Bash 4.2 or
+          later; the Bash included with macOS is supported. Powerline
+          mode also needs a font containing the divider glyphs.
+        </p>
+      </div>
+
+      <div class="see-also">
+        <p class="comment"># see also</p>
+        <p>
+          <a href="https://github.com/jimeh/tmux-chroma">
+            github.com/jimeh/tmux-chroma</a> &middot;
+          <a href="https://github.com/jimeh/tmux-chroma#options">
+            full option reference</a>
+        </p>
+        <p>
+          MIT licensed &middot; selected accents adapted from
+          <a href="https://catppuccin.com/palette">
+            Catppuccin Macchiato</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <nav
+    class="status-dock"
+    aria-label="Sections, shown as a live Chroma status line"
+  ></nav>
+
+  <div id="gallery"></div>
+
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

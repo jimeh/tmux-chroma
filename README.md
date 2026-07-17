@@ -7,7 +7,7 @@ A minimal, host-aware status theme for tmux. Chroma deterministically assigns
 an accent preset from each machine's short hostname, making hosts recognizable
 at a glance without per-machine configuration.
 
-![Chroma status line in Powerline mode](docs/preview.png)
+![Chroma status line in Powerline mode](website/public/preview.png)
 
 Explore every preset and status mode on the
 [interactive Chroma website](https://jimeh.github.io/tmux-chroma/).
