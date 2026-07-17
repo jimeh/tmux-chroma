@@ -160,6 +160,21 @@ for fragment in \
   esac
 done
 
+# The default is the auto preset: browser-seeded on this page, with a
+# hostname input that reuses the plugin's exact cksum hash to preview
+# the accent any host would get.
+for fragment in \
+  'function cksum(text)' \
+  'function presetForHost(host)' \
+  'id="auto-host-input"' \
+  "dataset.preset = 'auto'" \
+  'selectAuto();'; do
+  case "$(< "$SITE")" in
+    *"$fragment"*) ;;
+    *) fail 'auto preset must hash hostnames like the plugin' ;;
+  esac
+done
+
 for fragment in \
   'id="gallery-bars"' \
   'aria-modal="true"' \

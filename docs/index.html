@@ -303,6 +303,23 @@
       content: " *";
     }
 
+    /* The auto swatch stands for "hash the hostname"; a sweep of
+       accents rather than any single one. Its glow reuses the accent
+       the hash currently resolves to. */
+    .swatch-auto {
+      --swatch: var(--accent);
+    }
+
+    .swatch-auto .swatch-color {
+      background: linear-gradient(
+        90deg,
+        #8aadf4,
+        #a6da95,
+        #eed49f,
+        #ed8796
+      );
+    }
+
     .custom-color {
       --custom-swatch: var(--accent);
 
@@ -897,6 +914,36 @@ bar       #15181d  <span
         >copy</button>
       </div>
 
+      <h3>auto by hostname</h3>
+      <p class="lede">
+        The default 'auto' preset hashes each machine&rsquo;s short
+        hostname &mdash; this page seeded itself from your browser
+        instead. Type a hostname to preview the accent it would get.
+      </p>
+      <div
+        class="custom-color"
+        id="auto-host"
+        role="group"
+        aria-label="Preview the auto preset for a hostname"
+      >
+        <span
+          class="custom-color-swatch"
+          aria-hidden="true"
+        ></span>
+        <label class="visually-hidden" for="auto-host-input">
+          Hostname to preview the auto preset for
+        </label>
+        <input
+          class="custom-color-input"
+          id="auto-host-input"
+          type="text"
+          inputmode="text"
+          placeholder="hostname"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </div>
+
       <h3>custom accent</h3>
       <p class="lede">
         Skip the presets entirely: apply any #rrggbb value and Chroma
@@ -1145,8 +1192,39 @@ set -g @chroma_show_disk   <button
       return presets[sum % presets.length];
     }
 
+    // POSIX cksum, bit for bit: a non-reflected CRC-32 (polynomial
+    // 0x04c11db7) over the bytes, then over the byte length encoded
+    // least-significant octet first, ones-complemented. Must match
+    // the cksum call in seeded_preset in chroma.tmux exactly, so a
+    // hostname typed below lands on the same preset the plugin picks.
+    function cksum(text) {
+      const bytes = new TextEncoder().encode(text);
+      let crc = 0;
+      const feed = (byte) => {
+        crc = (crc ^ (byte << 24)) >>> 0;
+        for (let bit = 0; bit < 8; bit += 1) {
+          crc = crc & 0x80000000
+            ? ((crc << 1) ^ 0x04c11db7) >>> 0
+            : (crc << 1) >>> 0;
+        }
+      };
+      bytes.forEach(feed);
+      for (let length = bytes.length; length > 0; length >>>= 8) {
+        feed(length & 0xff);
+      }
+      return ~crc >>> 0;
+    }
+
+    // Mirrors seeded_preset: hash the short hostname (up to the
+    // first dot, like hostname -s) and index into the preset list.
+    function presetForHost(host) {
+      const short = host.split('.')[0];
+      return presets[cksum(short) % presets.length];
+    }
+
     const state = {
       preset: seededPreset(),
+      auto: true,
       powerline: false,
       cpu: true,
       memory: true,
@@ -1386,36 +1464,69 @@ set -g @chroma_show_disk   <button
       ));
     }
 
-    function selectPreset(preset) {
+    function applyPreset(preset) {
       state.preset = preset;
       const custom = preset.name === 'custom';
+      const auto = state.auto;
       const alt = mixColor(preset.base, '#15181d', 60);
+      // The config snippets show what ~/.tmux.conf would say: 'auto'
+      // stays 'auto' even while a typed hostname previews its result.
+      const confOption = custom ? '@chroma_base_color' : '@chroma_preset';
+      const confValue = auto ? 'auto' : custom ? preset.base : preset.name;
       root.style.setProperty('--accent', preset.base);
       root.style.setProperty('--accent-alt', alt);
-      document.getElementById('readout-name').textContent = preset.name;
+      document.getElementById('readout-name').textContent = auto
+        ? 'auto (' + preset.name + ')'
+        : preset.name;
       document.getElementById('readout-base').textContent = preset.base;
       document.getElementById('readout-alt').textContent = alt;
       document.getElementById('chip-base').style.background = preset.base;
       document.getElementById('chip-alt').style.background = alt;
-      document.getElementById('preset-line').textContent = custom
-        ? "set -g @chroma_base_color '" + preset.base + "'"
-        : "set -g @chroma_preset '" + preset.name + "'";
+      document.getElementById('preset-line').textContent =
+        'set -g ' + confOption + " '" + confValue + "'";
       document.getElementById('conf-preset-line').replaceChildren(
         custom ? "@chroma_base_color  '" : "@chroma_preset      '",
-        makeElement('conf-value', custom ? preset.base : preset.name),
+        makeElement('conf-value', confValue),
         "'"
       );
+      const selected = auto ? 'auto' : preset.name;
       document.querySelectorAll('.swatch').forEach((button) => {
         button.setAttribute(
           'aria-pressed',
-          String(button.dataset.preset === preset.name)
+          String(button.dataset.preset === selected)
         );
       });
+      if (auto) {
+        autoHostForm.style.setProperty('--custom-swatch', preset.base);
+      }
       renderStatus();
+    }
+
+    function selectPreset(preset) {
+      state.auto = false;
+      applyPreset(preset);
+    }
+
+    function selectAuto() {
+      state.auto = true;
+      const host = autoHostInput.value.trim();
+      applyPreset(host ? presetForHost(host) : seededPreset());
     }
 
     function setupPalette() {
       const grid = document.getElementById('swatch-grid');
+      const autoButton = document.createElement('button');
+      autoButton.className = 'swatch swatch-auto';
+      autoButton.type = 'button';
+      autoButton.dataset.preset = 'auto';
+      autoButton.setAttribute(
+        'aria-label',
+        'Use the auto preset, hashed from the hostname'
+      );
+      autoButton.appendChild(makeElement('swatch-color'));
+      autoButton.appendChild(makeElement('swatch-name', 'auto'));
+      autoButton.addEventListener('click', selectAuto);
+      grid.appendChild(autoButton);
       const displayPresets = [...presets].sort((first, second) => (
         colorHue(first.base) - colorHue(second.base)
       ));
@@ -1445,6 +1556,12 @@ set -g @chroma_show_disk   <button
     const customColorInput = document.getElementById(
       'custom-color-input'
     );
+    const autoHostForm = document.getElementById('auto-host');
+    const autoHostInput = document.getElementById('auto-host-input');
+
+    // Typing a hostname is an auto-mode action: it re-selects auto
+    // and previews the preset the plugin would pick for that host.
+    autoHostInput.addEventListener('input', selectAuto);
 
     customColorInput.addEventListener('input', () => {
       const customBase = normalizeHex(customColorInput.value);
@@ -1748,7 +1865,7 @@ set -g @chroma_show_disk   <button
     }, 30000);
 
     setupPalette();
-    selectPreset(state.preset);
+    selectAuto();
   </script>
 </body>
 </html>

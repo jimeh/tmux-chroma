@@ -61,6 +61,13 @@ resolve_preset() {
   local host="$2"
   local name
 
+  # 'auto' (the default) picks a stable preset from the short
+  # hostname; unknown names get the same treatment.
+  if [ "$preset" = 'auto' ] || [ -z "$preset" ]; then
+    seeded_preset "$host"
+    return
+  fi
+
   for name in $PRESET_NAMES; do
     if [ "$name" = "$preset" ]; then
       printf '%s\n' "$preset"

@@ -102,6 +102,15 @@ run_theme
 assert_option @chroma_current_preset sky
 assert_option @chroma_base '#91d7e3'
 
+# 'auto' must land on the same preset the seeded hash picks for the
+# host, mirroring seeded_preset: cksum(host_short) % preset count.
+tmux -L "$SOCKET" set-option -g @chroma_preset auto
+run_theme
+host="$(tmux -L "$SOCKET" display-message -p '#{host_short}')"
+sum="$(printf '%s' "$host" | cksum | awk '{ print $1 }')"
+read -ra names <<< "$(option @chroma_preset_names)"
+assert_option @chroma_current_preset "${names[sum % ${#names[@]}]}"
+
 tmux -L "$SOCKET" set-option -g @chroma_preset blue
 tmux -L "$SOCKET" set-option -g @chroma_powerline on
 tmux -L "$SOCKET" set-option -g @chroma_show_cpu off

@@ -64,7 +64,7 @@ Set options before Chroma loads:
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `@chroma_preset` | host-seeded | Preset name from the list below |
+| `@chroma_preset` | `auto` | Preset name below, or `auto` for host-seeded |
 | `@chroma_base_color` | unset | Full `#rrggbb` accent override |
 | `@chroma_clock_format` | `%H:%M` | Clock `strftime` format |
 | `@chroma_clock_min_width` | `91` | Minimum client width for the clock |
@@ -90,8 +90,9 @@ set -g @plugin 'jimeh/tmux-chroma'
 run "${HOME}/.tmux/plugins/tpm/tpm"
 ```
 
-An invalid preset falls back to the host-seeded selection. An invalid custom
-base color is ignored.
+The default `auto` hashes the machine's short hostname into a stable preset,
+so every host keeps its own accent without per-machine configuration. An
+invalid preset behaves like `auto`. An invalid custom base color is ignored.
 
 ## Presets
 
