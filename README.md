@@ -104,9 +104,6 @@ red         orchid      jade        plum        purple      rosewater
 flamingo    sky         gold        cornflower
 ```
 
-Legacy preset names remain accepted as aliases. The exception is `sky`, which
-now uses Catppuccin Sky; use `sapphire` for the color previously named `sky`.
-
 The selected preset supplies `base`. Chroma derives `base_alt` as a 60%
 blend of `base` toward the bar background, including when
 `@chroma_base_color` is used.

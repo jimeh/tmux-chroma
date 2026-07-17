@@ -56,32 +56,10 @@ seeded_preset() {
   printf '%s\n' "$1"
 }
 
-canonical_preset() {
-  local preset="$1"
-
-  case "$preset" in
-    aurora) preset='blue' ;;
-    ember) preset='peach' ;;
-    lagoon) preset='teal' ;;
-    violet) preset='mauve' ;;
-    moss) preset='green' ;;
-    slate) preset='lavender' ;;
-    rose) preset='pink' ;;
-    sand) preset='yellow' ;;
-    coral) preset='maroon' ;;
-    cherry) preset='red' ;;
-    fuchsia) preset='purple' ;;
-  esac
-
-  printf '%s\n' "$preset"
-}
-
 resolve_preset() {
   local preset="$1"
   local host="$2"
   local name
-
-  preset="$(canonical_preset "$preset")"
 
   for name in $PRESET_NAMES; do
     if [ "$name" = "$preset" ]; then

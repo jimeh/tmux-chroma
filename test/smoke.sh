@@ -55,7 +55,7 @@ run_theme() {
 }
 
 tmux -L "$SOCKET" -f /dev/null new-session -d -s chroma
-tmux -L "$SOCKET" set-option -g @chroma_preset ember
+tmux -L "$SOCKET" set-option -g @chroma_preset peach
 run_theme
 
 assert_option @chroma_current_preset peach
@@ -65,9 +65,7 @@ assert_option @chroma_plugin_dir "$ROOT"
 assert_contains "$(option @chroma_preset_names)" 'purple'
 assert_contains "$(option @chroma_preset_names)" 'gold'
 assert_contains "$(option @chroma_preset_names)" 'cornflower'
-assert_not_contains "$(option @chroma_preset_names)" 'fuchsia'
 assert_contains "$(option @chroma_preset_names)" 'rosewater'
-assert_not_contains "$(option @chroma_preset_names)" 'aurora'
 
 left_before="$(option status-left)"
 right_before="$(option status-right)"
@@ -89,7 +87,7 @@ assert_not_contains "$(option @chroma_base)" 'invalid'
 assert_contains "$(option @chroma_preset_names)" \
   "$(option @chroma_current_preset)"
 
-tmux -L "$SOCKET" set-option -g @chroma_preset fuchsia
+tmux -L "$SOCKET" set-option -g @chroma_preset purple
 run_theme
 assert_option @chroma_current_preset purple
 assert_option @chroma_base '#ba91d8'
