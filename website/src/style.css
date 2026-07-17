@@ -74,8 +74,11 @@ button {
   white-space: nowrap;
 }
 
+/* The page column matches the 80-column measure, so full-width
+   children (pane borders, the swatch grid) stay in the same centered
+   column as the capped prose and code blocks. */
 .shell {
-  width: min(100% - 2.5rem, 880px);
+  width: min(100% - 2.5rem, var(--measure));
   margin-inline: auto;
 }
 
@@ -796,7 +799,7 @@ h3::before {
 
 @media (max-width: 560px) {
   .shell {
-    width: min(100% - 1.75rem, 880px);
+    width: min(100% - 1.75rem, var(--measure));
   }
 
   .prompt-line .prompt-path {
