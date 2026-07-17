@@ -1,0 +1,12 @@
+# Tool versions for contributors, agents, and CI (via jdx/mise-action).
+# Run `mise install` once; the Makefile then finds everything on PATH.
+# Bun is the only JS runtime: it runs the website build and the npm
+# lint tools the Makefile pins via `bunx --bun`.
+
+[settings]
+minimum_release_age = "3d"
+
+[tools]
+bun = "1.3"
+shellcheck = "0.11"
+shfmt = "3.13.1"

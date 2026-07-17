@@ -5,7 +5,8 @@ on:
     branches:
       - main
     paths:
-      - docs/**
+      - website/**
+      - mise.toml
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -19,12 +20,18 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
     steps:
       - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v4
+      - run: bun install --frozen-lockfile
+      - run: bun run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: docs
+          path: website/dist
 
   deploy:
     needs: build
