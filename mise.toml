@@ -4,7 +4,7 @@
 # lint tools the Makefile pins via `bunx --bun`.
 
 [settings]
-minimum_release_age = "7d"
+minimum_release_age = "3d"
 
 [tools]
 bun = "1.3"
