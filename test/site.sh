@@ -81,6 +81,23 @@ assert_block_contains '.status-prefix.is-powerline' \
 assert_block_contains '.divider-metrics' '--divider-from: var(--bar);'
 assert_block_contains '.powerline-glyph' 'height: 100%;'
 
+# Narrow viewports hide the session and metrics segments; the
+# surviving forward and tail dividers must retarget their hidden
+# endpoints to the bar color or they paint stranded raised cells.
+narrow_block="$(
+  sed -n '/^    @media (max-width: 720px) {$/,/^    }$/p' "$SITE"
+)"
+for fragment in \
+  '.divider-forward' \
+  '--divider-to: var(--bar);' \
+  '.divider-tail' \
+  '--divider-from: var(--bar);'; do
+  case "$narrow_block" in
+    *"$fragment"*) ;;
+    *) fail 'narrow viewport must retarget surviving dividers to the bar' ;;
+  esac
+done
+
 # Segment spacing must come from literal space characters in the format
 # strings, mirroring tmux cell geometry, never from CSS padding.
 for selector in \

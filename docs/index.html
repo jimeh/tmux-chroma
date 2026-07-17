@@ -768,6 +768,18 @@
         display: none;
       }
 
+      /* With the session and metrics segments hidden, the surviving
+         dividers sit against the bar, so their panel-raised endpoints
+         must fall back to the bar color — like the plugin's tail
+         divider when the right side is empty. */
+      .divider-forward {
+        --divider-to: var(--bar);
+      }
+
+      .divider-tail {
+        --divider-from: var(--bar);
+      }
+
       .option-list div {
         grid-template-columns: 1fr;
         gap: 0.1rem;
