@@ -5,7 +5,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 shell_presets="$(
-  sed -n "s/^[[:space:]]*\([a-z][a-z]*\)) base='\(#[0-9a-fA-F]*\)' ;;/\1=\2/p" "$ROOT/chroma.tmux"
+  # The light column will sync with the site after its rewrite lands.
+  sed -n "s/^[[:space:]]*\([a-z][a-z]*\)) \
+base='\(#[[:xdigit:]]*\)' light='#[[:xdigit:]]*' ;;/\1=\2/p" \
+    "$ROOT/chroma.tmux"
 )"
 if [ -z "$shell_presets" ]; then
   printf 'failed to extract plugin palette data\n' >&2

@@ -54,11 +54,13 @@ bun run build
   insufficient for status-format behavior.
 - Run Powerline assertions under a UTF-8 locale. Older tmux versions do not
   preserve divider glyphs in a plain `C` locale.
-- The website duplicates preset names, base colors, the `base_alt` mix
-  formula, and the POSIX `cksum` hash from `chroma.tmux`
-  (`website/src/presets.ts`, `website/src/state.ts`). Update them together
-  and run `make test`; `test/palette-sync.sh` diffs the palettes and runs
-  the JS cksum port against `cksum(1)`.
+- `chroma.tmux` carries dark and light palettes. The website duplicates
+  preset names, base colors, the `base_alt` mix formula, and the POSIX
+  `cksum` hash from `chroma.tmux` (`website/src/presets.ts`,
+  `website/src/state.ts`); the site currently mirrors only the dark
+  column. Update them together and run `make test`;
+  `test/palette-sync.sh` diffs the palettes and runs the JS cksum port
+  against `cksum(1)`.
 - Keep website dependencies minimal: `preact` and `@preact/signals` at
   runtime; `vite`, `@preact/preset-vite`, and `typescript` for the
   build, nothing else. Source is strict TypeScript (`bun run

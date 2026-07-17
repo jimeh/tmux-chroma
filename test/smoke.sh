@@ -55,6 +55,13 @@ run_theme() {
 }
 
 tmux -L "$SOCKET" -f /dev/null new-session -d -s chroma
+run_theme
+
+assert_option @chroma_bg '#15181d'
+assert_option @chroma_current_mode dark
+assert_option @chroma_ink '#101216'
+assert_option @chroma_dark '#101216'
+
 tmux -L "$SOCKET" set-option -g @chroma_preset peach
 run_theme
 
@@ -101,6 +108,51 @@ tmux -L "$SOCKET" set-option -g @chroma_preset sky
 run_theme
 assert_option @chroma_current_preset sky
 assert_option @chroma_base '#91d7e3'
+
+tmux -L "$SOCKET" set-option -gu @chroma_base_color
+tmux -L "$SOCKET" set-option -g @chroma_background light
+tmux -L "$SOCKET" set-option -g @chroma_preset blue
+run_theme
+assert_option @chroma_current_mode light
+assert_option @chroma_base '#1e66f5'
+assert_option @chroma_bg '#e9ecf2'
+assert_option @chroma_warn '#df8e1d'
+assert_option @chroma_ink '#f4f6fa'
+assert_option @chroma_base_alt '#6f9bf3'
+
+left_before="$(option status-left)"
+right_before="$(option status-right)"
+run_theme
+[ "$left_before" = "$(option status-left)" ] ||
+  fail 'light status-left changed after reload'
+[ "$right_before" = "$(option status-right)" ] ||
+  fail 'light status-right changed after reload'
+
+tmux -L "$SOCKET" set-option -g @chroma_background '#fdf6e3'
+run_theme
+assert_option @chroma_current_mode light
+assert_option @chroma_bg '#e9e4d4'
+assert_option @chroma_bg_alt '#ded9cc'
+assert_option @chroma_border '#c8c5bc'
+
+tmux -L "$SOCKET" set-option -g @chroma_background '#301934'
+run_theme
+assert_option @chroma_current_mode dark
+assert_option @chroma_bg '#402c45'
+
+tmux -L "$SOCKET" set-option -g @chroma_background bogus
+run_theme
+assert_option @chroma_current_mode dark
+assert_option @chroma_bg '#15181d'
+
+tmux -L "$SOCKET" set-option -g @chroma_base_color '#123456'
+tmux -L "$SOCKET" set-option -g @chroma_background light
+run_theme
+assert_option @chroma_base '#123456'
+assert_option @chroma_base_alt '#687d94'
+
+tmux -L "$SOCKET" set-option -gu @chroma_base_color
+tmux -L "$SOCKET" set-option -gu @chroma_background
 
 # 'auto' must land on the same preset the seeded hash picks for the
 # host, mirroring seeded_preset: cksum(host_short) % preset count.
