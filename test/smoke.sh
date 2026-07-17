@@ -118,7 +118,21 @@ assert_option @chroma_base '#1e66f5'
 assert_option @chroma_bg '#e9ecf2'
 assert_option @chroma_warn '#df8e1d'
 assert_option @chroma_ink '#f4f6fa'
+assert_option @chroma_dark '#f4f6fa'
 assert_option @chroma_base_alt '#6f9bf3'
+
+# One Latte-sourced accent and one hand-curated accent guard the light
+# column until the site rewrite gives palette-sync a light target.
+tmux -L "$SOCKET" set-option -g @chroma_preset peach
+run_theme
+assert_option @chroma_base '#fe640b'
+
+tmux -L "$SOCKET" set-option -g @chroma_preset cornflower
+run_theme
+assert_option @chroma_base '#3d74d8'
+
+tmux -L "$SOCKET" set-option -g @chroma_preset blue
+run_theme
 
 left_before="$(option status-left)"
 right_before="$(option status-right)"
@@ -134,6 +148,12 @@ assert_option @chroma_current_mode light
 assert_option @chroma_bg '#e9e4d4'
 assert_option @chroma_bg_alt '#ded9cc'
 assert_option @chroma_border '#c8c5bc'
+
+# Luma 128 exactly is light; pins the >= boundary.
+tmux -L "$SOCKET" set-option -g @chroma_background '#808080'
+run_theme
+assert_option @chroma_current_mode light
+assert_option @chroma_bg '#79797b'
 
 tmux -L "$SOCKET" set-option -g @chroma_background '#301934'
 run_theme
