@@ -66,6 +66,8 @@ Set options before Chroma loads:
 | --- | --- | --- |
 | `@chroma_preset` | `auto` | Preset name below, or `auto` for host-seeded |
 | `@chroma_base_color` | unset | Full `#rrggbb` accent override |
+| `@chroma_background` | `dark` | Background: dark, light, a theme name, or #rrggbb |
+| `@chroma_mode` | `auto` | Force the dark or light palette over the background |
 | `@chroma_clock_format` | `%H:%M` | Clock `strftime` format |
 | `@chroma_clock_min_width` | `91` | Minimum client width for the clock |
 | `@chroma_powerline` | `off` | Powerline section dividers |
@@ -109,6 +111,28 @@ The selected preset supplies `base`. Chroma derives `base_alt` as a 60%
 blend of `base` toward the bar background, including when
 `@chroma_base_color` is used.
 
+## Light mode
+
+Set `@chroma_background` to `light` for a curated light palette. Every preset
+has a light variant. A `#rrggbb` value classifies the background as light or
+dark by perceived luma, then blends the status-bar surfaces toward that
+terminal background. Popular themes are also available by name — each resolves
+to that theme's background color and is treated like the matching `#rrggbb`:
+
+`solarized-light`, `solarized-dark`, `tomorrow`, `tomorrow-night`,
+`gruvbox-light`, `gruvbox-dark`, `one-light`, `one-dark`, `catppuccin-latte`,
+`catppuccin-frappe`, `catppuccin-macchiato`, `catppuccin-mocha`,
+`everforest-light`, `everforest-dark`, `rose-pine-dawn`, `rose-pine`,
+`github-light`, `github-dark`, `dracula`, `nord`, `monokai`, `tokyo-night`
+
+Set `@chroma_mode` to `dark` or `light` to override the luma classification
+for backgrounds near the boundary; the background still supplies the color the
+surfaces blend toward. The default `auto` follows `@chroma_background`.
+
+`@chroma_base_color` is used verbatim in both modes, so choose a
+light-appropriate custom accent yourself. Tmux cannot reliably query the
+terminal's background, so `@chroma_background` is manual.
+
 ## Status behavior
 
 - The clock is hidden on clients narrower than
@@ -130,7 +154,8 @@ Chroma publishes its resolved values as global tmux options:
 @chroma_fg               @chroma_muted
 @chroma_subtle           @chroma_border
 @chroma_warn             @chroma_alert
-@chroma_dark             @chroma_current_preset
+@chroma_ink              @chroma_dark
+@chroma_current_mode     @chroma_current_preset
 @chroma_preset_names     @chroma_plugin_dir
 @chroma_sync_on          @chroma_sync_off
 ```
@@ -153,8 +178,8 @@ website palette stays in sync with the plugin.
 
 Chroma uses selected accent colors from the
 [Catppuccin Macchiato palette](https://catppuccin.com/palette), under the MIT
-license. Chroma's neutral colors, additional accents, layout, behavior, and
-implementation are its own.
+license. Light accents are adapted from Catppuccin Latte. Chroma's neutral
+colors, additional accents, layout, behavior, and implementation are its own.
 
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for attribution.
 

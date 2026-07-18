@@ -28,6 +28,16 @@ export function colorHue(color: string): number {
   return (hue * 60 + 360) % 360;
 }
 
+// Integer perceived luma, matching chroma.tmux's classification of
+// custom backgrounds exactly (shell arithmetic truncates).
+export function colorLuma(color: string): number {
+  return Math.floor(
+    (299 * channel(color, 1) +
+      587 * channel(color, 3) +
+      114 * channel(color, 5)) / 1000
+  );
+}
+
 export function normalizeHex(value: string): string {
   const candidate = value.trim().replace(/^#?/, '#');
   return /^#[0-9a-f]{6}$/i.test(candidate)

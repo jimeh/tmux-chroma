@@ -78,6 +78,41 @@ resolve_preset() {
   seeded_preset "$host"
 }
 
+# Background seeds for popular terminal themes. A name resolves to
+# that theme's background color and then flows through the same
+# luma classification and surface blending as a literal #rrggbb.
+# The site duplicates this table; test/palette-sync.sh diffs them.
+named_background() {
+  local seed=''
+
+  case "$1" in
+    solarized-light) seed='#fdf6e3' ;;
+    solarized-dark) seed='#002b36' ;;
+    tomorrow) seed='#ffffff' ;;
+    tomorrow-night) seed='#1d1f21' ;;
+    gruvbox-light) seed='#fbf1c7' ;;
+    gruvbox-dark) seed='#282828' ;;
+    one-light) seed='#fafafa' ;;
+    one-dark) seed='#282c34' ;;
+    catppuccin-latte) seed='#eff1f5' ;;
+    catppuccin-frappe) seed='#303446' ;;
+    catppuccin-macchiato) seed='#24273a' ;;
+    catppuccin-mocha) seed='#1e1e2e' ;;
+    everforest-light) seed='#fdf6e0' ;;
+    everforest-dark) seed='#2d353b' ;;
+    rose-pine-dawn) seed='#faf4ed' ;;
+    rose-pine) seed='#191724' ;;
+    github-light) seed='#ffffff' ;;
+    github-dark) seed='#0d1117' ;;
+    dracula) seed='#282a36' ;;
+    nord) seed='#2e3440' ;;
+    monokai) seed='#272822' ;;
+    tokyo-night) seed='#1a1b26' ;;
+  esac
+
+  printf '%s\n' "$seed"
+}
+
 mix_color() {
   local c1="${1#\#}" c2="${2#\#}" pct="$3"
   local r g b
@@ -92,6 +127,10 @@ mix_color() {
 apply_preset() {
   local preset="$1"
   local base_color="$2"
+  local background="$3"
+  local mode_override="$4"
+  local mode='dark'
+  local seed='' hex luma r g b
   local bg='#15181d'
   local bg_alt='#20242b'
   local fg='#d7dde7'
@@ -99,35 +138,89 @@ apply_preset() {
   local subtle='#6f7a8d'
   local border='#343a44'
   local base='#8aadf4'
+  local light='#3f68bb'
   local base_alt
   local warn='#eed49f'
   local alert='#ed8796'
-  local dark='#101216'
+  local ink='#101216'
+  local muted_mix=60
+  local subtle_mix=45
+
+  case "$background" in
+    light) mode='light' ;;
+    '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
+      seed="$background"
+      hex="${background#\#}"
+      r=$((16#${hex:0:2}))
+      g=$((16#${hex:2:2}))
+      b=$((16#${hex:4:2}))
+      luma=$(((299 * r + 587 * g + 114 * b) / 1000))
+      if [ "$luma" -ge 130 ]; then
+        mode='light'
+      fi
+      ;;
+  esac
+
+  # An explicit @chroma_mode wins over the background's
+  # classification; the background still supplies the seed.
+  case "$mode_override" in
+    dark | light) mode="$mode_override" ;;
+  esac
+
+  if [ "$mode" = 'light' ]; then
+    bg='#e9ecf2'
+    bg_alt='#dde1e9'
+    fg='#3c4354'
+    muted='#5c6678'
+    subtle='#767f93'
+    border='#c4cad6'
+    warn='#b89651'
+    alert='#ad4352'
+    ink='#f4f6fa'
+    muted_mix=80
+    subtle_mix=62
+  fi
+
+  if [ -n "$seed" ]; then
+    bg="$(mix_color "$fg" "$seed" 10)"
+    bg_alt="$(mix_color "$fg" "$seed" 16)"
+    border="$(mix_color "$fg" "$seed" 27)"
+    # Text tones keep their contrast against any seed: fg stays the
+    # mode anchor, and the quieter tones blend it toward the seed at
+    # the per-mode ratios the anchors sit at over the default
+    # surfaces (light mode needs a stronger fg share).
+    muted="$(mix_color "$fg" "$seed" "$muted_mix")"
+    subtle="$(mix_color "$fg" "$seed" "$subtle_mix")"
+  fi
 
   case "$preset" in
-    blue) base='#8aadf4' ;;
-    peach) base='#f5a97f' ;;
-    teal) base='#8bd5ca' ;;
-    mauve) base='#c6a0f6' ;;
-    green) base='#a6da95' ;;
-    lavender) base='#b7bdf8' ;;
-    sapphire) base='#7dc4e4' ;;
-    pink) base='#f5bde6' ;;
-    yellow) base='#eed49f' ;;
-    maroon) base='#ee99a0' ;;
-    lime) base='#c8dd88' ;;
-    ash) base='#a5adcb' ;;
-    red) base='#ed8796' ;;
-    orchid) base='#e38dcd' ;;
-    jade) base='#8cd9b3' ;;
-    plum) base='#d290df' ;;
-    purple) base='#ba91d8' ;;
-    rosewater) base='#f4dbd6' ;;
-    flamingo) base='#f0c6c6' ;;
-    sky) base='#91d7e3' ;;
-    gold) base='#efbc88' ;;
-    cornflower) base='#83baee' ;;
+    blue) base='#8aadf4' light='#3f68bb' ;;
+    peach) base='#f5a97f' light='#b5663a' ;;
+    teal) base='#8bd5ca' light='#4f8d83' ;;
+    mauve) base='#c6a0f6' light='#824ec3' ;;
+    green) base='#a6da95' light='#649753' ;;
+    lavender) base='#b7bdf8' light='#616bc9' ;;
+    sapphire) base='#7dc4e4' light='#437f9a' ;;
+    pink) base='#f5bde6' light='#c569ac' ;;
+    yellow) base='#eed49f' light='#b89651' ;;
+    maroon) base='#ee99a0' light='#b74b54' ;;
+    lime) base='#c8dd88' light='#83964b' ;;
+    ash) base='#a5adcb' light='#636b89' ;;
+    red) base='#ed8796' light='#ad4352' ;;
+    orchid) base='#e38dcd' light='#a04b8b' ;;
+    jade) base='#8cd9b3' light='#4e9271' ;;
+    plum) base='#d290df' light='#8f4e9c' ;;
+    purple) base='#ba91d8' light='#775293' ;;
+    rosewater) base='#f4dbd6' light='#bc8176' ;;
+    flamingo) base='#f0c6c6' light='#bd7575' ;;
+    sky) base='#91d7e3' light='#4d96a2' ;;
+    gold) base='#efbc88' light='#b17a42' ;;
+    cornflower) base='#83baee' light='#4078ac' ;;
   esac
+
+  if [ "$mode" = 'light' ]; then
+    base="$light"
+  fi
 
   if [ -n "$base_color" ]; then
     base="$base_color"
@@ -147,7 +240,9 @@ apply_preset() {
   set_tmux_option @chroma_border "$border"
   set_tmux_option @chroma_warn "$warn"
   set_tmux_option @chroma_alert "$alert"
-  set_tmux_option @chroma_dark "$dark"
+  set_tmux_option @chroma_ink "$ink"
+  set_tmux_option @chroma_dark "$ink"
+  set_tmux_option @chroma_current_mode "$mode"
 }
 
 segment() {
@@ -177,12 +272,12 @@ powerline_divider() {
 }
 
 main() {
-  local host preset requested_preset base_color
+  local host preset requested_preset base_color background mode_override
   local host_label left_extra right_extra clock_format clock_min_width
   local powerline
   local interval
   local show_cpu show_memory show_disk disk_path
-  local bg bg_alt fg muted subtle border base base_alt warn alert dark
+  local bg bg_alt fg muted subtle border base base_alt warn alert ink
   local cpu memory disk metrics metric_sep sync_on sync_render
   local prefix prefix_on prefix_off left right clock wide tail tail_bg
   local window_flags
@@ -191,6 +286,13 @@ main() {
   requested_preset="$(get_tmux_option @chroma_preset)"
   preset="$(resolve_preset "$requested_preset" "$host")"
   base_color="$(get_tmux_option @chroma_base_color)"
+  background="$(default_tmux_option @chroma_background 'dark')"
+  mode_override="$(default_tmux_option @chroma_mode 'auto')"
+
+  case "$mode_override" in
+    dark | light) ;;
+    *) mode_override='auto' ;;
+  esac
 
   # mix_color needs a full #rrggbb value; ignore anything else.
   case "$base_color" in
@@ -198,7 +300,18 @@ main() {
     *) base_color='' ;;
   esac
 
-  apply_preset "$preset" "$base_color"
+  case "$background" in
+    dark | light) ;;
+    '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) ;;
+    *)
+      # A theme name resolves to its background seed; anything
+      # unknown falls back to the dark default.
+      background="$(named_background "$background")"
+      [ -n "$background" ] || background='dark'
+      ;;
+  esac
+
+  apply_preset "$preset" "$base_color" "$background" "$mode_override"
 
   host_label="$(default_tmux_option @chroma_host_label '#H')"
   left_extra="$(get_tmux_option @chroma_left_extra)"
@@ -222,7 +335,7 @@ main() {
   base_alt="$(get_tmux_option @chroma_base_alt)"
   warn="$(get_tmux_option @chroma_warn)"
   alert="$(get_tmux_option @chroma_alert)"
-  dark="$(get_tmux_option @chroma_dark)"
+  ink="$(get_tmux_option @chroma_ink)"
 
   set_tmux_option @chroma_plugin_dir "$CURRENT_DIR"
   # Unquoted echo flattens the newline in PRESET_NAMES to a space.
@@ -245,9 +358,9 @@ main() {
   fi
   prefix="#{?client_prefix,$prefix_on,$prefix_off}"
   if [ "$powerline" = 'on' ]; then
-    sync_on="$(segment "$dark" "$alert" ' SYNC  ')"
+    sync_on="$(segment "$ink" "$alert" ' SYNC  ')"
   else
-    sync_on="$(segment "$dark" "$alert" ' SYNC ')"
+    sync_on="$(segment "$ink" "$alert" ' SYNC ')"
   fi
   set_tmux_option @chroma_sync_on "$sync_on"
   set_tmux_option @chroma_sync_off ''
@@ -255,17 +368,17 @@ main() {
   # Commas would split the surrounding #{?...} conditional; tmux turns
   # #, back into a literal comma at display time.
   if [ "$powerline" = 'on' ]; then
-    clock="$(segment "$dark" "$base" " ${clock_format//,/#,}  ")"
+    clock="$(segment "$ink" "$base" " ${clock_format//,/#,}  ")"
   else
-    clock="$(segment "$dark" "$base" " ${clock_format//,/#,} ")"
+    clock="$(segment "$ink" "$base" " ${clock_format//,/#,} ")"
   fi
   wide="#{e|>=:#{client_width},$clock_min_width}"
 
   if [ "$powerline" = 'on' ]; then
-    left="$(segment "$dark" "$base" "  $host_label ")"
+    left="$(segment "$ink" "$base" "  $host_label ")"
     left="$left$(powerline_divider "$base" "$bg_alt" '')"
   else
-    left="$(segment "$dark" "$base" " $host_label ")"
+    left="$(segment "$ink" "$base" " $host_label ")"
   fi
   left="$left$(segment "$fg" "$bg_alt" ' #S ')"
 
@@ -342,8 +455,8 @@ main() {
   set_tmux_option status-style "fg=$fg,bg=$bg"
   set_tmux_option status-left-style "fg=$fg,bg=$bg"
   set_tmux_option status-right-style "fg=$fg,bg=$bg"
-  set_tmux_option message-style "fg=$dark,bg=$warn"
-  set_tmux_option mode-style "fg=$dark,bg=$base"
+  set_tmux_option message-style "fg=$ink,bg=$warn"
+  set_tmux_option mode-style "fg=$ink,bg=$base"
   set_tmux_option pane-border-style "fg=$border"
   set_tmux_option pane-active-border-style "fg=$base"
   set_tmux_option window-status-separator ''

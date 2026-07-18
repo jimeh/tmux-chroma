@@ -1,10 +1,17 @@
 import { effect } from '@preact/signals';
 import { render, type ComponentChild } from 'preact';
-import { ConfBlock, KeyRow } from './components/Config.tsx';
+import { BannerLetters } from './components/Banner.tsx';
+import {
+  BackgroundQuickToggle,
+  ConfBlock,
+  CustomBackground,
+  KeyRow,
+} from './components/Config.tsx';
 import { Dock } from './components/Dock.tsx';
 import { Gallery } from './components/Gallery.tsx';
 import {
   AutoHostPreview,
+  CopyButton,
   CustomColor,
   InstallCommand,
   PresetLine,
@@ -12,27 +19,56 @@ import {
   SwatchGrid,
 } from './components/Palette.tsx';
 import {
+  accent,
   accentAlt,
   armPrefix,
+  barColor,
   booting,
   currentWindow,
   disarmPrefix,
   galleryOpen,
   lastWindow,
   prefixArmed,
-  preset,
+  rainbowLogo,
+  rollLogo,
+  surfaces,
+  theme,
   tickClock,
   windows,
 } from './state.ts';
 import './style.css';
 
-// Re-theming is page-wide: the accent pair lives on :root so the CSS
-// can restyle prose, headings, and the dock without any component
-// touching elements it does not own.
+// Re-theming is page-wide: the theme attribute, accent pair, and
+// any custom-seed surfaces live on :root so the CSS can restyle
+// prose, headings, and the dock without any component touching
+// elements it does not own. For the named modes the surface
+// variables are cleared so the stylesheet's own blocks apply. The
+// theme-color meta follows the active bar so the browser chrome
+// matches.
 const root = document.documentElement;
+const themeMeta = document.querySelector('meta[name="theme-color"]');
 effect(() => {
-  root.style.setProperty('--accent', preset.value.base);
+  root.dataset.theme = theme.value;
+  const custom = surfaces.value;
+  const surfaceVars = {
+    '--canvas': custom?.canvas,
+    '--bar': custom?.bar,
+    '--panel': custom?.panel,
+    '--panel-raised': custom?.panelRaised,
+    '--line': custom?.line,
+    '--muted': custom?.muted,
+    '--subtle': custom?.subtle,
+  };
+  Object.entries(surfaceVars).forEach(([name, value]) => {
+    if (value) {
+      root.style.setProperty(name, value);
+    } else {
+      root.style.removeProperty(name);
+    }
+  });
+  root.style.setProperty('--accent', accent.value);
   root.style.setProperty('--accent-alt', accentAlt.value);
+  themeMeta?.setAttribute('content', barColor.value);
 });
 
 function mount(component: ComponentChild, id: string): void {
@@ -59,8 +95,52 @@ mount(<Readout />, 'readout');
 mount(<PresetLine />, 'preset-line');
 mount(<AutoHostPreview />, 'auto-host');
 mount(<CustomColor />, 'custom-color');
+mount(<BackgroundQuickToggle />, 'theme-toggle');
 mount(<ConfBlock />, 'conf-block');
+mount(<CustomBackground />, 'custom-background');
 mount(<KeyRow />, 'key-row');
+
+// The install snippets stay static HTML so they render without
+// JavaScript; their copy buttons are progressive enhancement,
+// mounted beside each code region.
+document.querySelectorAll('.inline-code').forEach((block) => {
+  const code = block.querySelector('.block-scroll');
+  if (!code) {
+    return;
+  }
+  const holder = document.createElement('span');
+  // Single-line snippets center the button vertically (equal top
+  // and bottom margins); multi-line ones pin it to the top corner.
+  const multiline = (code.textContent ?? '').trim().includes('\n');
+  holder.className = 'inline-code-copy' + (multiline ? ' is-corner' : '');
+  block.appendChild(holder);
+  render(
+    <CopyButton
+      copyLabel="Copy this snippet"
+      getText={() => code.textContent ?? ''}
+      getElement={() => code}
+    />,
+    holder
+  );
+});
+
+// Easter eggs: prefix+r re-rolls the banner with six random
+// hue-ordered accents, prefix+c paints the curated rainbow. The
+// static banner text is captured once and split into per-letter
+// columns on the first roll, so it keeps rendering without
+// JavaScript until then.
+const banner = document.querySelector('.banner');
+const bannerArt = banner?.textContent ?? '';
+let bannerMounted = false;
+
+function paintLogo(choose: () => void): void {
+  choose();
+  if (banner instanceof HTMLElement && !bannerMounted) {
+    bannerMounted = true;
+    banner.textContent = '';
+    render(<BannerLetters art={bannerArt} />, banner);
+  }
+}
 
 // Prefix easter egg: Ctrl-b or Ctrl-q, then w (choose-window),
 // opens the preset gallery. Plain q only closes when not typing
@@ -84,11 +164,21 @@ document.addEventListener('keydown', (event) => {
     armPrefix();
     return;
   }
-  if (prefixArmed() && event.key === 'w' &&
-      !event.ctrlKey && !event.metaKey && !event.altKey) {
-    event.preventDefault();
-    disarmPrefix();
-    galleryOpen.value = true;
+  if (prefixArmed() && !event.ctrlKey && !event.metaKey &&
+      !event.altKey) {
+    if (event.key === 'w') {
+      event.preventDefault();
+      disarmPrefix();
+      galleryOpen.value = true;
+    } else if (event.key === 'r') {
+      event.preventDefault();
+      disarmPrefix();
+      paintLogo(rollLogo);
+    } else if (event.key === 'c') {
+      event.preventDefault();
+      disarmPrefix();
+      paintLogo(rainbowLogo);
+    }
   }
 });
 

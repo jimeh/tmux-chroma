@@ -1,5 +1,4 @@
 import type { JSX } from 'preact';
-import type { Preset } from '../presets.ts';
 import { clockText } from '../state.ts';
 
 // Segment spacing comes from literal space characters in the strings
@@ -18,7 +17,6 @@ export interface StatusWindowItem {
 
 export interface StatusBarProps {
   host: string;
-  preset: Preset;
   powerline: boolean;
   prefixActive: boolean;
   syncActive: boolean;
@@ -116,7 +114,6 @@ function WindowItem({ item }: { item: StatusWindowItem }) {
 // survives re-renders.
 export function StatusBar({
   host,
-  preset,
   powerline,
   prefixActive,
   syncActive,
@@ -126,7 +123,9 @@ export function StatusBar({
   style,
 }: StatusBarProps) {
   const tail = syncActive ? 'SYNC' : clockText.value;
-  const tailColor = syncActive ? '#ed8796' : preset.base;
+  // The themed variables resolve per mode (and per gallery bar, where
+  // the accent pair is overridden inline).
+  const tailColor = syncActive ? 'var(--alert)' : 'var(--accent)';
   return (
     <div
       class={'statusbar' + (extraClass ? ' ' + extraClass : '')}
@@ -138,9 +137,19 @@ export function StatusBar({
       {powerline
         ? <Divider name="divider-forward" direction="forward" />
         : null}
-      <span class="status-segment status-session">{' chroma '}</span>
+      <span class="status-segment status-session">{' docs '}</span>
       {powerline
         ? <Divider name="divider-to-bar" direction="forward" />
+        : null}
+      {!powerline
+        ? (
+          <span
+            class={'status-session-gap' +
+              (prefixActive ? ' is-active' : '')}
+          >
+            {' '}
+          </span>
+        )
         : null}
       <span
         class={'status-segment status-prefix' +
