@@ -56,7 +56,7 @@ export function Dock() {
 
   // A hostname typed into the palette section's auto preview is
   // this "session's" machine, so the bar shows it like #H would.
-  const host = autoHost.value.trim() || 'noct';
+  const host = autoHost.value.trim() || 'chroma';
 
   // The bar scrolls in an inner region sharing the dock background,
   // so iOS overscroll cannot reveal the page behind the fixed dock.

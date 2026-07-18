@@ -11,18 +11,26 @@
     // Resolve the persisted @chroma_background before the
     // stylesheet paints: 'dark' (the default), 'light', or a custom
     // #rrggbb seed classified by luma and blended into surfaces
-    // exactly like chroma.tmux. src/state.ts repeats this
-    // resolution for the live controls.
+    // exactly like chroma.tmux; a persisted @chroma_mode overrides
+    // the classification. src/state.ts repeats this resolution for
+    // the live controls.
     (function () {
-      var stored = null;
-      try {
-        stored = localStorage.getItem('chroma-background');
-      } catch (error) {
-        // Storage may be unavailable; fall back to the dark default.
+      var read = function (key) {
+        try {
+          return localStorage.getItem(key);
+        } catch (error) {
+          // Storage may be unavailable; fall back to the defaults.
+          return null;
+        }
+      };
+      var stored = read('chroma-background');
+      var forced = read('chroma-mode');
+      if (forced !== 'dark' && forced !== 'light') {
+        forced = null;
       }
       var root = document.documentElement;
       if (stored === 'light' || stored === 'dark') {
-        root.dataset.theme = stored;
+        root.dataset.theme = forced || stored;
         return;
       }
       var named = {
@@ -53,7 +61,7 @@
         stored = named[stored];
       }
       if (!/^#[0-9a-f]{6}$/.test(stored || '')) {
-        root.dataset.theme = 'dark';
+        root.dataset.theme = forced || 'dark';
         return;
       }
       var seed = [1, 3, 5].map(function (offset) {
@@ -62,7 +70,7 @@
       var luma = Math.floor(
         (299 * seed[0] + 587 * seed[1] + 114 * seed[2]) / 1000
       );
-      var mode = luma >= 130 ? 'light' : 'dark';
+      var mode = forced || (luma >= 130 ? 'light' : 'dark');
       var fg = mode === 'light' ? [60, 67, 84] : [215, 221, 231];
       var mutedMix = mode === 'light' ? 80 : 60;
       var subtleMix = mode === 'light' ? 62 : 45;
@@ -111,13 +119,19 @@
   <main>
     <section class="window shell" id="intro" data-window="intro">
       <p class="prompt-line">
-        <span class="prompt-host">jimeh@noct</span>
-        <span class="prompt-path">~</span>
-        <span aria-hidden="true">$</span>
-        <span class="prompt-cmd">tmux attach -t chroma</span><span
-          class="cursor"
-          aria-hidden="true"
-        ></span>
+        <span class="prompt-text">
+          <span class="prompt-host">jimeh@chroma</span>
+          <span class="prompt-path">~</span>
+          <span aria-hidden="true">$</span>
+          <span class="prompt-cmd">tmux attach -t docs</span> <span
+            class="cursor"
+            aria-hidden="true"
+          ></span>
+        </span>
+        <span class="prompt-actions">
+          <span id="theme-toggle"></span>
+          <a href="https://github.com/jimeh/tmux-chroma">github</a>
+        </span>
       </p>
       <h1 class="visually-hidden">
         Chroma — a host-aware status theme for tmux

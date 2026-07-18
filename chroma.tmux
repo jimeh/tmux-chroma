@@ -128,6 +128,7 @@ apply_preset() {
   local preset="$1"
   local base_color="$2"
   local background="$3"
+  local mode_override="$4"
   local mode='dark'
   local seed='' hex luma r g b
   local bg='#15181d'
@@ -158,6 +159,12 @@ apply_preset() {
         mode='light'
       fi
       ;;
+  esac
+
+  # An explicit @chroma_mode wins over the background's
+  # classification; the background still supplies the seed.
+  case "$mode_override" in
+    dark | light) mode="$mode_override" ;;
   esac
 
   if [ "$mode" = 'light' ]; then
@@ -265,7 +272,7 @@ powerline_divider() {
 }
 
 main() {
-  local host preset requested_preset base_color background
+  local host preset requested_preset base_color background mode_override
   local host_label left_extra right_extra clock_format clock_min_width
   local powerline
   local interval
@@ -280,6 +287,12 @@ main() {
   preset="$(resolve_preset "$requested_preset" "$host")"
   base_color="$(get_tmux_option @chroma_base_color)"
   background="$(default_tmux_option @chroma_background 'dark')"
+  mode_override="$(default_tmux_option @chroma_mode 'auto')"
+
+  case "$mode_override" in
+    dark | light) ;;
+    *) mode_override='auto' ;;
+  esac
 
   # mix_color needs a full #rrggbb value; ignore anything else.
   case "$base_color" in
@@ -298,7 +311,7 @@ main() {
       ;;
   esac
 
-  apply_preset "$preset" "$base_color" "$background"
+  apply_preset "$preset" "$base_color" "$background" "$mode_override"
 
   host_label="$(default_tmux_option @chroma_host_label '#H')"
   left_extra="$(get_tmux_option @chroma_left_extra)"

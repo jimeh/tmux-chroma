@@ -204,7 +204,7 @@ assert_file_contains "$DOCK" 'prefers-reduced-motion' \
 # regardless of the system scheme) before the stylesheet paints, the
 # CSS overrides its dark defaults under data-theme='light', and the
 # live conf block hosts the toggle plus a custom background input.
-assert_file_contains "$HTML" "localStorage.getItem('chroma-background')" \
+assert_file_contains "$HTML" "read('chroma-background')" \
   'theme must resolve before the first paint'
 assert_block_contains ":root\[data-theme='light'\]" 'color-scheme: light;'
 assert_file_contains "$CONFIG" '@chroma_background' \
@@ -261,15 +261,23 @@ assert_file_contains "$STATE" 'persistValue(backgroundStorageKey' \
 # Every conf-block value (and the auto-host preview) persists under
 # a chroma-* key, stored only while non-default, with a reset link
 # in the conf block while anything differs.
-for key in chroma-preset chroma-host chroma-powerline chroma-show-cpu \
-  chroma-show-memory chroma-show-disk; do
+for key in chroma-preset chroma-mode chroma-host chroma-powerline \
+  chroma-show-cpu chroma-show-memory chroma-show-disk; do
   assert_file_contains "$STATE" "'$key'" \
     'conf values must persist across visits'
 done
+assert_file_contains "$CONFIG" '@chroma_mode' \
+  'the conf block must host the mode override'
+assert_file_contains "$HTML" "read('chroma-mode')" \
+  'the mode override must resolve before the first paint'
 assert_file_contains "$CONFIG" '# reset to defaults' \
   'the conf block must offer a reset while non-default'
 assert_file_contains "$PALETTE" 'aria-label="Clear the hostname"' \
   'the auto-host preview must offer a clear button'
+assert_file_contains "$PALETTE" 'aria-label="Reset the custom accent"' \
+  'an applied custom accent must offer a reset button'
+assert_file_contains "$CONFIG" 'aria-label="Reset the custom background"' \
+  'an applied custom background must offer a reset button'
 
 assert_file_contains "$CONFIG" "querySelector('.status-dock')" \
   'the conf dropdown must stop above the status dock'
@@ -288,9 +296,20 @@ assert_block_contains '.inline-code' 'position: relative;'
 assert_file_contains "$CONFIG" 'function confText' \
   'the conf block copy must emit only the option lines'
 
-# The typed command and the blinking cursor must sit flush.
-assert_file_contains "$HTML" 'chroma</span><span' \
-  'the prompt cursor must sit flush against the command'
+# The blinking cursor sits exactly one space after the typed
+# command, like a shell prompt.
+assert_file_contains "$HTML" 'docs</span> <span' \
+  'the prompt cursor must sit one space after the command'
+
+# The hero links to the repository and hosts a prominent light/dark
+# toggle beside the prompt.
+assert_file_contains "$HTML" \
+  '<a href="https://github.com/jimeh/tmux-chroma">github</a>' \
+  'the hero must link to the repository'
+assert_file_contains "$HTML" 'id="theme-toggle"' \
+  'the hero must host the light/dark toggle'
+assert_file_contains "$CONFIG" 'function BackgroundQuickToggle' \
+  'the hero toggle must flip the background option'
 
 for fragment in \
   'function seededPreset()' \

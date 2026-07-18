@@ -19,6 +19,7 @@ import {
   backgroundSeed,
   barColor,
   configDirty,
+  modeOverride,
   powerline,
   prefix,
   preset,
@@ -397,6 +398,60 @@ function PresetSelect() {
   );
 }
 
+// The hero's light/dark toggle: a prominent shortcut that flips
+// @chroma_background between the plain named modes (dropping any
+// custom seed, like picking dark/light from the conf dropdown). It
+// also clears a forced @chroma_mode, which would otherwise pin the
+// theme and make the toggle appear dead.
+export function BackgroundQuickToggle() {
+  const current = theme.value;
+  const next = current === 'dark' ? 'light' : 'dark';
+  return (
+    <button
+      class="conf-toggle"
+      type="button"
+      aria-label={'Switch to the ' + next + ' background'}
+      onClick={() => {
+        modeOverride.value = 'auto';
+        setBackground(next);
+      }}
+    >
+      {current}
+    </button>
+  );
+}
+
+// Forces the palette mode while @chroma_background keeps supplying
+// the seed; 'auto' follows the background's own classification.
+function ModeSelect() {
+  const value = modeOverride.value;
+  const groups: ConfSelectGroup[] = [
+    {
+      label: null,
+      options: [
+        {
+          value: 'auto',
+          swatch: 'linear-gradient(90deg, ' + anchors.dark.bg +
+            ' 50%, ' + anchors.light.bg + ' 50%)',
+        },
+        { value: 'dark', swatch: anchors.dark.bg },
+        { value: 'light', swatch: anchors.light.bg },
+      ],
+    },
+  ];
+  return (
+    <ConfSelect
+      ariaLabel="@chroma_mode value"
+      value={value}
+      display={"'" + value + "'"}
+      groups={groups}
+      onSelect={(next) => {
+        modeOverride.value = next;
+      }}
+    />
+  );
+}
+
 // The one theme control: this @chroma_background line re-themes
 // the whole page the way the option re-themes tmux. The dropdown
 // offers every option the plugin accepts — dark (the default),
@@ -457,6 +512,16 @@ export function CustomBackground() {
   const [value, setValue] = useState('');
   const [invalid, setInvalid] = useState(false);
   const customSeed = normalizeHex(value);
+  // Named themes come from the dropdown; this input only ever
+  // applies raw hex seeds, so only those get its clear button.
+  const applied = normalizeHex(background.value) !== '';
+
+  function clear(): void {
+    setValue('');
+    setInvalid(false);
+    inputRef.current?.setCustomValidity('');
+    setBackground('dark');
+  }
 
   function submit(event: Event): void {
     event.preventDefault();
@@ -514,6 +579,18 @@ export function CustomBackground() {
           setInvalid(false);
         }}
       />
+      {applied
+        ? (
+          <button
+            class="custom-color-clear"
+            type="button"
+            aria-label="Reset the custom background"
+            onClick={clear}
+          >
+            reset
+          </button>
+        )
+        : null}
       <button class="custom-color-submit" type="submit">apply</button>
     </form>
   );
@@ -533,6 +610,7 @@ function confText(): string {
   return [
     'set -g ' + conf.option + pad + "'" + conf.value + "'",
     "set -g @chroma_background  '" + background.value + "'",
+    "set -g @chroma_mode        '" + modeOverride.value + "'",
     "set -g @chroma_powerline   '" + onOff(powerline.value) + "'",
     "set -g @chroma_show_cpu    '" + onOff(showCpu.value) + "'",
     "set -g @chroma_show_memory '" + onOff(showMemory.value) + "'",
@@ -551,6 +629,8 @@ export function ConfBlock() {
         <PresetSelect />
         {'\nset -g @chroma_background  '}
         <BackgroundSelect />
+        {'\nset -g @chroma_mode        '}
+        <ModeSelect />
         {'\nset -g @chroma_powerline   '}
         <ConfToggle option={powerline} />
         {'\nset -g @chroma_show_cpu    '}

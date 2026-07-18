@@ -137,7 +137,7 @@ export function StatusBar({
       {powerline
         ? <Divider name="divider-forward" direction="forward" />
         : null}
-      <span class="status-segment status-session">{' chroma '}</span>
+      <span class="status-segment status-session">{' docs '}</span>
       {powerline
         ? <Divider name="divider-to-bar" direction="forward" />
         : null}

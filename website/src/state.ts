@@ -66,6 +66,15 @@ export function setBackground(next: string): void {
   background.value = next;
 }
 
+// @chroma_mode forces the palette mode over the background's
+// classification; 'auto' (the default) follows @chroma_background.
+function storedModeOverride(): string {
+  const value = storedValue('chroma-mode');
+  return value === 'dark' || value === 'light' ? value : 'auto';
+}
+
+export const modeOverride = signal<string>(storedModeOverride());
+
 export const backgroundSeed = computed<string | null>(() => {
   const value = background.value;
   if (value === 'dark' || value === 'light') {
@@ -75,8 +84,13 @@ export const backgroundSeed = computed<string | null>(() => {
 });
 
 // A custom seed resolves to the mode its perceived luma classifies
-// it as: >= 130 is light, exactly like the plugin.
+// it as: >= 130 is light, exactly like the plugin. An explicit
+// @chroma_mode wins over the classification.
 export const theme = computed<ThemeMode>(() => {
+  const forced = modeOverride.value;
+  if (forced === 'dark' || forced === 'light') {
+    return forced;
+  }
   const seed = backgroundSeed.value;
   if (seed) {
     return colorLuma(seed) >= 130 ? 'light' : 'dark';
@@ -176,6 +190,10 @@ effect(() => {
         : preset.value.name);
 });
 effect(() => {
+  persistValue('chroma-mode',
+    modeOverride.value === 'auto' ? null : modeOverride.value);
+});
+effect(() => {
   persistValue('chroma-host', autoHost.value.trim() || null);
 });
 effect(() => {
@@ -191,21 +209,23 @@ effect(() => {
   persistValue('chroma-show-disk', showDisk.value ? 'on' : null);
 });
 
-// True while any persisted conf value differs from its default;
-// the conf block offers a reset link only then.
+// True while any conf-block value differs from its default; the
+// conf block offers a reset link only then. The auto-host preview
+// is a palette-section control, not a conf line, so it neither
+// trips the link nor gets cleared by it.
 export const configDirty = computed(() => (
-  background.value !== 'dark' || !auto.value ||
-  autoHost.value.trim() !== '' || powerline.value ||
+  background.value !== 'dark' || modeOverride.value !== 'auto' ||
+  !auto.value || powerline.value ||
   !showCpu.value || !showMemory.value || showDisk.value
 ));
 
 export function resetConfig(): void {
   background.value = 'dark';
+  modeOverride.value = 'auto';
   powerline.value = false;
   showCpu.value = true;
   showMemory.value = true;
   showDisk.value = false;
-  autoHost.value = '';
   selectAuto();
 }
 

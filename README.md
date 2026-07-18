@@ -67,6 +67,7 @@ Set options before Chroma loads:
 | `@chroma_preset` | `auto` | Preset name below, or `auto` for host-seeded |
 | `@chroma_base_color` | unset | Full `#rrggbb` accent override |
 | `@chroma_background` | `dark` | Background: dark, light, a theme name, or #rrggbb |
+| `@chroma_mode` | `auto` | Force the dark or light palette over the background |
 | `@chroma_clock_format` | `%H:%M` | Clock `strftime` format |
 | `@chroma_clock_min_width` | `91` | Minimum client width for the clock |
 | `@chroma_powerline` | `off` | Powerline section dividers |
@@ -123,6 +124,10 @@ to that theme's background color and is treated like the matching `#rrggbb`:
 `catppuccin-frappe`, `catppuccin-macchiato`, `catppuccin-mocha`,
 `everforest-light`, `everforest-dark`, `rose-pine-dawn`, `rose-pine`,
 `github-light`, `github-dark`, `dracula`, `nord`, `monokai`, `tokyo-night`
+
+Set `@chroma_mode` to `dark` or `light` to override the luma classification
+for backgrounds near the boundary; the background still supplies the color the
+surfaces blend toward. The default `auto` follows `@chroma_background`.
 
 `@chroma_base_color` is used verbatim in both modes, so choose a
 light-appropriate custom accent yourself. Tmux cannot reliably query the

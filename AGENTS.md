@@ -69,7 +69,9 @@ bun run build
   of the system color scheme; the persisted choice — 'dark', 'light',
   a named theme background, or a custom `#rrggbb` seed classified and
   blended like the plugin (surfaces and the muted/subtle text tones
-  both derive from the seed) — is resolved by an inline script in
+  both derive from the seed), with a persisted `@chroma_mode`
+  override forcing the palette mode — is resolved by an inline
+  script in
   `website/index.html` before the stylesheet paints. Keep that script
   in sync with the same resolution in `website/src/state.ts`; the
   named-background table lives in `chroma.tmux`,

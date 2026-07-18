@@ -112,10 +112,24 @@ button {
   scroll-margin-top: 1.25rem;
 }
 
+/* The prompt text stays one inline span (flexing its pieces would
+   swallow the literal spaces between them); the flex row only
+   splits prompt from the right-aligned actions. */
 .prompt-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 1.5rem;
   margin: 0 0 clamp(2rem, 6vw, 3.5rem);
   color: var(--muted);
   font-size: 0.86rem;
+}
+
+.prompt-actions {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
 }
 
 .prompt-host {
@@ -126,8 +140,8 @@ button {
 .prompt-cmd {
   display: inline-block;
   overflow: hidden;
-  width: 21ch;
-  animation: typing 1.1s steps(21) backwards;
+  width: 19ch;
+  animation: typing 1.1s steps(19) backwards;
   color: var(--text);
   vertical-align: bottom;
   white-space: nowrap;
@@ -203,11 +217,16 @@ button {
   white-space: nowrap;
 }
 
-/* Copy/apply/clear are small inset chips with equal margins to
-   their container's edges. In flex rows the chip's own margins set
-   the row height, which makes the top, right, and bottom gaps the
-   same 0.6rem by construction. */
-.copy-button {
+/* Copy/apply/clear/reset share one chip style and two placements:
+   in-row (flex, centered, 0.5rem margins) and floating (absolute,
+   for the code blocks further down). In flex rows the chip plus
+   its margins (2rem + 2 × 0.5rem) exactly matches the inputs' own
+   height, so the top, right, and bottom gaps are the same 0.5rem
+   and a chip appearing (the hostname clear) never resizes its
+   row. */
+.copy-button,
+.custom-color-submit,
+.custom-color-clear {
   height: 2rem;
   padding: 0 0.9rem;
   border: 1px solid var(--line);
@@ -218,13 +237,17 @@ button {
   text-transform: lowercase;
 }
 
-.copy-button:hover {
+.copy-button:hover,
+.custom-color-submit:hover,
+.custom-color-clear:hover {
   color: var(--accent);
 }
 
-.install-command .copy-button {
+.install-command .copy-button,
+.custom-color-submit,
+.custom-color-clear {
   align-self: center;
-  margin: 0.6rem;
+  margin: 0.5rem;
 }
 
 .hint {
@@ -379,23 +402,9 @@ h3::before {
   color: var(--subtle);
 }
 
-.custom-color-submit,
-.custom-color-clear {
-  height: 2rem;
-  align-self: center;
-  margin: 0.6rem;
-  padding: 0 0.9rem;
-  border: 1px solid var(--line);
-  background: var(--panel-raised);
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 0.7rem;
-  text-transform: lowercase;
-}
-
-.custom-color-submit:hover,
-.custom-color-clear:hover {
-  color: var(--accent);
+/* Adjacent reset and apply chips share a single 0.5rem gap. */
+.custom-color-clear + .custom-color-submit {
+  margin-left: 0;
 }
 
 /* The visible box is the container, not the inner input, so the
@@ -448,8 +457,10 @@ h3::before {
   padding: 1.3rem 1.4rem;
 }
 
+/* Matches the install-command rows' code padding, which also makes
+   a centered chip's vertical gap land on the shared 0.5rem. */
 .inline-code > .block-scroll {
-  padding: 1rem 1.2rem;
+  padding: 0.8rem 1rem;
 }
 
 .readout .chip {
@@ -676,21 +687,20 @@ h3::before {
 /* The copy button floats over the block rather than consuming a
    rail, so the scroll region keeps the full width; long lines pass
    underneath its solid background. Single-line snippets center it
-   vertically and give the right edge the same gap the centering
-   yields above and below; multi-line blocks pin it to the corner
-   with the chips' standard margin on both edges. */
+   vertically, multi-line blocks pin it to the corner; both land on
+   the chips' standard 0.5rem gap. */
 .inline-code-copy {
   position: absolute;
   top: 50%;
-  right: 0.75rem;
+  right: 0.5rem;
   transform: translateY(-50%);
 }
 
 .inline-code-copy.is-corner,
 .conf-block > .copy-button {
   position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
+  top: 0.5rem;
+  right: 0.5rem;
   transform: none;
 }
 

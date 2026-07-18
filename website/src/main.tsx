@@ -1,6 +1,7 @@
 import { effect } from '@preact/signals';
 import { render, type ComponentChild } from 'preact';
 import {
+  BackgroundQuickToggle,
   ConfBlock,
   CustomBackground,
   KeyRow,
@@ -91,6 +92,7 @@ mount(<Readout />, 'readout');
 mount(<PresetLine />, 'preset-line');
 mount(<AutoHostPreview />, 'auto-host');
 mount(<CustomColor />, 'custom-color');
+mount(<BackgroundQuickToggle />, 'theme-toggle');
 mount(<ConfBlock />, 'conf-block');
 mount(<CustomBackground />, 'custom-background');
 mount(<KeyRow />, 'key-row');

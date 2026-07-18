@@ -186,6 +186,32 @@ run_theme
 assert_option @chroma_current_mode dark
 assert_option @chroma_bg '#15181d'
 
+# @chroma_mode forces the palette mode over the background's luma
+# classification; the background still supplies the seed.
+tmux -L "$SOCKET" set-option -g @chroma_background '#608ca6'
+run_theme
+assert_option @chroma_current_mode dark
+
+tmux -L "$SOCKET" set-option -g @chroma_mode light
+run_theme
+assert_option @chroma_current_mode light
+assert_option @chroma_bg '#5c849d'
+assert_option @chroma_ink '#f4f6fa'
+
+tmux -L "$SOCKET" set-option -g @chroma_mode dark
+tmux -L "$SOCKET" set-option -g @chroma_background light
+run_theme
+assert_option @chroma_current_mode dark
+assert_option @chroma_bg '#15181d'
+
+tmux -L "$SOCKET" set-option -g @chroma_mode bogus
+tmux -L "$SOCKET" set-option -g @chroma_background '#608ca6'
+run_theme
+assert_option @chroma_current_mode dark
+
+tmux -L "$SOCKET" set-option -gu @chroma_mode
+tmux -L "$SOCKET" set-option -gu @chroma_background
+
 tmux -L "$SOCKET" set-option -g @chroma_base_color '#123456'
 tmux -L "$SOCKET" set-option -g @chroma_background light
 run_theme

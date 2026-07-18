@@ -266,6 +266,14 @@ export function CustomColor() {
   const [value, setValue] = useState('');
   const [invalid, setInvalid] = useState(false);
   const customBase = normalizeHex(value);
+  const applied = !auto.value && preset.value.name === 'custom';
+
+  function clear(): void {
+    setValue('');
+    setInvalid(false);
+    inputRef.current?.setCustomValidity('');
+    selectAuto();
+  }
 
   function submit(event: Event): void {
     event.preventDefault();
@@ -320,6 +328,18 @@ export function CustomColor() {
           setInvalid(false);
         }}
       />
+      {applied
+        ? (
+          <button
+            class="custom-color-clear"
+            type="button"
+            aria-label="Reset the custom accent"
+            onClick={clear}
+          >
+            reset
+          </button>
+        )
+        : null}
       <button class="custom-color-submit" type="submit">apply</button>
     </form>
   );
