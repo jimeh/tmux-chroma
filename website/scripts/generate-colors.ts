@@ -36,24 +36,147 @@ const website = resolve(import.meta.dir, '..');
 const plugin = resolve(website, '..', 'chroma.tmux');
 const outputDir = resolve(website, '.generated');
 
-const process = Bun.spawn([plugin, '--dump-colors'], {
+const child = Bun.spawn([plugin, '--dump-colors'], {
   stdout: 'pipe',
   stderr: 'inherit',
 });
-const text = await new Response(process.stdout).text();
-if (await process.exited !== 0) {
+const text = await new Response(child.stdout).text();
+if (await child.exited !== 0) {
   throw new Error('chroma.tmux --dump-colors failed');
 }
 
-const colors = JSON.parse(text) as ColorSchema;
-if (colors.schemaVersion !== 1 || colors.presets.length === 0) {
-  throw new Error('unsupported or empty Chroma color schema');
+function fail(message: string): never {
+  throw new Error(`invalid Chroma color schema: ${message}`);
 }
 
-const first = colors.presets[0];
-if (!first) {
-  throw new Error('Chroma color schema has no presets');
+function record(value: unknown, label: string): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    fail(`${label} must be an object`);
+  }
+  return value as Record<string, unknown>;
 }
+
+function array(value: unknown, label: string): unknown[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    fail(`${label} must be a non-empty array`);
+  }
+  return value;
+}
+
+function string(value: unknown, label: string): string {
+  if (typeof value !== 'string' || value.length === 0) {
+    fail(`${label} must be a non-empty string`);
+  }
+  return value;
+}
+
+function hex(value: unknown, label: string): string {
+  const color = string(value, label);
+  if (!/^#[0-9a-f]{6}$/.test(color)) {
+    fail(`${label} must be a lowercase #rrggbb color`);
+  }
+  return color;
+}
+
+function number(
+  value: unknown,
+  label: string,
+  minimum: number,
+  maximum: number
+): number {
+  if (!Number.isInteger(value) ||
+      (value as number) < minimum || (value as number) > maximum) {
+    fail(`${label} must be an integer from ${minimum} to ${maximum}`);
+  }
+  return value as number;
+}
+
+function validateColors(value: unknown): ColorSchema {
+  const schema = record(value, 'root');
+  if (schema.schemaVersion !== 1) {
+    fail('schemaVersion must be 1');
+  }
+
+  const modeValues = record(schema.modes, 'modes');
+  for (const mode of ['dark', 'light'] as const) {
+    const anchors = record(modeValues[mode], `modes.${mode}`);
+    for (const anchor of [
+      'bg', 'bgAlt', 'fg', 'muted', 'subtle',
+      'border', 'warn', 'alert', 'ink',
+    ]) {
+      hex(anchors[anchor], `modes.${mode}.${anchor}`);
+    }
+  }
+
+  const presetNames = new Set<string>();
+  for (const [index, value] of array(schema.presets, 'presets').entries()) {
+    const preset = record(value, `presets[${index}]`);
+    const name = string(preset.name, `presets[${index}].name`);
+    if (!/^[a-z][a-z-]*$/.test(name)) {
+      fail(`presets[${index}].name has an invalid format`);
+    }
+    if (presetNames.has(name)) fail(`duplicate preset name: ${name}`);
+    presetNames.add(name);
+    hex(preset.dark, `presets[${index}].dark`);
+    hex(preset.light, `presets[${index}].light`);
+  }
+
+  const backgroundNames = new Set<string>();
+  for (const [index, value] of array(
+    schema.namedBackgrounds,
+    'namedBackgrounds'
+  ).entries()) {
+    const background = record(value, `namedBackgrounds[${index}]`);
+    const name = string(
+      background.name,
+      `namedBackgrounds[${index}].name`
+    );
+    if (!/^[a-z][a-z-]*$/.test(name)) {
+      fail(`namedBackgrounds[${index}].name has an invalid format`);
+    }
+    if (backgroundNames.has(name)) {
+      fail(`duplicate named background: ${name}`);
+    }
+    backgroundNames.add(name);
+    hex(background.seed, `namedBackgrounds[${index}].seed`);
+  }
+
+  const resolution = record(schema.resolution, 'resolution');
+  const luma = record(resolution.luma, 'resolution.luma');
+  for (const weight of ['red', 'green', 'blue']) {
+    number(luma[weight], `resolution.luma.${weight}`, 0, 10000);
+  }
+  number(luma.divisor, 'resolution.luma.divisor', 1, 10000);
+  number(luma.lightThreshold, 'resolution.luma.lightThreshold', 0, 255);
+
+  const surfaceMix = record(
+    resolution.surfaceMix,
+    'resolution.surfaceMix'
+  );
+  for (const surface of ['bg', 'panel', 'bgAlt', 'border']) {
+    number(surfaceMix[surface], `resolution.surfaceMix.${surface}`, 0, 100);
+  }
+
+  const textMix = record(resolution.textMix, 'resolution.textMix');
+  for (const mode of ['dark', 'light']) {
+    const mixes = record(textMix[mode], `resolution.textMix.${mode}`);
+    number(mixes.muted, `resolution.textMix.${mode}.muted`, 0, 100);
+    number(mixes.subtle, `resolution.textMix.${mode}.subtle`, 0, 100);
+  }
+  number(resolution.baseAltMix, 'resolution.baseAltMix', 0, 100);
+
+  return value as ColorSchema;
+}
+
+let parsed: unknown;
+try {
+  parsed = JSON.parse(text);
+} catch (error) {
+  const detail = error instanceof Error ? error.message : String(error);
+  fail(`output is not valid JSON: ${detail}`);
+}
+const colors = validateColors(parsed);
+const first = colors.presets[0];
 
 function mix(firstColor: string, secondColor: string, percent: number): string {
   return '#' + [1, 3, 5].map((index) => {

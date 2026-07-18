@@ -29,16 +29,22 @@ is the only JS runtime, including for `test/palette-sync.sh`.
 
 ```sh
 mise install
+cd website
+bun install --frozen-lockfile
+cd ..
 make format
 make lint
 make test
 make check
 ```
 
+The root palette parity test imports the real website signals runtime, so
+website dependencies must be installed before `make test` or `make check`.
+
 Website (from `website/`):
 
 ```sh
-bun install
+bun install --frozen-lockfile
 bun run dev
 bun run typecheck
 bun run build

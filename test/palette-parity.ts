@@ -1,15 +1,6 @@
 import { resolve } from 'node:path';
 import { colorSchema } from '../website/.generated/colors.ts';
-import { colorLuma, mixColor } from '../website/src/color.ts';
-import {
-  anchors,
-  cksum,
-  namedBackgroundSeed,
-  presetAccent,
-  presets,
-  resolution,
-  type ThemeMode,
-} from '../website/src/presets.ts';
+import { cksum, presets, type ThemeMode } from '../website/src/presets.ts';
 
 interface TestCase {
   preset: string;
@@ -18,57 +9,92 @@ interface TestCase {
   baseColor?: string;
 }
 
-const root = resolve(import.meta.dir, '..');
-const plugin = resolve(root, 'chroma.tmux');
+interface RuntimePalette {
+  mode: ThemeMode;
+  surfaces: {
+    canvas: string;
+    bar: string;
+    panel: string;
+    panelRaised: string;
+    line: string;
+    muted: string;
+    subtle: string;
+  } | null;
+  bar: string;
+  accent: string;
+  accentAlt: string;
+}
 
-function browserResolve(test: TestCase) {
-  const preset = presets.find((entry) => entry.name === test.preset);
-  if (!preset) throw new Error(`missing generated preset ${test.preset}`);
-  const named = namedBackgroundSeed(test.background);
-  const seed = named ?? (/^#[0-9a-f]{6}$/i.test(test.background)
-    ? test.background
-    : null);
-  let mode: ThemeMode = test.background === 'light' ? 'light' : 'dark';
-  if (seed) {
-    mode = colorLuma(seed) >= resolution.luma.lightThreshold
-      ? 'light'
-      : 'dark';
-  }
-  if (test.mode !== 'auto') mode = test.mode;
-  const anchor = anchors[mode];
-  const textMix = resolution.textMix[mode];
-  const surface = resolution.surfaceMix;
-  const bg = seed ? mixColor(anchor.fg, seed, surface.bg) : anchor.bg;
-  const base = test.baseColor ?? presetAccent(preset, mode);
-  return {
-    preset: test.preset,
-    mode,
-    seed,
-    colors: {
-      base,
-      baseAlt: mixColor(base, bg, resolution.baseAltMix),
-      bg,
-      bgAlt: seed
-        ? mixColor(anchor.fg, seed, surface.bgAlt)
-        : anchor.bgAlt,
-      fg: anchor.fg,
-      muted: seed
-        ? mixColor(anchor.fg, seed, textMix.muted)
-        : anchor.muted,
-      subtle: seed
-        ? mixColor(anchor.fg, seed, textMix.subtle)
-        : anchor.subtle,
-      border: seed
-        ? mixColor(anchor.fg, seed, surface.border)
-        : anchor.border,
-      warn: anchor.warn,
-      alert: anchor.alert,
-      ink: anchor.ink,
-    },
+interface ShellPalette {
+  mode: ThemeMode;
+  seed: string | null;
+  colors: {
+    base: string;
+    baseAlt: string;
+    bg: string;
+    bgAlt: string;
+    muted: string;
+    subtle: string;
+    border: string;
   };
 }
 
-async function shellResolve(test: TestCase) {
+const root = resolve(import.meta.dir, '..');
+const plugin = resolve(root, 'chroma.tmux');
+const storage = new Map<string, string>();
+const storageApi = {
+  getItem: (key: string) => storage.get(key) ?? null,
+  setItem: (key: string, value: string) => storage.set(key, value),
+  removeItem: (key: string) => storage.delete(key),
+};
+
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  value: storageApi,
+});
+Object.defineProperty(globalThis, 'navigator', {
+  configurable: true,
+  value: { language: 'en-GB', userAgent: 'chroma-parity-test' },
+});
+Object.defineProperty(globalThis, 'screen', {
+  configurable: true,
+  value: { height: 720, width: 1280 },
+});
+Object.defineProperty(globalThis, 'window', {
+  configurable: true,
+  value: {
+    clearTimeout: globalThis.clearTimeout.bind(globalThis),
+    devicePixelRatio: 1,
+    setTimeout: globalThis.setTimeout.bind(globalThis),
+  },
+});
+
+const state = await import('../website/src/state.ts');
+const prepaintSource = await Bun.file(
+  resolve(root, 'website/.generated/prepaint.js')
+).text();
+
+function runtimeResolve(test: TestCase): RuntimePalette {
+  const preset = presets.find((entry) => entry.name === test.preset);
+  if (!preset) throw new Error(`missing generated preset ${test.preset}`);
+
+  state.background.value = test.background;
+  state.modeOverride.value = test.mode;
+  state.selectPreset(test.baseColor
+    ? { name: 'custom', base: test.baseColor }
+    : preset);
+
+  const surfaceValues = state.surfaces.value;
+  return {
+    mode: state.theme.value,
+    surfaces: surfaceValues ? { ...surfaceValues } : null,
+    bar: state.barColor.value,
+    accent: state.accent.value,
+    accentAlt: state.accentAlt.value,
+  };
+}
+
+async function shellResolve(test: TestCase): Promise<ShellPalette> {
   const args = [
     plugin,
     '--resolve-colors',
@@ -83,7 +109,52 @@ async function shellResolve(test: TestCase) {
   const child = Bun.spawn(args, { stdout: 'pipe', stderr: 'inherit' });
   const text = await new Response(child.stdout).text();
   if (await child.exited !== 0) throw new Error('shell resolver failed');
-  return JSON.parse(text);
+  return JSON.parse(text) as ShellPalette;
+}
+
+function assertEqual(actual: unknown, expected: unknown, label: string): void {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    throw new Error(
+      `${label}\nactual:   ${JSON.stringify(actual)}\n` +
+      `expected: ${JSON.stringify(expected)}`
+    );
+  }
+}
+
+function assertRuntimeMatchesShell(
+  test: TestCase,
+  runtime: RuntimePalette,
+  shell: ShellPalette
+): void {
+  const label = `resolver mismatch for ${JSON.stringify(test)}`;
+  assertEqual(runtime.mode, shell.mode, `${label}: mode`);
+  assertEqual(runtime.bar, shell.colors.bg, `${label}: bar`);
+  assertEqual(runtime.accent, shell.colors.base, `${label}: accent`);
+  assertEqual(
+    runtime.accentAlt,
+    shell.colors.baseAlt,
+    `${label}: accentAlt`
+  );
+
+  if (shell.seed === null) {
+    assertEqual(runtime.surfaces, null, `${label}: named surfaces`);
+    return;
+  }
+  if (!runtime.surfaces) throw new Error(`${label}: missing surfaces`);
+  assertEqual(runtime.surfaces.canvas, shell.seed, `${label}: canvas`);
+  assertEqual(runtime.surfaces.bar, shell.colors.bg, `${label}: surface bar`);
+  assertEqual(
+    runtime.surfaces.panelRaised,
+    shell.colors.bgAlt,
+    `${label}: panelRaised`
+  );
+  assertEqual(runtime.surfaces.line, shell.colors.border, `${label}: line`);
+  assertEqual(runtime.surfaces.muted, shell.colors.muted, `${label}: muted`);
+  assertEqual(
+    runtime.surfaces.subtle,
+    shell.colors.subtle,
+    `${label}: subtle`
+  );
 }
 
 const cases: TestCase[] = [
@@ -95,6 +166,7 @@ const cases: TestCase[] = [
   { preset: 'red', background: '#818181', mode: 'auto' },
   { preset: 'sky', background: 'solarized-light', mode: 'dark' },
   { preset: 'cornflower', background: 'tomorrow-night', mode: 'light' },
+  { preset: 'jade', background: '#FDF6E3', mode: 'auto' },
   {
     preset: 'purple',
     background: '#608ca6',
@@ -104,15 +176,72 @@ const cases: TestCase[] = [
 ];
 
 for (const test of cases) {
-  const expected = browserResolve(test);
-  const actual = await shellResolve(test);
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-    throw new Error(
-      `resolver mismatch for ${JSON.stringify(test)}\n` +
-      `shell:  ${JSON.stringify(actual)}\n` +
-      `browser: ${JSON.stringify(expected)}`
-    );
+  const runtime = runtimeResolve(test);
+  const shell = await shellResolve(test);
+  assertRuntimeMatchesShell(test, runtime, shell);
+}
+
+interface PrepaintResult {
+  theme: string | undefined;
+  styles: Record<string, string>;
+}
+
+function runPrepaint(test: TestCase): PrepaintResult {
+  storage.clear();
+  if (test.background !== 'dark') {
+    storage.set('chroma-background', test.background);
   }
+  if (test.mode !== 'auto') storage.set('chroma-mode', test.mode);
+
+  const styles = new Map<string, string>();
+  const documentElement = {
+    dataset: {} as Record<string, string>,
+    style: {
+      setProperty: (name: string, value: string) => styles.set(name, value),
+    },
+  };
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { documentElement },
+  });
+  Function(prepaintSource)();
+  return {
+    theme: documentElement.dataset.theme,
+    styles: Object.fromEntries(styles),
+  };
+}
+
+const prepaintCases: TestCase[] = [
+  { preset: 'blue', background: 'dark', mode: 'auto' },
+  { preset: 'peach', background: 'light', mode: 'auto' },
+  { preset: 'teal', background: 'solarized-light', mode: 'auto' },
+  { preset: 'mauve', background: '#301934', mode: 'auto' },
+  { preset: 'gold', background: 'tomorrow-night', mode: 'light' },
+];
+
+for (const test of prepaintCases) {
+  const runtime = runtimeResolve(test);
+  const prepaint = runPrepaint(test);
+  assertEqual(
+    prepaint.theme,
+    runtime.mode,
+    `prepaint theme mismatch for ${JSON.stringify(test)}`
+  );
+  const surfaces = runtime.surfaces;
+  const expectedStyles = surfaces ? {
+    '--canvas': surfaces.canvas,
+    '--bar': surfaces.bar,
+    '--panel': surfaces.panel,
+    '--panel-raised': surfaces.panelRaised,
+    '--line': surfaces.line,
+    '--muted': surfaces.muted,
+    '--subtle': surfaces.subtle,
+  } : {};
+  assertEqual(
+    prepaint.styles,
+    expectedStyles,
+    `prepaint styles mismatch for ${JSON.stringify(test)}`
+  );
 }
 
 if (colorSchema.presets.map((preset) => preset.name).join(' ') !==
@@ -120,7 +249,13 @@ if (colorSchema.presets.map((preset) => preset.name).join(' ') !==
   throw new Error('generated preset order changed');
 }
 
-for (const host of ['noct', 'alpha', 'web-01', 'x']) {
+for (const host of [
+  'noct',
+  'alpha',
+  'web-01',
+  'x',
+  'longhostname-with-many-octets',
+]) {
   const child = Bun.spawn(['cksum'], {
     stdin: new TextEncoder().encode(host),
     stdout: 'pipe',
@@ -133,4 +268,7 @@ for (const host of ['noct', 'alpha', 'web-01', 'x']) {
   }
 }
 
-console.log(`palette parity: ok (${cases.length} resolution cases)`);
+console.log(
+  `palette parity: ok (${cases.length} runtime, ` +
+  `${prepaintCases.length} prepaint cases)`
+);
