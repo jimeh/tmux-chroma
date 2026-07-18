@@ -1,4 +1,9 @@
 config:
+  first-line-h1: false
+  no-inline-html:
+    allowed_elements:
+      - div
+      - img
   line-length:
     line_length: 80
     code_blocks: true
