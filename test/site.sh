@@ -346,4 +346,18 @@ done
 assert_file_contains "$MAIN" "event.key === 'w'" \
   'prefix + w must open the preset gallery'
 
+# Easter eggs: prefix + r re-rolls the banner with six random
+# accents kept in hue order (sampled as sorted indices of the
+# hue-ordered list); prefix + c paints the curated rainbow.
+assert_file_contains "$MAIN" "event.key === 'r'" \
+  'prefix + r must re-roll the banner accents'
+assert_file_contains "$MAIN" "event.key === 'c'" \
+  'prefix + c must paint the banner rainbow'
+assert_file_contains "$STATE" 'function rollLogo' \
+  'prefix + r must re-roll the banner accents'
+assert_file_contains "$STATE" 'function rainbowLogo' \
+  'prefix + c must paint the banner rainbow'
+assert_file_contains "$ROOT/website/src/components/Banner.tsx" \
+  'LETTER_COLUMNS' 'the banner must split into per-letter columns'
+
 printf 'site: ok\n'

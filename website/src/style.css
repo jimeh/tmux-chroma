@@ -173,6 +173,18 @@ button {
   transition: background 180ms ease;
 }
 
+/* Easter egg: prefix+r/prefix+c split the banner into six
+   full-height letter columns, each with its own accent gradient
+   through the same text clipping the whole logo uses. */
+.banner-letter {
+  display: inline-block;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  vertical-align: top;
+  white-space: pre;
+}
+
 .tagline {
   margin-bottom: 1.1rem;
   animation: fade-up 700ms 1.15s backwards ease-out;

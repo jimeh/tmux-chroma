@@ -1,5 +1,6 @@
 import { effect } from '@preact/signals';
 import { render, type ComponentChild } from 'preact';
+import { BannerLetters } from './components/Banner.tsx';
 import {
   BackgroundQuickToggle,
   ConfBlock,
@@ -28,6 +29,8 @@ import {
   galleryOpen,
   lastWindow,
   prefixArmed,
+  rainbowLogo,
+  rollLogo,
   surfaces,
   theme,
   tickClock,
@@ -121,6 +124,24 @@ document.querySelectorAll('.inline-code').forEach((block) => {
   );
 });
 
+// Easter eggs: prefix+r re-rolls the banner with six random
+// hue-ordered accents, prefix+c paints the curated rainbow. The
+// static banner text is captured once and split into per-letter
+// columns on the first roll, so it keeps rendering without
+// JavaScript until then.
+const banner = document.querySelector('.banner');
+const bannerArt = banner?.textContent ?? '';
+let bannerMounted = false;
+
+function paintLogo(choose: () => void): void {
+  choose();
+  if (banner instanceof HTMLElement && !bannerMounted) {
+    bannerMounted = true;
+    banner.textContent = '';
+    render(<BannerLetters art={bannerArt} />, banner);
+  }
+}
+
 // Prefix easter egg: Ctrl-b or Ctrl-q, then w (choose-window),
 // opens the preset gallery. Plain q only closes when not typing
 // into a field; Escape closes regardless, like any dialog.
@@ -143,11 +164,21 @@ document.addEventListener('keydown', (event) => {
     armPrefix();
     return;
   }
-  if (prefixArmed() && event.key === 'w' &&
-      !event.ctrlKey && !event.metaKey && !event.altKey) {
-    event.preventDefault();
-    disarmPrefix();
-    galleryOpen.value = true;
+  if (prefixArmed() && !event.ctrlKey && !event.metaKey &&
+      !event.altKey) {
+    if (event.key === 'w') {
+      event.preventDefault();
+      disarmPrefix();
+      galleryOpen.value = true;
+    } else if (event.key === 'r') {
+      event.preventDefault();
+      disarmPrefix();
+      paintLogo(rollLogo);
+    } else if (event.key === 'c') {
+      event.preventDefault();
+      disarmPrefix();
+      paintLogo(rainbowLogo);
+    }
   }
 });
 

@@ -2,6 +2,7 @@ import { computed, effect, signal } from '@preact/signals';
 import { colorLuma, mixColor, normalizeHex } from './color.ts';
 import {
   anchors,
+  displayPresets,
   namedBackgroundSeed,
   presetAccent,
   presetForHost,
@@ -293,6 +294,31 @@ export function armPrefix(): void {
   }
   prefix.value = true;
   prefixTimer = window.setTimeout(disarmPrefix, 1500);
+}
+
+// Easter eggs: prefix+r re-rolls the banner with six random
+// presets, prefix+c paints it with a curated rainbow. Sampling
+// indices from the hue-ordered displayPresets and sorting them
+// keeps the six random accents in hue order.
+export const logoPresets = signal<Preset[] | null>(null);
+
+export function rollLogo(): void {
+  const picked = new Set<number>();
+  while (picked.size < 6) {
+    picked.add(Math.floor(Math.random() * displayPresets.length));
+  }
+  logoPresets.value = [...picked]
+    .sort((first, second) => first - second)
+    .map((index) => displayPresets[index]);
+}
+
+// Six accents evenly spaced around the hue wheel, warm to cool.
+const logoRainbow = ['peach', 'yellow', 'green', 'sky', 'blue', 'mauve'];
+
+export function rainbowLogo(): void {
+  logoPresets.value = logoRainbow
+    .map((name) => presets.find((item) => item.name === name))
+    .filter((item): item is Preset => item !== undefined);
 }
 
 function formatClock(): string {
