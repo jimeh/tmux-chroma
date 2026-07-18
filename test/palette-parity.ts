@@ -230,6 +230,7 @@ const prepaintCases: TestCase[] = [
   { preset: 'red', background: 'light', mode: 'dark' },
   { preset: 'teal', background: 'solarized-light', mode: 'auto' },
   { preset: 'mauve', background: '#301934', mode: 'auto' },
+  { preset: 'jade', background: '#FDF6E3', mode: 'auto' },
   { preset: 'gold', background: 'tomorrow-night', mode: 'light' },
 ];
 

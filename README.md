@@ -192,8 +192,9 @@ website palette stays in sync with the plugin.
 ```
 
 The first command prints the complete versioned color schema as JSON. The
-second resolves one palette without contacting tmux; it also accepts a literal
-`#rrggbb` background, `--mode dark|light`, and `--base-color #rrggbb`.
+second resolves one palette without contacting tmux; it also accepts
+`--background '#rrggbb'`, `--mode dark|light`, and
+`--base-color '#rrggbb'`.
 
 ## Credits
 
