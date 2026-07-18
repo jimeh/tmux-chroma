@@ -185,6 +185,19 @@ check_pair() {
 check_pair 'luma=$(((299 \* r + 587 \* g + 114 \* b) \/ 1000))' \
   "$ROOT/website/src/color.ts" '299 \* channel(color, 1)'
 # shellcheck disable=SC2016
+check_pair 'luma=$(((299 \* r + 587 \* g + 114 \* b) \/ 1000))' \
+  "$ROOT/website/src/color.ts" '587 \* channel(color, 3)'
+# shellcheck disable=SC2016
+check_pair 'luma=$(((299 \* r + 587 \* g + 114 \* b) \/ 1000))' \
+  "$ROOT/website/src/color.ts" '114 \* channel(color, 5)) \/ 1000'
+# The shared mix keeps the plugin's channel order and divisor.
+# shellcheck disable=SC2016
+check_pair 'r=$((($((16#${c1:0:2})) \* pct' \
+  "$ROOT/website/src/color.ts" 'channel(first, index) \* percent'
+# shellcheck disable=SC2016
+check_pair '(100 - pct)) \/ 100))' \
+  "$ROOT/website/src/color.ts" '(100 - percent)'
+# shellcheck disable=SC2016
 check_pair '"$luma" -ge 130' \
   "$site_state" 'colorLuma(seed) >= 130'
 # shellcheck disable=SC2016
@@ -207,13 +220,28 @@ check_pair 'muted_mix=80' "$site_state" "'light' ? 80 : 60"
 check_pair 'subtle_mix=45' "$site_state" "'light' ? 62 : 45"
 check_pair 'subtle_mix=62' "$site_state" "'light' ? 62 : 45"
 
-# The inline pre-paint script in index.html repeats the same blends;
-# every surface percentage and both text-tone ratio pairs state.ts
-# derives must appear there too.
+# The inline pre-paint script in index.html repeats the same
+# resolution: every blend percentage, both text-tone ratio pairs,
+# the full luma formula and threshold, the mix channel order, and
+# the mode fg anchors (as decimal RGB, derived here from the same
+# plugin anchors the site checks above use).
+rgb_triple() {
+  local hex="${1#\#}"
+
+  printf '%d, %d, %d' \
+    "$((16#${hex:0:2}))" "$((16#${hex:2:2}))" "$((16#${hex:4:2}))"
+}
+
+fg_dark="$(plugin_anchor dark fg)"
+fg_light="$(plugin_anchor light fg)"
 site_html="$ROOT/website/index.html"
 for fragment in 'mix(10)' 'mix(13)' 'mix(16)' 'mix(27)' \
   'mix(mutedMix)' 'mix(subtleMix)' 'luma >= 130' \
-  "'light' ? 80 : 60" "'light' ? 62 : 45"; do
+  "'light' ? 80 : 60" "'light' ? 62 : 45" \
+  '(299 * seed[0] + 587 * seed[1] + 114 * seed[2]) / 1000' \
+  '(fg[index] * pct + channel * (100 - pct)) / 100' \
+  "mode === 'light' ? [$(rgb_triple "$fg_light")] : \
+[$(rgb_triple "$fg_dark")]"; do
   if ! grep -F "$fragment" "$site_html" > /dev/null; then
     printf '%s pre-paint script misses %s\n' \
       "$site_html" "$fragment" >&2

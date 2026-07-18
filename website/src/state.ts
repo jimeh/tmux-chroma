@@ -55,10 +55,14 @@ function persistValue(key: string, value: string | null): void {
 
 function storedBackground(): string {
   const value = storedValue(backgroundStorageKey);
-  return value === 'light' || value === 'dark' ||
-      namedBackgroundSeed(value) || normalizeHex(value)
-    ? value
-    : 'dark';
+  if (value === 'light' || value === 'dark' ||
+      namedBackgroundSeed(value)) {
+    return value;
+  }
+  // Return the normalized form, not the raw stored string: a
+  // hand-edited value like FDF6E3 would otherwise pass validation
+  // but break the '#rrggbb' slicing in the color math.
+  return normalizeHex(value) || 'dark';
 }
 
 export const background = signal<string>(storedBackground());
