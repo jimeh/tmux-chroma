@@ -4,8 +4,82 @@ set -u
 
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-PRESET_NAMES='blue peach teal mauve green lavender sapphire pink yellow maroon
-lime ash red orchid jade plum purple rosewater flamingo sky gold cornflower'
+# These ordered tables are Chroma's authored color source of truth. Keep the
+# preset order stable: seeded_preset hashes directly into it.
+PRESETS='blue #8aadf4 #3f68bb
+peach #f5a97f #b5663a
+teal #8bd5ca #4f8d83
+mauve #c6a0f6 #824ec3
+green #a6da95 #649753
+lavender #b7bdf8 #616bc9
+sapphire #7dc4e4 #437f9a
+pink #f5bde6 #c569ac
+yellow #eed49f #b89651
+maroon #ee99a0 #b74b54
+lime #c8dd88 #83964b
+ash #a5adcb #636b89
+red #ed8796 #ad4352
+orchid #e38dcd #a04b8b
+jade #8cd9b3 #4e9271
+plum #d290df #8f4e9c
+purple #ba91d8 #775293
+rosewater #f4dbd6 #bc8176
+flamingo #f0c6c6 #bd7575
+sky #91d7e3 #4d96a2
+gold #efbc88 #b17a42
+cornflower #83baee #4078ac'
+
+NAMED_BACKGROUNDS='solarized-light #fdf6e3
+solarized-dark #002b36
+tomorrow #ffffff
+tomorrow-night #1d1f21
+gruvbox-light #fbf1c7
+gruvbox-dark #282828
+one-light #fafafa
+one-dark #282c34
+catppuccin-latte #eff1f5
+catppuccin-frappe #303446
+catppuccin-macchiato #24273a
+catppuccin-mocha #1e1e2e
+everforest-light #fdf6e0
+everforest-dark #2d353b
+rose-pine-dawn #faf4ed
+rose-pine #191724
+github-light #ffffff
+github-dark #0d1117
+dracula #282a36
+nord #2e3440
+monokai #272822
+tokyo-night #1a1b26'
+
+MODE_ANCHORS='dark #15181d #20242b #d7dde7 #8b96a8 #6f7a8d #343a44 #eed49f #ed8796 #101216
+light #e9ecf2 #dde1e9 #3c4354 #5c6678 #767f93 #c4cad6 #b89651 #ad4352 #f4f6fa'
+
+LUMA_RED=299
+LUMA_GREEN=587
+LUMA_BLUE=114
+LUMA_DIVISOR=1000
+LUMA_LIGHT_THRESHOLD=130
+SURFACE_BG_MIX=10
+SURFACE_PANEL_MIX=13
+SURFACE_BG_ALT_MIX=16
+SURFACE_BORDER_MIX=27
+DARK_MUTED_MIX=60
+DARK_SUBTLE_MIX=45
+LIGHT_MUTED_MIX=80
+LIGHT_SUBTLE_MIX=62
+BASE_ALT_MIX=60
+
+preset_names() {
+  local name dark light names=''
+
+  while read -r name dark light; do
+    names="${names:+$names }$name"
+  done <<< "$PRESETS"
+  printf '%s\n' "$names"
+}
+
+PRESET_NAMES="$(preset_names)"
 
 get_tmux_option() {
   local option="$1"
@@ -81,36 +155,40 @@ resolve_preset() {
 # Background seeds for popular terminal themes. A name resolves to
 # that theme's background color and then flows through the same
 # luma classification and surface blending as a literal #rrggbb.
-# The site duplicates this table; test/palette-sync.sh diffs them.
 named_background() {
-  local seed=''
+  local wanted="$1" name seed
 
-  case "$1" in
-    solarized-light) seed='#fdf6e3' ;;
-    solarized-dark) seed='#002b36' ;;
-    tomorrow) seed='#ffffff' ;;
-    tomorrow-night) seed='#1d1f21' ;;
-    gruvbox-light) seed='#fbf1c7' ;;
-    gruvbox-dark) seed='#282828' ;;
-    one-light) seed='#fafafa' ;;
-    one-dark) seed='#282c34' ;;
-    catppuccin-latte) seed='#eff1f5' ;;
-    catppuccin-frappe) seed='#303446' ;;
-    catppuccin-macchiato) seed='#24273a' ;;
-    catppuccin-mocha) seed='#1e1e2e' ;;
-    everforest-light) seed='#fdf6e0' ;;
-    everforest-dark) seed='#2d353b' ;;
-    rose-pine-dawn) seed='#faf4ed' ;;
-    rose-pine) seed='#191724' ;;
-    github-light) seed='#ffffff' ;;
-    github-dark) seed='#0d1117' ;;
-    dracula) seed='#282a36' ;;
-    nord) seed='#2e3440' ;;
-    monokai) seed='#272822' ;;
-    tokyo-night) seed='#1a1b26' ;;
-  esac
+  while read -r name seed; do
+    if [ "$name" = "$wanted" ]; then
+      printf '%s\n' "$seed"
+      return
+    fi
+  done <<< "$NAMED_BACKGROUNDS"
+  printf '\n'
+}
 
-  printf '%s\n' "$seed"
+preset_colors() {
+  local wanted="$1" name dark light
+
+  while read -r name dark light; do
+    if [ "$name" = "$wanted" ]; then
+      printf '%s %s\n' "$dark" "$light"
+      return
+    fi
+  done <<< "$PRESETS"
+  return 1
+}
+
+mode_anchors() {
+  local wanted="$1" mode values
+
+  while read -r mode values; do
+    if [ "$mode" = "$wanted" ]; then
+      printf '%s\n' "$values"
+      return
+    fi
+  done <<< "$MODE_ANCHORS"
+  return 1
 }
 
 mix_color() {
@@ -124,27 +202,16 @@ mix_color() {
   printf '#%02x%02x%02x\n' "$r" "$g" "$b"
 }
 
-apply_preset() {
+resolve_colors() {
   local preset="$1"
   local base_color="$2"
   local background="$3"
   local mode_override="$4"
-  local mode='dark'
+  local mode='dark' accent_dark accent_light
   local seed='' hex luma r g b
-  local bg='#15181d'
-  local bg_alt='#20242b'
-  local fg='#d7dde7'
-  local muted='#8b96a8'
-  local subtle='#6f7a8d'
-  local border='#343a44'
-  local base='#8aadf4'
-  local light='#3f68bb'
-  local base_alt
-  local warn='#eed49f'
-  local alert='#ed8796'
-  local ink='#101216'
-  local muted_mix=60
-  local subtle_mix=45
+  local bg bg_alt fg muted subtle border warn alert ink
+  local muted_mix="$DARK_MUTED_MIX"
+  local subtle_mix="$DARK_SUBTLE_MIX"
 
   case "$background" in
     light) mode='light' ;;
@@ -154,8 +221,8 @@ apply_preset() {
       r=$((16#${hex:0:2}))
       g=$((16#${hex:2:2}))
       b=$((16#${hex:4:2}))
-      luma=$(((299 * r + 587 * g + 114 * b) / 1000))
-      if [ "$luma" -ge 130 ]; then
+      luma=$(((LUMA_RED * r + LUMA_GREEN * g + LUMA_BLUE * b) / LUMA_DIVISOR))
+      if [ "$luma" -ge "$LUMA_LIGHT_THRESHOLD" ]; then
         mode='light'
       fi
       ;;
@@ -167,24 +234,17 @@ apply_preset() {
     dark | light) mode="$mode_override" ;;
   esac
 
+  read -r bg bg_alt fg muted subtle border warn alert ink \
+    <<< "$(mode_anchors "$mode")"
   if [ "$mode" = 'light' ]; then
-    bg='#e9ecf2'
-    bg_alt='#dde1e9'
-    fg='#3c4354'
-    muted='#5c6678'
-    subtle='#767f93'
-    border='#c4cad6'
-    warn='#b89651'
-    alert='#ad4352'
-    ink='#f4f6fa'
-    muted_mix=80
-    subtle_mix=62
+    muted_mix="$LIGHT_MUTED_MIX"
+    subtle_mix="$LIGHT_SUBTLE_MIX"
   fi
 
   if [ -n "$seed" ]; then
-    bg="$(mix_color "$fg" "$seed" 10)"
-    bg_alt="$(mix_color "$fg" "$seed" 16)"
-    border="$(mix_color "$fg" "$seed" 27)"
+    bg="$(mix_color "$fg" "$seed" "$SURFACE_BG_MIX")"
+    bg_alt="$(mix_color "$fg" "$seed" "$SURFACE_BG_ALT_MIX")"
+    border="$(mix_color "$fg" "$seed" "$SURFACE_BORDER_MIX")"
     # Text tones keep their contrast against any seed: fg stays the
     # mode anchor, and the quieter tones blend it toward the seed at
     # the per-mode ratios the anchors sit at over the default
@@ -193,56 +253,183 @@ apply_preset() {
     subtle="$(mix_color "$fg" "$seed" "$subtle_mix")"
   fi
 
-  case "$preset" in
-    blue) base='#8aadf4' light='#3f68bb' ;;
-    peach) base='#f5a97f' light='#b5663a' ;;
-    teal) base='#8bd5ca' light='#4f8d83' ;;
-    mauve) base='#c6a0f6' light='#824ec3' ;;
-    green) base='#a6da95' light='#649753' ;;
-    lavender) base='#b7bdf8' light='#616bc9' ;;
-    sapphire) base='#7dc4e4' light='#437f9a' ;;
-    pink) base='#f5bde6' light='#c569ac' ;;
-    yellow) base='#eed49f' light='#b89651' ;;
-    maroon) base='#ee99a0' light='#b74b54' ;;
-    lime) base='#c8dd88' light='#83964b' ;;
-    ash) base='#a5adcb' light='#636b89' ;;
-    red) base='#ed8796' light='#ad4352' ;;
-    orchid) base='#e38dcd' light='#a04b8b' ;;
-    jade) base='#8cd9b3' light='#4e9271' ;;
-    plum) base='#d290df' light='#8f4e9c' ;;
-    purple) base='#ba91d8' light='#775293' ;;
-    rosewater) base='#f4dbd6' light='#bc8176' ;;
-    flamingo) base='#f0c6c6' light='#bd7575' ;;
-    sky) base='#91d7e3' light='#4d96a2' ;;
-    gold) base='#efbc88' light='#b17a42' ;;
-    cornflower) base='#83baee' light='#4078ac' ;;
-  esac
+  read -r accent_dark accent_light <<< "$(preset_colors "$preset")"
+  resolved_base="$accent_dark"
 
   if [ "$mode" = 'light' ]; then
-    base="$light"
+    resolved_base="$accent_light"
   fi
 
   if [ -n "$base_color" ]; then
-    base="$base_color"
+    resolved_base="$base_color"
   fi
 
   # Quieter tint of base, used for window flags except bell alerts.
-  base_alt="$(mix_color "$base" "$bg" 60)"
+  resolved_base_alt="$(mix_color "$resolved_base" "$bg" "$BASE_ALT_MIX")"
 
-  set_tmux_option @chroma_current_preset "$preset"
-  set_tmux_option @chroma_base "$base"
-  set_tmux_option @chroma_base_alt "$base_alt"
-  set_tmux_option @chroma_bg "$bg"
-  set_tmux_option @chroma_bg_alt "$bg_alt"
-  set_tmux_option @chroma_fg "$fg"
-  set_tmux_option @chroma_muted "$muted"
-  set_tmux_option @chroma_subtle "$subtle"
-  set_tmux_option @chroma_border "$border"
-  set_tmux_option @chroma_warn "$warn"
-  set_tmux_option @chroma_alert "$alert"
-  set_tmux_option @chroma_ink "$ink"
-  set_tmux_option @chroma_dark "$ink"
-  set_tmux_option @chroma_current_mode "$mode"
+  resolved_preset="$preset"
+  resolved_mode="$mode"
+  resolved_seed="$seed"
+  resolved_bg="$bg"
+  resolved_bg_alt="$bg_alt"
+  resolved_fg="$fg"
+  resolved_muted="$muted"
+  resolved_subtle="$subtle"
+  resolved_border="$border"
+  resolved_warn="$warn"
+  resolved_alert="$alert"
+  resolved_ink="$ink"
+}
+
+apply_preset() {
+  resolve_colors "$@"
+
+  set_tmux_option @chroma_current_preset "$resolved_preset"
+  set_tmux_option @chroma_base "$resolved_base"
+  set_tmux_option @chroma_base_alt "$resolved_base_alt"
+  set_tmux_option @chroma_bg "$resolved_bg"
+  set_tmux_option @chroma_bg_alt "$resolved_bg_alt"
+  set_tmux_option @chroma_fg "$resolved_fg"
+  set_tmux_option @chroma_muted "$resolved_muted"
+  set_tmux_option @chroma_subtle "$resolved_subtle"
+  set_tmux_option @chroma_border "$resolved_border"
+  set_tmux_option @chroma_warn "$resolved_warn"
+  set_tmux_option @chroma_alert "$resolved_alert"
+  set_tmux_option @chroma_ink "$resolved_ink"
+  set_tmux_option @chroma_dark "$resolved_ink"
+  set_tmux_option @chroma_current_mode "$resolved_mode"
+}
+
+dump_colors() {
+  local mode bg bg_alt fg muted subtle border warn alert ink
+  local name dark light seed comma=''
+
+  printf '{\n  "schemaVersion": 1,\n  "modes": {\n'
+  while read -r mode bg bg_alt fg muted subtle border warn alert ink; do
+    printf '%s    "%s": {\n' "$comma" "$mode"
+    printf '      "bg": "%s",\n      "bgAlt": "%s",\n' "$bg" "$bg_alt"
+    printf '      "fg": "%s",\n      "muted": "%s",\n' "$fg" "$muted"
+    printf '      "subtle": "%s",\n      "border": "%s",\n' \
+      "$subtle" "$border"
+    printf '      "warn": "%s",\n      "alert": "%s",\n' "$warn" "$alert"
+    printf '      "ink": "%s"\n    }' "$ink"
+    comma=$',\n'
+  done <<< "$MODE_ANCHORS"
+  printf '\n  },\n  "presets": [\n'
+  comma=''
+  while read -r name dark light; do
+    printf '%s    { "name": "%s", "dark": "%s", "light": "%s" }' \
+      "$comma" "$name" "$dark" "$light"
+    comma=$',\n'
+  done <<< "$PRESETS"
+  printf '\n  ],\n  "namedBackgrounds": [\n'
+  comma=''
+  while read -r name seed; do
+    printf '%s    { "name": "%s", "seed": "%s" }' \
+      "$comma" "$name" "$seed"
+    comma=$',\n'
+  done <<< "$NAMED_BACKGROUNDS"
+  printf '\n  ],\n  "resolution": {\n'
+  printf '    "luma": { "red": %s, "green": %s, "blue": %s, ' \
+    "$LUMA_RED" "$LUMA_GREEN" "$LUMA_BLUE"
+  printf '"divisor": %s, "lightThreshold": %s },\n' \
+    "$LUMA_DIVISOR" "$LUMA_LIGHT_THRESHOLD"
+  printf '    "surfaceMix": { "bg": %s, "panel": %s, ' \
+    "$SURFACE_BG_MIX" "$SURFACE_PANEL_MIX"
+  printf '"bgAlt": %s, "border": %s },\n' \
+    "$SURFACE_BG_ALT_MIX" "$SURFACE_BORDER_MIX"
+  printf '    "textMix": {\n'
+  printf '      "dark": { "muted": %s, "subtle": %s },\n' \
+    "$DARK_MUTED_MIX" "$DARK_SUBTLE_MIX"
+  printf '      "light": { "muted": %s, "subtle": %s }\n' \
+    "$LIGHT_MUTED_MIX" "$LIGHT_SUBTLE_MIX"
+  printf '    },\n    "baseAltMix": %s\n  }\n}\n' "$BASE_ALT_MIX"
+}
+
+dump_resolved_colors() {
+  printf '{\n'
+  printf '  "preset": "%s",\n  "mode": "%s",\n' \
+    "$resolved_preset" "$resolved_mode"
+  if [ -n "$resolved_seed" ]; then
+    printf '  "seed": "%s",\n' "$resolved_seed"
+  else
+    printf '  "seed": null,\n'
+  fi
+  printf '  "colors": {\n'
+  printf '    "base": "%s",\n    "baseAlt": "%s",\n' \
+    "$resolved_base" "$resolved_base_alt"
+  printf '    "bg": "%s",\n    "bgAlt": "%s",\n' \
+    "$resolved_bg" "$resolved_bg_alt"
+  printf '    "fg": "%s",\n    "muted": "%s",\n' \
+    "$resolved_fg" "$resolved_muted"
+  printf '    "subtle": "%s",\n    "border": "%s",\n' \
+    "$resolved_subtle" "$resolved_border"
+  printf '    "warn": "%s",\n    "alert": "%s",\n' \
+    "$resolved_warn" "$resolved_alert"
+  printf '    "ink": "%s"\n  }\n}\n' "$resolved_ink"
+}
+
+resolve_colors_command() {
+  local preset='blue' background='dark' mode='auto' base_color=''
+  local value
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --preset | --background | --mode | --base-color)
+        if [ "$#" -lt 2 ]; then
+          printf '%s requires a value\n' "$1" >&2
+          return 2
+        fi
+        value="$2"
+        case "$1" in
+          --preset) preset="$value" ;;
+          --background) background="$value" ;;
+          --mode) mode="$value" ;;
+          --base-color) base_color="$value" ;;
+        esac
+        shift 2
+        ;;
+      *)
+        printf 'unknown --resolve-colors argument: %s\n' "$1" >&2
+        return 2
+        ;;
+    esac
+  done
+
+  if ! preset_colors "$preset" > /dev/null; then
+    printf 'unknown preset: %s\n' "$preset" >&2
+    return 2
+  fi
+  case "$mode" in
+    auto | dark | light) ;;
+    *)
+      printf 'mode must be auto, dark, or light: %s\n' "$mode" >&2
+      return 2
+      ;;
+  esac
+  case "$base_color" in
+    '') ;;
+    '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) ;;
+    *)
+      printf 'base color must be #rrggbb: %s\n' "$base_color" >&2
+      return 2
+      ;;
+  esac
+  case "$background" in
+    dark | light) ;;
+    '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) ;;
+    *)
+      value="$(named_background "$background")"
+      if [ -z "$value" ]; then
+        printf 'unknown background: %s\n' "$background" >&2
+        return 2
+      fi
+      background="$value"
+      ;;
+  esac
+
+  resolve_colors "$preset" "$base_color" "$background" "$mode"
+  dump_resolved_colors
 }
 
 segment() {
@@ -470,4 +657,21 @@ main() {
   set_tmux_option status-right "$right#[default]"
 }
 
-main
+case "${1-}" in
+  --dump-colors)
+    if [ "$#" -ne 1 ]; then
+      printf '%s takes no arguments\n' "$1" >&2
+      exit 2
+    fi
+    dump_colors
+    ;;
+  --resolve-colors)
+    shift
+    resolve_colors_command "$@"
+    ;;
+  '') main ;;
+  *)
+    printf 'unknown argument: %s\n' "$1" >&2
+    exit 2
+    ;;
+esac

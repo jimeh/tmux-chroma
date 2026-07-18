@@ -14,6 +14,12 @@ DOCK="$ROOT/website/src/components/Dock.tsx"
 PALETTE="$ROOT/website/src/components/Palette.tsx"
 GALLERY="$ROOT/website/src/components/Gallery.tsx"
 CONFIG="$ROOT/website/src/components/Config.tsx"
+GENERATED="$ROOT/website/.generated/prepaint.js"
+
+(
+  cd "$ROOT/website"
+  bun run generate > /dev/null
+)
 
 fail() {
   printf 'site: %s\n' "$1" >&2
@@ -204,8 +210,10 @@ assert_file_contains "$DOCK" 'prefers-reduced-motion' \
 # regardless of the system scheme) before the stylesheet paints, the
 # CSS overrides its dark defaults under data-theme='light', and the
 # live conf block hosts the toggle plus a custom background input.
-assert_file_contains "$HTML" "read('chroma-background')" \
+assert_file_contains "$HTML" '<script data-chroma-prepaint></script>' \
   'theme must resolve before the first paint'
+assert_file_contains "$GENERATED" "read('chroma-background')" \
+  'generated pre-paint resolver must restore the persisted theme'
 assert_block_contains ":root\[data-theme='light'\]" 'color-scheme: light;'
 assert_file_contains "$CONFIG" '@chroma_background' \
   'the conf block must host the theme control'
@@ -268,7 +276,7 @@ for key in chroma-preset chroma-mode chroma-host chroma-powerline \
 done
 assert_file_contains "$CONFIG" '@chroma_mode' \
   'the conf block must host the mode override'
-assert_file_contains "$HTML" "read('chroma-mode')" \
+assert_file_contains "$GENERATED" "read('chroma-mode')" \
   'the mode override must resolve before the first paint'
 assert_file_contains "$CONFIG" '# reset to defaults' \
   'the conf block must offer a reset while non-default'

@@ -1,3 +1,5 @@
+import { colorSchema } from '../.generated/colors.ts';
+
 function channel(color: string, index: number): number {
   return parseInt(color.slice(index, index + 2), 16);
 }
@@ -31,10 +33,11 @@ export function colorHue(color: string): number {
 // Integer perceived luma, matching chroma.tmux's classification of
 // custom backgrounds exactly (shell arithmetic truncates).
 export function colorLuma(color: string): number {
+  const luma = colorSchema.resolution.luma;
   return Math.floor(
-    (299 * channel(color, 1) +
-      587 * channel(color, 3) +
-      114 * channel(color, 5)) / 1000
+    (luma.red * channel(color, 1) +
+      luma.green * channel(color, 3) +
+      luma.blue * channel(color, 5)) / luma.divisor
   );
 }
 

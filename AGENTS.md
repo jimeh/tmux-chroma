@@ -54,15 +54,14 @@ bun run build
   insufficient for status-format behavior.
 - Run Powerline assertions under a UTF-8 locale. Older tmux versions do not
   preserve divider glyphs in a plain `C` locale.
-- `chroma.tmux` carries dark and light palettes, and the website
-  duplicates both: preset names with both accent columns and the
-  `base_alt` mix formula (`website/src/presets.ts`,
-  `website/src/state.ts`), the neutral anchors of both modes (in
-  `website/src/style.css` for styling and the `anchors` object in
-  `website/src/presets.ts` for the readout and seed derivation), and
-  the POSIX `cksum` hash. Update them
-  together and run `make test`; `test/palette-sync.sh` diffs the
-  palettes and anchors and runs the JS cksum port against `cksum(1)`.
+- `chroma.tmux` is the single authored source for presets, named
+  backgrounds, neutral anchors, and resolution constants. Its
+  `--dump-colors` mode emits the versioned JSON schema without tmux;
+  `--resolve-colors` exposes the real shell resolver for parity tests.
+  `bun run generate` in `website/` creates ignored files under
+  `website/.generated/`; dev, typecheck, and build run it first. Never
+  hand-edit or commit generated colors. Run `make test` after changing
+  the schema or resolver.
 - The site has one theme control, the `@chroma_background` dropdown
   in the live conf block (plus a custom background input): the page,
   dock, and gallery re-theme together. Dark is the default regardless
@@ -71,13 +70,11 @@ bun run build
   blended like the plugin (surfaces and the muted/subtle text tones
   both derive from the seed), with a persisted `@chroma_mode`
   override forcing the palette mode — is resolved by an inline
-  script in
-  `website/index.html` before the stylesheet paints. Keep that script
-  in sync with the same resolution in `website/src/state.ts`; the
-  named-background table lives in `chroma.tmux`,
-  `website/src/presets.ts`, and that inline script, and
-  `test/palette-sync.sh` diffs all three. Dark stays the README
-  screenshot source.
+  generated pre-paint script before the stylesheet paints. Vite injects
+  that script and shared color variables at the placeholders in
+  `website/index.html`; browser color math consumes the generated
+  constants and is checked against `--resolve-colors`. Dark stays the
+  README screenshot source.
 - Keep website dependencies minimal: `preact` and `@preact/signals` at
   runtime; `vite`, `@preact/preset-vite`, and `typescript` for the
   build, nothing else. Source is strict TypeScript (`bun run
