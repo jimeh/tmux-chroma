@@ -1,11 +1,20 @@
-# Chroma
+<div align="center">
+
+<img width="432px" src="./img/chroma.svg" alt="Chroma">
+
+**A minimal, host-aware status theme for tmux.**
 
 [![CI](https://github.com/jimeh/tmux-chroma/actions/workflows/ci.yml/badge.svg)](https://github.com/jimeh/tmux-chroma/actions/workflows/ci.yml)
 [![Website](https://img.shields.io/badge/website-live-8aadf4)](https://jimeh.github.io/tmux-chroma/)
+[![GitHub Issues](https://img.shields.io/github/issues/jimeh/tmux-chroma?logo=github&label=Issues)](https://github.com/jimeh/tmux-chroma/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/jimeh/tmux-chroma?logo=github&label=PRs)](https://github.com/jimeh/tmux-chroma/pulls)
+[![License](https://img.shields.io/github/license/jimeh/tmux-chroma?label=License)](https://github.com/jimeh/tmux-chroma/blob/main/LICENSE)
 
-A minimal, host-aware status theme for tmux. Chroma deterministically assigns
-an accent preset from each machine's short hostname, making hosts recognizable
-at a glance without per-machine configuration.
+</div>
+
+Chroma deterministically assigns an accent preset from each machine's short
+hostname, making hosts recognizable at a glance without per-machine
+configuration.
 
 ![Chroma status line in Powerline mode](website/public/preview.png)
 
