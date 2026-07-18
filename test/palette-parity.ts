@@ -33,9 +33,13 @@ interface ShellPalette {
     baseAlt: string;
     bg: string;
     bgAlt: string;
+    fg: string;
     muted: string;
     subtle: string;
     border: string;
+    warn: string;
+    alert: string;
+    ink: string;
   };
 }
 
@@ -127,6 +131,7 @@ function assertRuntimeMatchesShell(
   shell: ShellPalette
 ): void {
   const label = `resolver mismatch for ${JSON.stringify(test)}`;
+  const anchors = colorSchema.modes[runtime.mode];
   assertEqual(runtime.mode, shell.mode, `${label}: mode`);
   assertEqual(runtime.bar, shell.colors.bg, `${label}: bar`);
   assertEqual(runtime.accent, shell.colors.base, `${label}: accent`);
@@ -135,9 +140,17 @@ function assertRuntimeMatchesShell(
     shell.colors.baseAlt,
     `${label}: accentAlt`
   );
+  assertEqual(shell.colors.fg, anchors.fg, `${label}: fg`);
+  assertEqual(shell.colors.warn, anchors.warn, `${label}: warn`);
+  assertEqual(shell.colors.alert, anchors.alert, `${label}: alert`);
+  assertEqual(shell.colors.ink, anchors.ink, `${label}: ink`);
 
   if (shell.seed === null) {
     assertEqual(runtime.surfaces, null, `${label}: named surfaces`);
+    assertEqual(shell.colors.bgAlt, anchors.bgAlt, `${label}: bgAlt`);
+    assertEqual(shell.colors.muted, anchors.muted, `${label}: muted`);
+    assertEqual(shell.colors.subtle, anchors.subtle, `${label}: subtle`);
+    assertEqual(shell.colors.border, anchors.border, `${label}: border`);
     return;
   }
   if (!runtime.surfaces) throw new Error(`${label}: missing surfaces`);
@@ -214,6 +227,7 @@ function runPrepaint(test: TestCase): PrepaintResult {
 const prepaintCases: TestCase[] = [
   { preset: 'blue', background: 'dark', mode: 'auto' },
   { preset: 'peach', background: 'light', mode: 'auto' },
+  { preset: 'red', background: 'light', mode: 'dark' },
   { preset: 'teal', background: 'solarized-light', mode: 'auto' },
   { preset: 'mauve', background: '#301934', mode: 'auto' },
   { preset: 'gold', background: 'tomorrow-night', mode: 'light' },
@@ -255,6 +269,7 @@ for (const host of [
   'web-01',
   'x',
   'longhostname-with-many-octets',
+  'x'.repeat(300),
 ]) {
   const child = Bun.spawn(['cksum'], {
     stdin: new TextEncoder().encode(host),
