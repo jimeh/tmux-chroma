@@ -6,7 +6,7 @@ Chroma is a dependency-light tmux status theme for macOS and Linux.
 
 - `chroma.tmux`: executable TPM entrypoint and theme implementation.
 - `scripts/`: bundled CPU, memory, and disk status helpers.
-- `website/`: Vite + Preact TypeScript source for the GitHub Pages site
+- `website/`: Vite + Preact TypeScript source for the Cloudflare Workers site
   and interactive preview; terminal-session layout where the fixed
   status-line dock doubles as page navigation. Static prose lives in
   `website/index.html`; interactive islands mount from
@@ -14,10 +14,12 @@ Chroma is a dependency-light tmux status theme for macOS and Linux.
   is the package manager and script runner (`bun install`, `bun run`).
 - `test/`: shell and live tmux regression tests.
 
-The site is built and deployed by `.github/workflows/pages.yml`; the
-`website/dist` output is gitignored and must never be committed. TPM
-installs clone this whole repository, so keep `website/` small and never
-add build artifacts or vendored dependencies to it.
+Cloudflare Workers Builds builds and deploys the site from `website/`.
+Production publishes from `main` to `chroma.jimeh.dev`; non-production
+branches upload preview versions and receive links in pull requests. The
+`website/dist` output is gitignored and must never be committed. TPM installs
+clone this whole repository, so keep `website/` small and never add build
+artifacts or vendored dependencies to it.
 
 ## Commands
 
@@ -48,6 +50,8 @@ bun install --frozen-lockfile
 bun run dev
 bun run typecheck
 bun run build
+bun run deploy
+bun run deploy:preview
 ```
 
 ## Conventions
@@ -82,11 +86,10 @@ bun run build
   constants and is checked against `--resolve-colors`. Dark stays the
   README screenshot source.
 - Keep website dependencies minimal: `preact` and `@preact/signals` at
-  runtime; `vite`, `@preact/preset-vite`, and `typescript` for the
-  build, nothing else. Source is strict TypeScript (`bun run
-  typecheck` must pass). Prose stays as static HTML in
-  `website/index.html` so content renders without JavaScript;
-  components own only the interactive islands.
+  runtime; `vite`, `@preact/preset-vite`, and `typescript` for the build;
+  `wrangler` for deployment. Source is strict TypeScript (`bun run typecheck`
+  must pass). Prose stays as static HTML in `website/index.html` so content
+  renders without JavaScript; components own only the interactive islands.
 - The preview status bar mirrors tmux cell geometry: segment spacing comes
   from literal space characters in the format strings under
   `white-space: pre` (`website/src/components/StatusBar.tsx`), never CSS
@@ -95,11 +98,10 @@ bun run build
 - One `StatusBar` component renders both the dock and the gallery bars;
   keyed window items keep focused dock buttons attached across re-renders,
   which the gallery's focus restore relies on.
-- Use `https://jimeh.github.io/tmux-chroma/` as the canonical site URL.
-  The personal site runs on Cloudflare Workers, so keep the legacy
-  `jimeh/jimeh.github.io` Pages custom domain and `CNAME` unset; otherwise
-  GitHub redirects all project Pages through the unrelated personal-site
-  origin.
+- Use `https://chroma.jimeh.dev/` as the canonical site URL. Keep the custom
+  domain and static asset directory in `website/wrangler.jsonc`; do not add a
+  GitHub Pages `CNAME`. Workers preview URLs are explicitly enabled while the
+  public `workers.dev` production route is disabled.
 - Preserve keyboard focus, mobile overflow handling, and reduced-motion
   behavior when changing the site.
 - iOS Safari paints a scroll container's background on the moving

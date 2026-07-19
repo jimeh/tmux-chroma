@@ -4,9 +4,6 @@ import { colorSchema } from './.generated/colors.ts';
 import { colorCss, prepaint } from './.generated/site.ts';
 
 export default defineConfig({
-  // The site deploys under /tmux-chroma/ on GitHub Pages; relative
-  // asset URLs keep the build independent of that mount point.
-  base: './',
   plugins: [
     {
       name: 'chroma-generated-colors',
