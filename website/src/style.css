@@ -1023,7 +1023,7 @@ h3::before {
 /* Two columns need enough room to preserve the terminal cell geometry
    in both bars. Once either column would start clipping, stack all four
    backgrounds and keep each comparison pair full width. */
-@media (max-width: 1340px) {
+@media (max-width: 1360px) {
   .preview-popup {
     width: min(760px, 100%);
   }

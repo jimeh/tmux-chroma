@@ -429,7 +429,7 @@ assert_file_contains "$HTML" 'id="preview"' \
 assert_block_contains '.preview-grid' \
   'grid-template-columns: repeat(2, minmax(0, 1fr));'
 assert_block_contains '.preview-bar' 'min-width: 0;'
-assert_file_contains "$CSS" '@media (max-width: 1340px)' \
+assert_file_contains "$CSS" '@media (max-width: 1360px)' \
   'the README screenshot preview must stack when two bars no longer fit'
 assert_file_contains "$CSS" \
   'grid-template-columns: minmax(0, 1fr);' \
