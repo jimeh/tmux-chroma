@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - chroma.tmux
       - website/**
       - mise.toml
       - .github/workflows/pages.yml

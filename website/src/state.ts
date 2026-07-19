@@ -7,6 +7,7 @@ import {
   presetAccent,
   presetForHost,
   presets,
+  resolution,
   seededPreset,
   type Preset,
   type ThemeMode,
@@ -29,8 +30,8 @@ export const windows: PageWindow[] = [
 // Every value the conf block renders (plus the auto-host preview)
 // persists across visits under a chroma-* key, stored only while it
 // differs from its default — so reset is just clearing the keys.
-// The background resolution also runs in an inline <head> script so
-// the first paint is already themed; keep the two in sync.
+// The generated pre-paint resolver applies the same constants before
+// this module loads, so the first paint already has the persisted theme.
 const backgroundStorageKey = 'chroma-background';
 
 function storedValue(key: string): string {
@@ -88,9 +89,8 @@ export const backgroundSeed = computed<string | null>(() => {
   return namedBackgroundSeed(value) ?? value;
 });
 
-// A custom seed resolves to the mode its perceived luma classifies
-// it as: >= 130 is light, exactly like the plugin. An explicit
-// @chroma_mode wins over the classification.
+// A custom seed resolves to the mode its perceived luma classifies,
+// exactly like the plugin. An explicit @chroma_mode wins over it.
 export const theme = computed<ThemeMode>(() => {
   const forced = modeOverride.value;
   if (forced === 'dark' || forced === 'light') {
@@ -98,17 +98,18 @@ export const theme = computed<ThemeMode>(() => {
   }
   const seed = backgroundSeed.value;
   if (seed) {
-    return colorLuma(seed) >= 130 ? 'light' : 'dark';
+    return colorLuma(seed) >= resolution.luma.lightThreshold
+      ? 'light'
+      : 'dark';
   }
   return background.value === 'light' ? 'light' : 'dark';
 });
 
 // Mirrors the plugin's custom-seed derivation: the terminal
 // background is the seed itself, the bar surfaces blend the mode's
-// fg toward it (bg at 10, bg_alt at 16, border at 27 percent;
-// panel is the site-only mid-step between bar and bg_alt), and the
-// quieter text tones blend fg toward the seed so they keep their
-// contrast against any background.
+// fg toward it using the generated ratios (panel is the site-only
+// mid-step between bar and bg_alt), and the quieter text tones keep
+// their contrast by blending fg toward the seed.
 export interface Surfaces {
   canvas: string;
   bar: string;
@@ -127,16 +128,16 @@ export const surfaces = computed<Surfaces | null>(() => {
   const fg = anchors[theme.value].fg;
   // Light mode needs a stronger fg share for the quieter tones,
   // matching where its anchors sit over the default surfaces.
-  const mutedMix = theme.value === 'light' ? 80 : 60;
-  const subtleMix = theme.value === 'light' ? 62 : 45;
+  const textMix = resolution.textMix[theme.value];
+  const surfaceMix = resolution.surfaceMix;
   return {
     canvas: seed,
-    bar: mixColor(fg, seed, 10),
-    panel: mixColor(fg, seed, 13),
-    panelRaised: mixColor(fg, seed, 16),
-    line: mixColor(fg, seed, 27),
-    muted: mixColor(fg, seed, mutedMix),
-    subtle: mixColor(fg, seed, subtleMix),
+    bar: mixColor(fg, seed, surfaceMix.bg),
+    panel: mixColor(fg, seed, surfaceMix.panel),
+    panelRaised: mixColor(fg, seed, surfaceMix.bgAlt),
+    line: mixColor(fg, seed, surfaceMix.border),
+    muted: mixColor(fg, seed, textMix.muted),
+    subtle: mixColor(fg, seed, textMix.subtle),
   };
 });
 
@@ -243,7 +244,7 @@ export const accent = computed(() => (
 // The quieter companion color is derived by blending the accent
 // toward the active bar background, exactly like the plugin.
 export const accentAlt = computed(() => (
-  mixColor(accent.value, barColor.value, 60)
+  mixColor(accent.value, barColor.value, resolution.baseAltMix)
 ));
 
 // The auto-host preview swatch keeps showing the last auto result

@@ -1,6 +1,10 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { mixColor } from '../color.ts';
-import { displayPresets, presetAccent } from '../presets.ts';
+import {
+  displayPresets,
+  presetAccent,
+  resolution,
+} from '../presets.ts';
 import { barColor, galleryOpen, powerline, theme } from '../state.ts';
 import { StatusBar, type StatusWindowItem } from './StatusBar.tsx';
 
@@ -83,7 +87,11 @@ export function Gallery() {
                 windows={galleryWindows}
                 style={{
                   '--accent': accent,
-                  '--accent-alt': mixColor(accent, barColor.value, 60),
+                  '--accent-alt': mixColor(
+                    accent,
+                    barColor.value,
+                    resolution.baseAltMix
+                  ),
                 }}
               />
             );

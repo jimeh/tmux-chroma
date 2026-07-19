@@ -44,6 +44,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4
+      - name: Install website dependencies
+        working-directory: website
+        run: bun install --frozen-lockfile
       - name: Install build dependencies
         run: |
           sudo apt-get update
@@ -76,6 +79,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4
+      - name: Install website dependencies
+        working-directory: website
+        run: bun install --frozen-lockfile
       - name: Install tmux
         run: brew install tmux
       - name: Test

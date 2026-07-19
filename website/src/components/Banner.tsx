@@ -1,5 +1,5 @@
 import { mixColor } from '../color.ts';
-import { presetAccent } from '../presets.ts';
+import { presetAccent, resolution } from '../presets.ts';
 import { barColor, logoPresets, theme } from '../state.ts';
 
 // Column boundaries of the six letters in the ASCII banner (ANSI
@@ -33,7 +33,11 @@ export function BannerLetters({ art }: { art: string }) {
         const gradient = chosenPreset
           ? (() => {
             const accent = presetAccent(chosenPreset, theme.value);
-            const alt = mixColor(accent, barColor.value, 60);
+            const alt = mixColor(
+              accent,
+              barColor.value,
+              resolution.baseAltMix
+            );
             return 'linear-gradient(180deg, ' + accent +
               ' 55%, ' + alt + ')';
           })()

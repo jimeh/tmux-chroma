@@ -12,6 +12,7 @@ import {
   displayPresets,
   namedBackgrounds,
   presetAccent,
+  resolution,
 } from '../presets.ts';
 import {
   auto,
@@ -484,13 +485,17 @@ function BackgroundSelect() {
     {
       label: 'dark themes',
       options: namedBackgrounds
-        .filter((entry) => colorLuma(entry.seed) < 130)
+        .filter((entry) => (
+          colorLuma(entry.seed) < resolution.luma.lightThreshold
+        ))
         .map(asOption),
     },
     {
       label: 'light themes',
       options: namedBackgrounds
-        .filter((entry) => colorLuma(entry.seed) >= 130)
+        .filter((entry) => (
+          colorLuma(entry.seed) >= resolution.luma.lightThreshold
+        ))
         .map(asOption),
     },
   ];

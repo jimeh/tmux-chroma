@@ -183,6 +183,19 @@ The tests load Chroma in an isolated tmux server, verify reload idempotency
 and option behavior, exercise the bundled metric scripts, and ensure the
 website palette stays in sync with the plugin.
 
+`chroma.tmux` is also the executable color specification used by the website:
+
+```sh
+./chroma.tmux --dump-colors
+./chroma.tmux --resolve-colors \
+  --preset blue --background solarized-light --mode auto
+```
+
+The first command prints the complete versioned color schema as JSON. The
+second resolves one palette without contacting tmux; it also accepts
+`--background '#rrggbb'`, `--mode dark|light`, and
+`--base-color '#rrggbb'`.
+
 ## Credits
 
 Chroma uses selected accent colors from the

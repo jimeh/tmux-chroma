@@ -1,18 +1,8 @@
 :root {
   color-scheme: dark;
   --canvas: #090a0d;
-  --bar: #15181d;
   --panel: #181b20;
-  --panel-raised: #20242b;
   --line: #2b313b;
-  --text: #d7dde7;
-  --muted: #8b96a8;
-  --subtle: #6f7a8d;
-  --warn: #eed49f;
-  --alert: #ed8796;
-  --ink: #101216;
-  --accent: #8aadf4;
-  --accent-alt: #5b719e;
   --scrim: rgba(6, 7, 10, 0.82);
   --mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
   --dock-height: 28px;
@@ -24,27 +14,14 @@
   --measure: 720px;
 }
 
-/* Light mode mirrors chroma.tmux's light palette: the bar surfaces,
-   text tones, alerts, and ink come verbatim from the plugin's light
-   neutral anchors, while the page-only surfaces (canvas, panel,
-   line) keep the dark theme's luminance ordering around them. The
-   accent pair is themed from src/state.ts. An inline script in
-   index.html sets data-theme before this sheet paints. */
+/* Shared color variables are generated from chroma.tmux and injected
+   by Vite before this sheet. These page-only surfaces keep the dark
+   theme's luminance ordering around the plugin anchors. */
 :root[data-theme='light'] {
   color-scheme: light;
   --canvas: #f6f8fb;
-  --bar: #e9ecf2;
   --panel: #e4e8ef;
-  --panel-raised: #dde1e9;
   --line: #c7cedb;
-  --text: #3c4354;
-  --muted: #5c6678;
-  --subtle: #767f93;
-  --warn: #b89651;
-  --alert: #ad4352;
-  --ink: #f4f6fa;
-  --accent: #3f68bb;
-  --accent-alt: #839cd1;
   --scrim: rgba(23, 27, 34, 0.45);
 }
 
@@ -362,21 +339,10 @@ h3::before {
 .swatch-auto .swatch-color {
   background: linear-gradient(
     90deg,
-    #8aadf4,
-    #a6da95,
-    #eed49f,
-    #ed8796
-  );
-}
-
-/* The same four presets, from the light accent column. */
-:root[data-theme='light'] .swatch-auto .swatch-color {
-  background: linear-gradient(
-    90deg,
-    #3f68bb,
-    #649753,
-    #b89651,
-    #ad4352
+    var(--auto-accent-1),
+    var(--auto-accent-2),
+    var(--auto-accent-3),
+    var(--auto-accent-4)
   );
 }
 

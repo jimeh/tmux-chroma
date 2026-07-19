@@ -121,8 +121,7 @@ assert_option @chroma_ink '#f4f6fa'
 assert_option @chroma_dark '#f4f6fa'
 assert_option @chroma_base_alt '#839cd1'
 
-# Two more accents pin the light column here; palette-sync.sh keeps
-# the full table in lockstep with the site.
+# Two more accents independently pin the generated light column.
 tmux -L "$SOCKET" set-option -g @chroma_preset peach
 run_theme
 assert_option @chroma_base '#b5663a'
