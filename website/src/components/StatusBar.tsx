@@ -73,7 +73,7 @@ function Divider({
 }
 
 // One window entry; the dock passes onSelect and renders buttons,
-// the gallery leaves it unset and renders inert spans.
+// while screenshot panels leave it unset and render inert spans.
 function WindowItem({ item }: { item: StatusWindowItem }) {
   const className = 'status-window' + (item.current ? ' is-current' : '');
   const content = (
@@ -109,7 +109,7 @@ function WindowItem({ item }: { item: StatusWindowItem }) {
 }
 
 // A full status line. Renders both the interactive dock and the
-// gallery's one-line-per-accent previews; keyed window items let
+// screenshot panels' static previews; keyed window items let
 // Preact update segments in place, so a focused window button
 // survives re-renders.
 export function StatusBar({
@@ -123,8 +123,8 @@ export function StatusBar({
   style,
 }: StatusBarProps) {
   const tail = syncActive ? 'SYNC' : clockText.value;
-  // The themed variables resolve per mode (and per gallery bar, where
-  // the accent pair is overridden inline).
+  // The themed variables resolve per mode (and per screenshot bar,
+  // where the palette may be overridden inline).
   const tailColor = syncActive ? 'var(--alert)' : 'var(--accent)';
   return (
     <div

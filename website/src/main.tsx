@@ -9,6 +9,7 @@ import {
 } from './components/Config.tsx';
 import { Dock } from './components/Dock.tsx';
 import { Gallery } from './components/Gallery.tsx';
+import { Preview } from './components/Preview.tsx';
 import {
   AutoHostPreview,
   CopyButton,
@@ -29,6 +30,7 @@ import {
   galleryOpen,
   lastWindow,
   prefixArmed,
+  previewOpen,
   rainbowLogo,
   rollLogo,
   surfaces,
@@ -83,6 +85,7 @@ if (dock) {
   render(<Dock />, dock);
 }
 mount(<Gallery />, 'gallery');
+mount(<Preview />, 'preview');
 mount(
   <InstallCommand
     text="set -g @plugin 'jimeh/tmux-chroma'"
@@ -142,17 +145,20 @@ function paintLogo(choose: () => void): void {
   }
 }
 
-// Prefix easter egg: Ctrl-b or Ctrl-q, then w (choose-window),
-// opens the preset gallery. Plain q only closes when not typing
-// into a field; Escape closes regardless, like any dialog.
+// Prefix easter eggs: Ctrl-b or Ctrl-q, then w (choose-window),
+// opens the preset gallery; prefix+p opens the README screenshot
+// preview. Plain q only closes when not typing into a field;
+// Escape closes regardless, like any dialog.
 document.addEventListener('keydown', (event) => {
   const target = event.target instanceof Element ? event.target : null;
   const typing = Boolean(target?.closest('input, textarea, select'));
-  if (galleryOpen.value && (event.key === 'Escape' ||
+  const overlayOpen = galleryOpen.value || previewOpen.value;
+  if (overlayOpen && (event.key === 'Escape' ||
       (event.key === 'q' && !typing && !event.ctrlKey &&
         !event.metaKey && !event.altKey))) {
     event.preventDefault();
     galleryOpen.value = false;
+    previewOpen.value = false;
     return;
   }
   if (typing) {
@@ -169,7 +175,13 @@ document.addEventListener('keydown', (event) => {
     if (event.key === 'w') {
       event.preventDefault();
       disarmPrefix();
+      previewOpen.value = false;
       galleryOpen.value = true;
+    } else if (event.key === 'p') {
+      event.preventDefault();
+      disarmPrefix();
+      galleryOpen.value = false;
+      previewOpen.value = true;
     } else if (event.key === 'r') {
       event.preventDefault();
       disarmPrefix();
