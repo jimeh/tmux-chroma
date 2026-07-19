@@ -1,6 +1,8 @@
 :root {
   color-scheme: dark;
-  --canvas: #090a0d;
+  --canvas-dark: #090a0d;
+  --canvas-light: #f6f8fb;
+  --canvas: var(--canvas-dark);
   --panel: #181b20;
   --line: #2b313b;
   --scrim: rgba(6, 7, 10, 0.82);
@@ -19,7 +21,7 @@
    theme's luminance ordering around the plugin anchors. */
 :root[data-theme='light'] {
   color-scheme: light;
-  --canvas: #f6f8fb;
+  --canvas: var(--canvas-light);
   --panel: #e4e8ef;
   --line: #c7cedb;
   --scrim: rgba(23, 27, 34, 0.45);
@@ -892,10 +894,9 @@ h3::before {
   --divider-to: var(--tail-color);
 }
 
-/* Preset gallery — hidden behind the tmux prefix (Ctrl-b or
-   Ctrl-q, then w, like choose-window). Renders one status line per
-   accent so the whole palette can be screenshotted for the README. */
-.status-gallery {
+/* Screenshot panels hidden behind the tmux prefix. The shared shell
+   keeps their focus, backdrop, and mobile overflow behavior aligned. */
+.status-overlay {
   position: fixed;
   z-index: 20;
   inset: 0;
@@ -906,7 +907,7 @@ h3::before {
   background: var(--scrim);
 }
 
-.gallery-popup {
+.status-popup {
   max-width: 100%;
   max-height: 100%;
   padding: 1.1rem 1.2rem 1.2rem;
@@ -917,11 +918,12 @@ h3::before {
   outline: none;
 }
 
-.gallery-hint {
+.status-popup-hint {
   margin: 0 0 0.9rem;
   font-size: 0.8rem;
 }
 
+/* Prefix+w mirrors choose-window with one status line per accent. */
 .gallery-bars {
   display: grid;
   min-width: 740px;
@@ -935,6 +937,101 @@ h3::before {
   --dock-height: 15px;
 
   pointer-events: none;
+}
+
+/* Prefix+p is the README screenshot stage. Each panel owns a full
+   palette resolved from chroma.tmux's generated constants, letting
+   dark and light modes coexist without changing the page theme. */
+.preview-popup {
+  width: min(1370px, 100%);
+}
+
+.preview-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.9rem;
+}
+
+.preview-kicker,
+.preview-hint {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.preview-grid {
+  display: grid;
+  min-width: 1180px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.preview-theme {
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--preview-background);
+  color: var(--text);
+}
+
+.preview-theme-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 11px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.3;
+  text-transform: lowercase;
+}
+
+.preview-theme-heading > span {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.preview-theme-heading code {
+  color: inherit;
+  font: inherit;
+}
+
+.preview-style + .preview-style {
+  margin-top: 9px;
+}
+
+.preview-style-label {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--subtle);
+  font-size: 9px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.preview-bar {
+  --dock-height: 17px;
+
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  pointer-events: none;
+  font-size: 11px;
+}
+
+/* Two columns need enough room to preserve the terminal cell geometry
+   in both bars. Once either column would start clipping, stack all four
+   backgrounds and keep each comparison pair full width. */
+@media (max-width: 1360px) {
+  .preview-popup {
+    width: min(760px, 100%);
+  }
+
+  .preview-grid {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @keyframes typing {

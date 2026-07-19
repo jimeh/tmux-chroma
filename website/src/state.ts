@@ -81,35 +81,6 @@ function storedModeOverride(): string {
 
 export const modeOverride = signal<string>(storedModeOverride());
 
-export const backgroundSeed = computed<string | null>(() => {
-  const value = background.value;
-  if (value === 'dark' || value === 'light') {
-    return null;
-  }
-  return namedBackgroundSeed(value) ?? value;
-});
-
-// A custom seed resolves to the mode its perceived luma classifies,
-// exactly like the plugin. An explicit @chroma_mode wins over it.
-export const theme = computed<ThemeMode>(() => {
-  const forced = modeOverride.value;
-  if (forced === 'dark' || forced === 'light') {
-    return forced;
-  }
-  const seed = backgroundSeed.value;
-  if (seed) {
-    return colorLuma(seed) >= resolution.luma.lightThreshold
-      ? 'light'
-      : 'dark';
-  }
-  return background.value === 'light' ? 'light' : 'dark';
-});
-
-// Mirrors the plugin's custom-seed derivation: the terminal
-// background is the seed itself, the bar surfaces blend the mode's
-// fg toward it using the generated ratios (panel is the site-only
-// mid-step between bar and bg_alt), and the quieter text tones keep
-// their contrast by blending fg toward the seed.
 export interface Surfaces {
   canvas: string;
   bar: string;
@@ -120,26 +91,88 @@ export interface Surfaces {
   subtle: string;
 }
 
-export const surfaces = computed<Surfaces | null>(() => {
-  const seed = backgroundSeed.value;
-  if (!seed) {
-    return null;
+/** A resolved background mode and its optional derived surfaces. */
+export interface BackgroundResolution {
+  mode: ThemeMode;
+  seed: string | null;
+  surfaces: Surfaces | null;
+}
+
+/**
+ * Resolve any supported background without touching page state.
+ *
+ * The screenshot preview uses this same path so every isolated status
+ * bar stays in parity with the live page and the shell resolver.
+ */
+export function resolveBackground(
+  value: string,
+  modeOverrideValue = 'auto'
+): BackgroundResolution {
+  let seed: string | null;
+  if (value === 'dark' || value === 'light') {
+    seed = null;
+  } else {
+    seed = namedBackgroundSeed(value) ?? value;
   }
-  const fg = anchors[theme.value].fg;
+
+  let mode: ThemeMode;
+  if (modeOverrideValue === 'dark' || modeOverrideValue === 'light') {
+    mode = modeOverrideValue;
+  } else if (seed) {
+    mode = colorLuma(seed) >= resolution.luma.lightThreshold
+      ? 'light'
+      : 'dark';
+  } else {
+    mode = value === 'light' ? 'light' : 'dark';
+  }
+
+  if (!seed) {
+    return { mode, seed, surfaces: null };
+  }
+
+  // Mirrors the plugin's custom-seed derivation: the terminal
+  // background is the seed itself, the bar surfaces blend the mode's
+  // fg toward it using the generated ratios (panel is the site-only
+  // mid-step between bar and bg_alt), and the quieter text tones keep
+  // their contrast by blending fg toward the seed.
+  const fg = anchors[mode].fg;
   // Light mode needs a stronger fg share for the quieter tones,
   // matching where its anchors sit over the default surfaces.
-  const textMix = resolution.textMix[theme.value];
+  const textMix = resolution.textMix[mode];
   const surfaceMix = resolution.surfaceMix;
   return {
-    canvas: seed,
-    bar: mixColor(fg, seed, surfaceMix.bg),
-    panel: mixColor(fg, seed, surfaceMix.panel),
-    panelRaised: mixColor(fg, seed, surfaceMix.bgAlt),
-    line: mixColor(fg, seed, surfaceMix.border),
-    muted: mixColor(fg, seed, textMix.muted),
-    subtle: mixColor(fg, seed, textMix.subtle),
+    mode,
+    seed,
+    surfaces: {
+      canvas: seed,
+      bar: mixColor(fg, seed, surfaceMix.bg),
+      panel: mixColor(fg, seed, surfaceMix.panel),
+      panelRaised: mixColor(fg, seed, surfaceMix.bgAlt),
+      line: mixColor(fg, seed, surfaceMix.border),
+      muted: mixColor(fg, seed, textMix.muted),
+      subtle: mixColor(fg, seed, textMix.subtle),
+    },
   };
-});
+}
+
+const backgroundResolution = computed(() => resolveBackground(
+  background.value,
+  modeOverride.value
+));
+
+export const backgroundSeed = computed(
+  () => backgroundResolution.value.seed
+);
+
+// A custom seed resolves to the mode its perceived luma classifies,
+// exactly like the plugin. An explicit @chroma_mode wins over it.
+export const theme = computed<ThemeMode>(
+  () => backgroundResolution.value.mode
+);
+
+export const surfaces = computed<Surfaces | null>(
+  () => backgroundResolution.value.surfaces
+);
 
 // The active status-bar background: derived from a custom seed, or
 // the mode's anchor.
@@ -178,6 +211,7 @@ export const sync = signal(false);
 export const currentWindow = signal(windows[0].id);
 export const lastWindow = signal<string | null>(null);
 export const galleryOpen = signal(false);
+export const previewOpen = signal(false);
 export const booting = signal(true);
 export const autoHost = signal(storedValue('chroma-host'));
 export const clockText = signal(formatClock());

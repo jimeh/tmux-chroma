@@ -83,8 +83,8 @@ bun run deploy:preview
   generated pre-paint script before the stylesheet paints. Vite injects
   that script and shared color variables at the placeholders in
   `website/index.html`; browser color math consumes the generated
-  constants and is checked against `--resolve-colors`. Dark stays the
-  README screenshot source.
+  constants and is checked against `--resolve-colors`. The fixed
+  four-background preview is the README screenshot source.
 - Keep website dependencies minimal: `preact` and `@preact/signals` at
   runtime; `vite`, `@preact/preset-vite`, and `typescript` for the build;
   `wrangler` for deployment. Source is strict TypeScript (`bun run typecheck`
@@ -95,9 +95,9 @@ bun run deploy:preview
   `white-space: pre` (`website/src/components/StatusBar.tsx`), never CSS
   padding. The fixed dock scrolls horizontally instead of wrapping on
   narrow viewports. `test/site.sh` enforces the no-padding rule.
-- One `StatusBar` component renders both the dock and the gallery bars;
-  keyed window items keep focused dock buttons attached across re-renders,
-  which the gallery's focus restore relies on.
+- One `StatusBar` component renders the dock, gallery, and README preview
+  bars; keyed window items keep focused dock buttons attached across
+  re-renders, which the overlays' focus restore relies on.
 - Use `https://chroma.jimeh.dev/` as the canonical site URL. Keep the custom
   domain and static asset directory in `website/wrangler.jsonc`; do not add a
   GitHub Pages `CNAME`. Workers preview URLs are explicitly enabled while the
@@ -120,3 +120,8 @@ bun run deploy:preview
   Ctrl-q, then w (choose-window). It renders one status line per accent
   and is used to screenshot the palette for the README. Keep it working
   when changing status bar markup or styles.
+- Prefix+p opens the README screenshot preview: a 2×2 matrix of dark,
+  light, solarized-dark, and solarized-light backgrounds, each with block
+  and Powerline status bars. It resolves every tile independently from
+  the shared browser color resolver; keep the fixed peach, blue, green,
+  and mauve accent sequence and composition deterministic.

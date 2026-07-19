@@ -13,6 +13,8 @@ STATUSBAR="$ROOT/website/src/components/StatusBar.tsx"
 DOCK="$ROOT/website/src/components/Dock.tsx"
 PALETTE="$ROOT/website/src/components/Palette.tsx"
 GALLERY="$ROOT/website/src/components/Gallery.tsx"
+PREVIEW="$ROOT/website/src/components/Preview.tsx"
+STATUS_OVERLAY="$ROOT/website/src/components/StatusOverlay.tsx"
 CONFIG="$ROOT/website/src/components/Config.tsx"
 GENERATED="$ROOT/website/.generated/prepaint.js"
 PACKAGE="$ROOT/website/package.json"
@@ -383,15 +385,55 @@ assert_file_contains "$PALETTE" 'onClick={selectAuto}' \
 
 for fragment in \
   'class="gallery-bars"' \
-  'aria-modal="true"' \
-  "'1:zsh'" \
-  'region.inert = true;' \
-  'region.inert = false;'; do
+  "'1:zsh'"; do
   assert_file_contains "$GALLERY" "$fragment" \
     'prefix + w must open the preset gallery'
 done
+for fragment in \
+  'aria-modal="true"' \
+  'region.inert = true;' \
+  'region.inert = false;'; do
+  assert_file_contains "$STATUS_OVERLAY" "$fragment" \
+    'status overlays must preserve modal focus behavior'
+done
 assert_file_contains "$MAIN" "event.key === 'w'" \
   'prefix + w must open the preset gallery'
+
+# Prefix+p opens the deterministic README screenshot stage: four
+# background resolutions, with block and Powerline status lines in
+# every tile. The styles share the real background resolver instead
+# of maintaining a second set of palette constants.
+for fragment in \
+  "{ name: 'dark', label: 'dark', accent: 'peach' }" \
+  "{ name: 'light', label: 'light', accent: 'blue' }" \
+  "accent: 'green'" \
+  "accent: 'mauve'" \
+  '<PreviewBar powerline={false} />' \
+  '<PreviewBar powerline />' \
+  'resolveBackground(background.name)'; do
+  assert_file_contains "$PREVIEW" "$fragment" \
+    'prefix + p must render the README screenshot preview'
+done
+assert_file_contains "$STATE" 'function resolveBackground' \
+  'preview backgrounds must use the live page resolver'
+assert_file_contains "$PREVIEW" "'--preview-background'" \
+  'default preview backgrounds must use the website canvas surfaces'
+assert_file_contains "$PREVIEW" 'var(--canvas-' \
+  'default preview backgrounds must use the website canvas surfaces'
+assert_block_contains ':root' '--canvas-dark: #090a0d;'
+assert_block_contains ':root' '--canvas-light: #f6f8fb;'
+assert_file_contains "$MAIN" "event.key === 'p'" \
+  'prefix + p must open the README screenshot preview'
+assert_file_contains "$HTML" 'id="preview"' \
+  'the page must mount the README screenshot preview'
+assert_block_contains '.preview-grid' \
+  'grid-template-columns: repeat(2, minmax(0, 1fr));'
+assert_block_contains '.preview-bar' 'min-width: 0;'
+assert_file_contains "$CSS" '@media (max-width: 1360px)' \
+  'the README screenshot preview must stack when two bars no longer fit'
+assert_file_contains "$CSS" \
+  'grid-template-columns: minmax(0, 1fr);' \
+  'the README screenshot preview must stack when two bars no longer fit'
 
 # Easter eggs: prefix + r re-rolls the banner with six random
 # accents kept in hue order (sampled as sorted indices of the
