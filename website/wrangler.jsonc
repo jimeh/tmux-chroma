@@ -7,10 +7,10 @@
   "routes": [
     {
       "pattern": "chroma.jimeh.dev",
-      "custom_domain": true
-    }
+      "custom_domain": true,
+    },
   ],
   "assets": {
-    "directory": "./dist"
-  }
+    "directory": "./dist",
+  },
 }

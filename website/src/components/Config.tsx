@@ -69,6 +69,10 @@ interface PopupPlacement {
   ready: boolean;
 }
 
+function confOptionId(id: string, index: number): string {
+  return id + '-option-' + index;
+}
+
 // A conf value that opens a custom dropdown, so every option can
 // carry a color swatch (native <option>s cannot). Select-only
 // combobox pattern: the button holds focus and aria-activedescendant
@@ -99,7 +103,6 @@ function ConfSelect({
 
   const open = placement !== null;
   const flat = groups.flatMap((group) => group.options);
-  const optionId = (index: number): string => id + '-option-' + index;
 
   // Opening renders the popup hidden at a provisional spot; the
   // layout effect below measures it and moves it into place.
@@ -124,7 +127,9 @@ function ConfSelect({
     const button = buttonRef.current;
     const popup = popupRef.current;
     const scroll = scrollRef.current;
-    const selected = popup?.querySelector('#' + CSS.escape(optionId(active)));
+    const selected = popup?.querySelector(
+      '#' + CSS.escape(confOptionId(id, active))
+    );
     const label = selected?.querySelector('.conf-option-label');
     if (!button || !popup || !scroll || !selected || !label) {
       return;
@@ -137,10 +142,11 @@ function ConfSelect({
     // (the border), and the selected row's centre in list-content
     // coordinates.
     const chrome = scrollRect.top - popupRect.top;
-    const selCenter = selRect.top + selRect.height / 2 -
-      scrollRect.top + scroll.scrollTop;
-    const dockTop = document.querySelector('.status-dock')
-      ?.getBoundingClientRect().top ?? window.innerHeight;
+    const selCenter =
+      selRect.top + selRect.height / 2 - scrollRect.top + scroll.scrollTop;
+    const dockTop =
+      document.querySelector('.status-dock')?.getBoundingClientRect().top ??
+      window.innerHeight;
     const btnCenter = btnRect.top + btnRect.height / 2;
     // Each side is bounded by the screen (viewport top, dock top)
     // and by how much list actually exists on that side of the
@@ -175,7 +181,7 @@ function ConfSelect({
       height,
       ready: true,
     });
-  }, [open]);
+  }, [open, active, id]);
 
   function close(): void {
     setPlacement(null);
@@ -248,11 +254,22 @@ function ConfSelect({
 
   useEffect(() => {
     if (open) {
-      popupRef.current
-        ?.querySelector('#' + CSS.escape(optionId(active)))
-        ?.scrollIntoView({ block: 'nearest' });
+      const scroll = scrollRef.current;
+      const option = popupRef.current?.querySelector(
+        '#' + CSS.escape(confOptionId(id, active))
+      );
+      if (!scroll || !option) {
+        return;
+      }
+      const scrollRect = scroll.getBoundingClientRect();
+      const optionRect = option.getBoundingClientRect();
+      if (optionRect.top < scrollRect.top) {
+        scroll.scrollTop -= scrollRect.top - optionRect.top;
+      } else if (optionRect.bottom > scrollRect.bottom) {
+        scroll.scrollTop += optionRect.bottom - scrollRect.bottom;
+      }
     }
-  }, [open, active]);
+  }, [open, active, id]);
 
   let index = -1;
   return (
@@ -266,7 +283,7 @@ function ConfSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? id + '-listbox' : undefined}
-        aria-activedescendant={open ? optionId(active) : undefined}
+        aria-activedescendant={open ? confOptionId(id, active) : undefined}
         onClick={() => {
           if (open) {
             close();
@@ -278,72 +295,70 @@ function ConfSelect({
       >
         {display}
       </button>
-      {open
-        ? (
-          <div
-            ref={popupRef}
-            id={id + '-listbox'}
-            class="conf-select-popup"
-            role="listbox"
-            aria-label={ariaLabel}
-            style={{
-              left: placement.left,
-              top: placement.top,
-              visibility: placement.ready ? undefined : 'hidden',
-            }}
-          >
-            {/* iOS paints a scroll container's background on the
+      {open ? (
+        <div
+          ref={popupRef}
+          id={id + '-listbox'}
+          class="conf-select-popup"
+          role="listbox"
+          aria-label={ariaLabel}
+          style={{
+            left: placement.left,
+            top: placement.top,
+            visibility: placement.ready ? undefined : 'hidden',
+          }}
+        >
+          {/* iOS paints a scroll container's background on the
                 moving content layer, so overscrolling would reveal
                 whatever sits behind it; scrolling happens in this
                 inner region whose background matches the popup. */}
-            <div
-              ref={scrollRef}
-              class="conf-select-scroll"
-              style={{ height: placement.height, maxHeight: 340 }}
-            >
-              {groups.map((group) => (
-                <div
-                  key={group.label ?? ''}
-                  role="group"
-                  aria-label={group.label ?? undefined}
-                >
-                  {group.label
-                    ? (
-                      <div class="conf-option-group" aria-hidden="true">
-                        {'# ' + group.label}
-                      </div>
-                    )
-                    : null}
-                  {group.options.map((option) => {
-                    index += 1;
-                    const optionIndex = index;
-                    return (
-                      <div
-                        key={option.value}
-                        id={optionId(optionIndex)}
-                        class={'conf-option' +
-                          (optionIndex === active ? ' is-active' : '')}
-                        role="option"
-                        aria-selected={option.value === value}
-                        onMouseEnter={() => setActive(optionIndex)}
-                        onClick={() => choose(option.value)}
-                      >
-                        <span
-                          class="conf-option-swatch"
-                          style={{ background: option.swatch }}
-                        />
-                        <span class="conf-option-label">
-                          {"'" + option.value + "'"}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+          <div
+            ref={scrollRef}
+            class="conf-select-scroll"
+            style={{ height: placement.height, maxHeight: 340 }}
+          >
+            {groups.map((group) => (
+              <div
+                key={group.label ?? ''}
+                role="group"
+                aria-label={group.label ?? undefined}
+              >
+                {group.label ? (
+                  <div class="conf-option-group" aria-hidden="true">
+                    {'# ' + group.label}
+                  </div>
+                ) : null}
+                {group.options.map((option) => {
+                  index += 1;
+                  const optionIndex = index;
+                  return (
+                    <div
+                      key={option.value}
+                      id={confOptionId(id, optionIndex)}
+                      class={
+                        'conf-option' +
+                        (optionIndex === active ? ' is-active' : '')
+                      }
+                      role="option"
+                      aria-selected={option.value === value}
+                      onMouseEnter={() => setActive(optionIndex)}
+                      onClick={() => choose(option.value)}
+                    >
+                      <span
+                        class="conf-option-swatch"
+                        style={{ background: option.swatch }}
+                      />
+                      <span class="conf-option-label">
+                        {"'" + option.value + "'"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
-        )
-        : null}
+        </div>
+      ) : null}
     </span>
   );
 }
@@ -358,11 +373,15 @@ function PresetSelect() {
   const value = auto.value ? 'auto' : conf.value;
   const mode = theme.value;
   // The auto entry sweeps accents like the swatch grid's auto tile.
-  const autoSwatch = 'linear-gradient(90deg, ' +
-    ['blue', 'green', 'yellow', 'red'].map((name) => {
-      const item = displayPresets.find((entry) => entry.name === name);
-      return item ? presetAccent(item, mode) : 'transparent';
-    }).join(', ') + ')';
+  const autoSwatch =
+    'linear-gradient(90deg, ' +
+    ['blue', 'green', 'yellow', 'red']
+      .map((name) => {
+        const item = displayPresets.find((entry) => entry.name === name);
+        return item ? presetAccent(item, mode) : 'transparent';
+      })
+      .join(', ') +
+    ')';
   const groups: ConfSelectGroup[] = [
     {
       label: null,
@@ -432,8 +451,12 @@ function ModeSelect() {
       options: [
         {
           value: 'auto',
-          swatch: 'linear-gradient(90deg, ' + anchors.dark.bg +
-            ' 50%, ' + anchors.light.bg + ' 50%)',
+          swatch:
+            'linear-gradient(90deg, ' +
+            anchors.dark.bg +
+            ' 50%, ' +
+            anchors.light.bg +
+            ' 50%)',
         },
         { value: 'dark', swatch: anchors.dark.bg },
         { value: 'light', swatch: anchors.light.bg },
@@ -461,7 +484,9 @@ function ModeSelect() {
 // shows as its own entry while active.
 function BackgroundSelect() {
   const value = background.value;
-  const custom = value !== 'dark' && value !== 'light' &&
+  const custom =
+    value !== 'dark' &&
+    value !== 'light' &&
     !namedBackgrounds.some((entry) => entry.name === value);
   const asOption = (entry: { name: string; seed: string }) => ({
     value: entry.name,
@@ -472,9 +497,7 @@ function BackgroundSelect() {
   // group it actually renders as; each swatch is the theme's
   // background color itself.
   const groups: ConfSelectGroup[] = [
-    ...(custom
-      ? [{ label: null, options: [{ value, swatch: value }] }]
-      : []),
+    ...(custom ? [{ label: null, options: [{ value, swatch: value }] }] : []),
     {
       label: 'modes',
       options: [
@@ -485,17 +508,17 @@ function BackgroundSelect() {
     {
       label: 'dark themes',
       options: namedBackgrounds
-        .filter((entry) => (
-          colorLuma(entry.seed) < resolution.luma.lightThreshold
-        ))
+        .filter(
+          (entry) => colorLuma(entry.seed) < resolution.luma.lightThreshold
+        )
         .map(asOption),
     },
     {
       label: 'light themes',
       options: namedBackgrounds
-        .filter((entry) => (
-          colorLuma(entry.seed) >= resolution.luma.lightThreshold
-        ))
+        .filter(
+          (entry) => colorLuma(entry.seed) >= resolution.luma.lightThreshold
+        )
         .map(asOption),
     },
   ];
@@ -538,9 +561,7 @@ export function CustomBackground() {
     // re-render syncs the value state.
     const submitted = normalizeHex(input.value);
     if (!submitted) {
-      input.setCustomValidity(
-        'Enter a six-digit hex color, such as #fdf6e3.'
-      );
+      input.setCustomValidity('Enter a six-digit hex color, such as #fdf6e3.');
       setInvalid(true);
       input.reportValidity();
       return;
@@ -557,8 +578,7 @@ export function CustomBackground() {
       aria-label="Custom terminal background"
       novalidate
       style={{
-        '--custom-swatch':
-          customSeed || backgroundSeed.value || barColor.value,
+        '--custom-swatch': customSeed || backgroundSeed.value || barColor.value,
       }}
       onSubmit={submit}
     >
@@ -584,19 +604,19 @@ export function CustomBackground() {
           setInvalid(false);
         }}
       />
-      {applied
-        ? (
-          <button
-            class="custom-color-clear"
-            type="button"
-            aria-label="Reset the custom background"
-            onClick={clear}
-          >
-            reset
-          </button>
-        )
-        : null}
-      <button class="custom-color-submit" type="submit">apply</button>
+      {applied ? (
+        <button
+          class="custom-color-clear"
+          type="button"
+          aria-label="Reset the custom background"
+          onClick={clear}
+        >
+          reset
+        </button>
+      ) : null}
+      <button class="custom-color-submit" type="submit">
+        apply
+      </button>
     </form>
   );
 }
@@ -644,25 +664,16 @@ export function ConfBlock() {
         <ConfToggle option={showMemory} />
         {'\nset -g @chroma_show_disk   '}
         <ConfToggle option={showDisk} />
-        {configDirty.value
-          ? (
-            <>
-              {'\n\n'}
-              <button
-                class="conf-reset"
-                type="button"
-                onClick={resetConfig}
-              >
-                # reset to defaults
-              </button>
-            </>
-          )
-          : null}
+        {configDirty.value ? (
+          <>
+            {'\n\n'}
+            <button class="conf-reset" type="button" onClick={resetConfig}>
+              # reset to defaults
+            </button>
+          </>
+        ) : null}
       </pre>
-      <CopyButton
-        copyLabel="Copy the configuration"
-        getText={confText}
-      />
+      <CopyButton copyLabel="Copy the configuration" getText={confText} />
     </div>
   );
 }

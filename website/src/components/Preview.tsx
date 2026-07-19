@@ -1,11 +1,6 @@
 import type { JSX } from 'preact';
 import { mixColor } from '../color.ts';
-import {
-  anchors,
-  presetAccent,
-  presets,
-  resolution,
-} from '../presets.ts';
+import { anchors, presetAccent, presets, resolution } from '../presets.ts';
 import { previewOpen, resolveBackground } from '../state.ts';
 import { StatusBar, type StatusWindowItem } from './StatusBar.tsx';
 import { StatusOverlay } from './StatusOverlay.tsx';
@@ -38,24 +33,19 @@ const previewWindows: StatusWindowItem[] = [
   { key: 'logs', text: '4:logs', flag: '!', alert: true },
 ];
 
-function backgroundStyle(
-  background: PreviewBackground
-): JSX.CSSProperties {
+function backgroundStyle(background: PreviewBackground): JSX.CSSProperties {
   const resolved = resolveBackground(background.name);
   const mode = anchors[resolved.mode];
   const custom = resolved.surfaces;
   const bar = custom?.bar ?? mode.bg;
-  const previewPreset = presets.find(
-    (item) => item.name === background.accent
-  );
+  const previewPreset = presets.find((item) => item.name === background.accent);
   if (!previewPreset) {
     throw new Error('Unknown preview accent: ' + background.accent);
   }
   const accent = presetAccent(previewPreset, resolved.mode);
 
   return {
-    '--preview-background': resolved.seed ??
-      `var(--canvas-${resolved.mode})`,
+    '--preview-background': resolved.seed ?? `var(--canvas-${resolved.mode})`,
     '--bar': bar,
     '--panel-raised': custom?.panelRaised ?? mode.bgAlt,
     '--line': custom?.line ?? mode.border,
@@ -66,11 +56,7 @@ function backgroundStyle(
     '--alert': mode.alert,
     '--ink': mode.ink,
     '--accent': accent,
-    '--accent-alt': mixColor(
-      accent,
-      bar,
-      resolution.baseAltMix
-    ),
+    '--accent-alt': mixColor(accent, bar, resolution.baseAltMix),
   };
 }
 

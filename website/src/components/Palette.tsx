@@ -30,7 +30,7 @@ function fallbackCopy(text: string): boolean {
   let copied = false;
   try {
     copied = document.execCommand('copy');
-  } catch (_error) {
+  } catch {
     copied = false;
   }
   area.remove();
@@ -60,7 +60,7 @@ export function CopyButton({
     try {
       await navigator.clipboard.writeText(text);
       copied = true;
-    } catch (_error) {
+    } catch {
       copied = false;
     }
     if (!copied) {
@@ -111,9 +111,7 @@ export function InstallCommand({
 }) {
   const codeRef = useRef<HTMLElement>(null);
   return (
-    <div
-      class={'install-command' + (extraClass ? ' ' + extraClass : '')}
-    >
+    <div class={'install-command' + (extraClass ? ' ' + extraClass : '')}>
       <code ref={codeRef}>{text}</code>
       <CopyButton
         copyLabel={copyLabel}
@@ -139,7 +137,7 @@ export function PresetLine() {
   const conf = presetConfig();
   return (
     <InstallCommand
-      text={"set -g " + conf.option + " '" + conf.value + "'"}
+      text={'set -g ' + conf.option + " '" + conf.value + "'"}
       copyLabel="Copy preset configuration"
     />
   );
@@ -242,21 +240,19 @@ export function AutoHostPreview() {
           selectAuto();
         }}
       />
-      {autoHost.value
-        ? (
-          <button
-            class="custom-color-clear"
-            type="button"
-            aria-label="Clear the hostname"
-            onClick={() => {
-              autoHost.value = '';
-              selectAuto();
-            }}
-          >
-            clear
-          </button>
-        )
-        : null}
+      {autoHost.value ? (
+        <button
+          class="custom-color-clear"
+          type="button"
+          aria-label="Clear the hostname"
+          onClick={() => {
+            autoHost.value = '';
+            selectAuto();
+          }}
+        >
+          clear
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -285,9 +281,7 @@ export function CustomColor() {
     // re-render syncs the value state.
     const submitted = normalizeHex(input.value);
     if (!submitted) {
-      input.setCustomValidity(
-        'Enter a six-digit hex color, such as #83baee.'
-      );
+      input.setCustomValidity('Enter a six-digit hex color, such as #83baee.');
       setInvalid(true);
       input.reportValidity();
       return;
@@ -328,19 +322,19 @@ export function CustomColor() {
           setInvalid(false);
         }}
       />
-      {applied
-        ? (
-          <button
-            class="custom-color-clear"
-            type="button"
-            aria-label="Reset the custom accent"
-            onClick={clear}
-          >
-            reset
-          </button>
-        )
-        : null}
-      <button class="custom-color-submit" type="submit">apply</button>
+      {applied ? (
+        <button
+          class="custom-color-clear"
+          type="button"
+          aria-label="Reset the custom accent"
+          onClick={clear}
+        >
+          reset
+        </button>
+      ) : null}
+      <button class="custom-color-submit" type="submit">
+        apply
+      </button>
     </form>
   );
 }

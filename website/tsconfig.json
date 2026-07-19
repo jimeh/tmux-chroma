@@ -6,7 +6,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
-    "types": [],
+    "types": ["bun"],
     "strict": true,
     "noUncheckedIndexedAccess": false,
     "noEmit": true,
@@ -15,5 +15,13 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": ["src", ".generated", "vite.config.ts"]
+  "include": [
+    "src",
+    ".generated",
+    "scripts",
+    "test",
+    "../test/**/*.test.ts",
+    "playwright.config.ts",
+    "vite.config.ts"
+  ]
 }

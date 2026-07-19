@@ -32,19 +32,19 @@ export function BannerLetters({ art }: { art: string }) {
         // themed gradient.
         const gradient = chosenPreset
           ? (() => {
-            const accent = presetAccent(chosenPreset, theme.value);
-            const alt = mixColor(
-              accent,
-              barColor.value,
-              resolution.baseAltMix
-            );
-            return 'linear-gradient(180deg, ' + accent +
-              ' 55%, ' + alt + ')';
-          })()
+              const accent = presetAccent(chosenPreset, theme.value);
+              const alt = mixColor(
+                accent,
+                barColor.value,
+                resolution.baseAltMix
+              );
+              return 'linear-gradient(180deg, ' + accent + ' 55%, ' + alt + ')';
+            })()
           : 'linear-gradient(180deg, var(--accent) 55%, ' +
             'var(--accent-alt))';
         return (
           <span
+            key={start}
             class="banner-letter"
             style={{ backgroundImage: gradient }}
           >

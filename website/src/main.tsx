@@ -153,9 +153,15 @@ document.addEventListener('keydown', (event) => {
   const target = event.target instanceof Element ? event.target : null;
   const typing = Boolean(target?.closest('input, textarea, select'));
   const overlayOpen = galleryOpen.value || previewOpen.value;
-  if (overlayOpen && (event.key === 'Escape' ||
-      (event.key === 'q' && !typing && !event.ctrlKey &&
-        !event.metaKey && !event.altKey))) {
+  if (
+    overlayOpen &&
+    (event.key === 'Escape' ||
+      (event.key === 'q' &&
+        !typing &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey))
+  ) {
     event.preventDefault();
     galleryOpen.value = false;
     previewOpen.value = false;
@@ -164,14 +170,18 @@ document.addEventListener('keydown', (event) => {
   if (typing) {
     return;
   }
-  if ((event.key === 'b' || event.key === 'q') && event.ctrlKey &&
-      !event.metaKey && !event.altKey && !event.shiftKey) {
+  if (
+    (event.key === 'b' || event.key === 'q') &&
+    event.ctrlKey &&
+    !event.metaKey &&
+    !event.altKey &&
+    !event.shiftKey
+  ) {
     event.preventDefault();
     armPrefix();
     return;
   }
-  if (prefixArmed() && !event.ctrlKey && !event.metaKey &&
-      !event.altKey) {
+  if (prefixArmed() && !event.ctrlKey && !event.metaKey && !event.altKey) {
     if (event.key === 'w') {
       event.preventDefault();
       disarmPrefix();

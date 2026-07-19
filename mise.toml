@@ -1,12 +1,131 @@
-# Tool versions for contributors, agents, and CI (via jdx/mise-action).
-# Run `mise install` once; the Makefile then finds everything on PATH.
-# Bun is the only JS runtime: it runs the website build and the npm
-# lint tools the Makefile pins via `bunx --bun`.
+# Tool versions and the complete contributor task surface. Run `mise tasks`
+# to discover commands and `mise run verify` before handoff.
 
 [settings]
-minimum_release_age = "3d"
+minimum_release_age = "7d"
 
 [tools]
-bun = "1.3"
-shellcheck = "0.11"
+bun = "1.3.14"
+shellcheck = "0.11.0"
 shfmt = "3.13.1"
+actionlint = "1.7.12"
+markdownlint-cli2 = "0.23.0"
+"npm:html-validate" = "10.3.0"
+oxfmt = "0.59.0"
+oxlint = "1.74.0"
+pinact = "4.1.0"
+taplo = "0.10.0"
+zizmor = "1.26.1"
+
+[tasks.setup]
+description = "Install pinned tools and website dependencies"
+run = [
+  "mise install --locked",
+  "cd website && bun install --frozen-lockfile",
+  "cd website && bunx --bun playwright install chromium",
+]
+
+[tasks.dev]
+description = "Start the website development server"
+dir = "website"
+run = "bun run dev"
+
+[tasks.generate]
+description = "Generate website color artifacts from chroma.tmux"
+dir = "website"
+run = "bun run generate"
+
+[tasks.build]
+description = "Build the production website"
+depends = ["generate"]
+dir = "website"
+run = "bunx --bun vite build"
+
+[tasks.typecheck]
+description = "Typecheck website, generator, and Bun tests"
+depends = ["generate"]
+dir = "website"
+run = "bunx --bun tsc --noEmit"
+
+[tasks.format]
+description = "Format shell, TypeScript, CSS, JSON, TOML, and Markdown"
+run = [
+  "shfmt -w chroma.tmux scripts/cpu scripts/disk scripts/memory test/smoke.sh",
+  "oxfmt website/src website/scripts website/test website/vite.config.ts website/playwright.config.ts website/package.json website/tsconfig.json website/wrangler.jsonc test/*.ts .oxfmtrc.json .oxlintrc.json",
+  "taplo format mise.toml",
+  "markdownlint-cli2 --fix README.md THIRD_PARTY_NOTICES.md AGENTS.md website/AGENTS.md",
+]
+
+[tasks."format:check"]
+description = "Check formatting without changing files"
+run = [
+  "shfmt -d chroma.tmux scripts/cpu scripts/disk scripts/memory test/smoke.sh",
+  "oxfmt --check website/src website/scripts website/test website/vite.config.ts website/playwright.config.ts website/package.json website/tsconfig.json website/wrangler.jsonc test/*.ts .oxfmtrc.json .oxlintrc.json",
+  "taplo format --check mise.toml",
+]
+
+[tasks."lint:shell"]
+description = "Check Bash syntax and run ShellCheck"
+run = [
+  "bash -n chroma.tmux scripts/cpu scripts/disk scripts/memory test/smoke.sh",
+  "shellcheck -s bash chroma.tmux scripts/cpu scripts/disk scripts/memory test/smoke.sh",
+]
+
+[tasks."lint:web"]
+description = "Lint website and Bun test TypeScript"
+run = "oxlint --deny-warnings --react-plugin --jsx-a11y-plugin website/src website/scripts website/test website/vite.config.ts website/playwright.config.ts test/*.ts"
+
+[tasks."lint:docs"]
+description = "Lint Markdown and validate static HTML"
+run = [
+  "markdownlint-cli2 README.md THIRD_PARTY_NOTICES.md AGENTS.md website/AGENTS.md",
+  "html-validate website/index.html",
+]
+
+[tasks.lint]
+description = "Run all source and documentation linters"
+depends = ["lint:shell", "lint:web", "lint:docs"]
+
+[tasks."test:web"]
+description = "Run Bun tests for website and palette contracts"
+depends = ["generate"]
+dir = "website"
+run = "bun test ../test/palette.test.ts ../test/site.test.ts"
+
+[tasks."test:tmux"]
+description = "Run the live tmux and metric helper smoke tests"
+run = "bash test/smoke.sh"
+
+[tasks."test:browser"]
+description = "Run Chromium smoke tests against the production website"
+depends = ["build"]
+dir = "website"
+run = "env -u NO_COLOR bunx --bun playwright test"
+
+[tasks.test]
+description = "Run all website and tmux tests"
+depends = ["test:web", "test:tmux"]
+
+[tasks."ci:workflows"]
+description = "Check GitHub Actions syntax, security, and SHA pins"
+run = ["actionlint", "zizmor --offline .", "pinact run --check"]
+
+[tasks.check]
+description = "Run the fast local handoff checks"
+depends = ["format:check", "lint", "typecheck", "test"]
+
+[tasks.verify]
+description = "Run complete CI-equivalent validation"
+depends = ["check", "build", "test:browser", "ci:workflows"]
+
+[tasks.doctor]
+description = "Check required tools, dependencies, and tmux availability"
+run = [
+  "mise install --dry-run-code",
+  "test -d website/node_modules || { echo 'website dependencies missing; run: mise run setup' >&2; exit 1; }",
+  "tmux -V",
+]
+
+[tasks.clean]
+description = "Remove generated website and deployment artifacts"
+run = "rm -rf website/.generated website/dist website/.wrangler"

@@ -34,9 +34,7 @@ export function StatusOverlay({
     const regions = [
       document.querySelector('main'),
       document.querySelector('.status-dock'),
-    ].filter(
-      (region): region is HTMLElement => region instanceof HTMLElement
-    );
+    ].filter((region): region is HTMLElement => region instanceof HTMLElement);
     const returnFocus = document.activeElement;
     regions.forEach((region) => {
       region.inert = true;
@@ -68,11 +66,7 @@ export function StatusOverlay({
         }
       }}
     >
-      <div
-        class={'status-popup ' + popupClass}
-        tabindex={-1}
-        ref={popupRef}
-      >
+      <div class={'status-popup ' + popupClass} tabindex={-1} ref={popupRef}>
         {children}
       </div>
     </div>

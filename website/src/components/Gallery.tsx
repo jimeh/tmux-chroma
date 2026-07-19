@@ -1,9 +1,5 @@
 import { mixColor } from '../color.ts';
-import {
-  displayPresets,
-  presetAccent,
-  resolution,
-} from '../presets.ts';
+import { displayPresets, presetAccent, resolution } from '../presets.ts';
 import { barColor, galleryOpen, powerline, theme } from '../state.ts';
 import { StatusBar, type StatusWindowItem } from './StatusBar.tsx';
 import { StatusOverlay } from './StatusOverlay.tsx';

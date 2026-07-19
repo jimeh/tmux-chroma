@@ -37,7 +37,7 @@ const backgroundStorageKey = 'chroma-background';
 function storedValue(key: string): string {
   try {
     return localStorage.getItem(key) ?? '';
-  } catch (_error) {
+  } catch {
     return '';
   }
 }
@@ -49,15 +49,14 @@ function persistValue(key: string, value: string | null): void {
     } else {
       localStorage.setItem(key, value);
     }
-  } catch (_error) {
+  } catch {
     // Private browsing without storage: choices last the visit.
   }
 }
 
 function storedBackground(): string {
   const value = storedValue(backgroundStorageKey);
-  if (value === 'light' || value === 'dark' ||
-      namedBackgroundSeed(value)) {
+  if (value === 'light' || value === 'dark' || namedBackgroundSeed(value)) {
     return value;
   }
   // Return the normalized form, not the raw stored string: a
@@ -119,9 +118,7 @@ export function resolveBackground(
   if (modeOverrideValue === 'dark' || modeOverrideValue === 'light') {
     mode = modeOverrideValue;
   } else if (seed) {
-    mode = colorLuma(seed) >= resolution.luma.lightThreshold
-      ? 'light'
-      : 'dark';
+    mode = colorLuma(seed) >= resolution.luma.lightThreshold ? 'light' : 'dark';
   } else {
     mode = value === 'light' ? 'light' : 'dark';
   }
@@ -155,20 +152,15 @@ export function resolveBackground(
   };
 }
 
-const backgroundResolution = computed(() => resolveBackground(
-  background.value,
-  modeOverride.value
-));
-
-export const backgroundSeed = computed(
-  () => backgroundResolution.value.seed
+const backgroundResolution = computed(() =>
+  resolveBackground(background.value, modeOverride.value)
 );
+
+export const backgroundSeed = computed(() => backgroundResolution.value.seed);
 
 // A custom seed resolves to the mode its perceived luma classifies,
 // exactly like the plugin. An explicit @chroma_mode wins over it.
-export const theme = computed<ThemeMode>(
-  () => backgroundResolution.value.mode
-);
+export const theme = computed<ThemeMode>(() => backgroundResolution.value.mode);
 
 export const surfaces = computed<Surfaces | null>(
   () => backgroundResolution.value.surfaces
@@ -176,9 +168,9 @@ export const surfaces = computed<Surfaces | null>(
 
 // The active status-bar background: derived from a custom seed, or
 // the mode's anchor.
-export const barColor = computed(() => (
-  surfaces.value?.bar ?? anchors[theme.value].bg
-));
+export const barColor = computed(
+  () => surfaces.value?.bar ?? anchors[theme.value].bg
+);
 
 // A persisted accent choice survives reloads: a preset name, a
 // custom #rrggbb, or the auto default (seeded by a persisted host
@@ -202,9 +194,7 @@ export const preset = signal<Preset>(initial.preset);
 export const auto = signal(initial.auto);
 export const powerline = signal(storedValue('chroma-powerline') === 'on');
 export const showCpu = signal(storedValue('chroma-show-cpu') !== 'off');
-export const showMemory = signal(
-  storedValue('chroma-show-memory') !== 'off'
-);
+export const showMemory = signal(storedValue('chroma-show-memory') !== 'off');
 export const showDisk = signal(storedValue('chroma-show-disk') === 'on');
 export const prefix = signal(false);
 export const sync = signal(false);
@@ -218,20 +208,26 @@ export const clockText = signal(formatClock());
 
 // Persist each conf value only while it differs from its default.
 effect(() => {
-  persistValue(backgroundStorageKey,
-    background.value === 'dark' ? null : background.value);
+  persistValue(
+    backgroundStorageKey,
+    background.value === 'dark' ? null : background.value
+  );
 });
 effect(() => {
-  persistValue('chroma-preset',
+  persistValue(
+    'chroma-preset',
     auto.value
       ? null
       : preset.value.name === 'custom'
         ? preset.value.base
-        : preset.value.name);
+        : preset.value.name
+  );
 });
 effect(() => {
-  persistValue('chroma-mode',
-    modeOverride.value === 'auto' ? null : modeOverride.value);
+  persistValue(
+    'chroma-mode',
+    modeOverride.value === 'auto' ? null : modeOverride.value
+  );
 });
 effect(() => {
   persistValue('chroma-host', autoHost.value.trim() || null);
@@ -253,11 +249,16 @@ effect(() => {
 // conf block offers a reset link only then. The auto-host preview
 // is a palette-section control, not a conf line, so it neither
 // trips the link nor gets cleared by it.
-export const configDirty = computed(() => (
-  background.value !== 'dark' || modeOverride.value !== 'auto' ||
-  !auto.value || powerline.value ||
-  !showCpu.value || !showMemory.value || showDisk.value
-));
+export const configDirty = computed(
+  () =>
+    background.value !== 'dark' ||
+    modeOverride.value !== 'auto' ||
+    !auto.value ||
+    powerline.value ||
+    !showCpu.value ||
+    !showMemory.value ||
+    showDisk.value
+);
 
 export function resetConfig(): void {
   background.value = 'dark';
@@ -271,15 +272,13 @@ export function resetConfig(): void {
 
 // The accent the current mode resolves to: the light column in
 // light mode, base otherwise, exactly like the plugin.
-export const accent = computed(() => (
-  presetAccent(preset.value, theme.value)
-));
+export const accent = computed(() => presetAccent(preset.value, theme.value));
 
 // The quieter companion color is derived by blending the accent
 // toward the active bar background, exactly like the plugin.
-export const accentAlt = computed(() => (
+export const accentAlt = computed(() =>
   mixColor(accent.value, barColor.value, resolution.baseAltMix)
-));
+);
 
 // The auto-host preview swatch keeps showing the last auto result
 // while a manual preset is selected, so it only follows the accent
@@ -290,9 +289,9 @@ effect(() => {
     autoPreviewPreset.value = preset.value;
   }
 });
-export const autoPreviewBase = computed(() => (
+export const autoPreviewBase = computed(() =>
   presetAccent(autoPreviewPreset.value, theme.value)
-));
+);
 
 export function selectPreset(next: Preset): void {
   auto.value = false;
@@ -362,8 +361,11 @@ export function rainbowLogo(): void {
 
 function formatClock(): string {
   const now = new Date();
-  return String(now.getHours()).padStart(2, '0') + ':' +
-    String(now.getMinutes()).padStart(2, '0');
+  return (
+    String(now.getHours()).padStart(2, '0') +
+    ':' +
+    String(now.getMinutes()).padStart(2, '0')
+  );
 }
 
 export function tickClock(): void {
