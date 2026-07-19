@@ -15,6 +15,8 @@ PALETTE="$ROOT/website/src/components/Palette.tsx"
 GALLERY="$ROOT/website/src/components/Gallery.tsx"
 CONFIG="$ROOT/website/src/components/Config.tsx"
 GENERATED="$ROOT/website/.generated/prepaint.js"
+PACKAGE="$ROOT/website/package.json"
+WRANGLER="$ROOT/website/wrangler.jsonc"
 
 (
   cd "$ROOT/website"
@@ -34,6 +36,17 @@ assert_file_contains() {
   case "$(< "$file")" in
     *"$fragment"*) ;;
     *) fail "$message" ;;
+  esac
+}
+
+assert_file_excludes() {
+  local file="$1"
+  local fragment="$2"
+  local message="$3"
+
+  case "$(< "$file")" in
+    *"$fragment"*) fail "$message" ;;
+    *) ;;
   esac
 }
 
@@ -92,6 +105,32 @@ for fragment in \
   assert_file_contains "$HTML" "$fragment" \
     'landing page must identify Chroma as a tmux theme'
 done
+
+# The production site is a static-assets Worker on its canonical
+# custom domain. Cloudflare's Git integration uploads branch versions
+# so pull requests receive stable preview links without promoting them.
+for fragment in \
+  '<link rel="canonical" href="https://chroma.jimeh.dev/">' \
+  '<meta property="og:url" content="https://chroma.jimeh.dev/">' \
+  'content="https://chroma.jimeh.dev/preview.png"'; do
+  assert_file_contains "$HTML" "$fragment" \
+    'site metadata must use the Workers custom domain'
+done
+assert_file_excludes "$HTML" 'jimeh.github.io/tmux-chroma' \
+  'site metadata must not retain the GitHub Pages URL'
+for fragment in \
+  '"preview_urls": true' \
+  '"pattern": "chroma.jimeh.dev"' \
+  '"custom_domain": true' \
+  '"directory": "./dist"'; do
+  assert_file_contains "$WRANGLER" "$fragment" \
+    'Wrangler must deploy previews and production static assets'
+done
+assert_file_contains "$PACKAGE" '"deploy": "wrangler deploy"' \
+  'the website must expose its production deploy command'
+assert_file_contains "$PACKAGE" \
+  '"deploy:preview": "wrangler versions upload"' \
+  'the website must expose its preview upload command'
 
 assert_block_contains ':root' '--dock-height: 28px;'
 

@@ -2,9 +2,8 @@
 
 ## Preact
 
-The GitHub Pages site under `website/` is built with Preact and
-@preact/signals, which are bundled into the deployed site. Both are MIT
-licensed:
+The site under `website/` is built with Preact and @preact/signals, which are
+bundled into the deployed site. Both are MIT licensed:
 
 Copyright (c) 2015-present Jason Miller
 
