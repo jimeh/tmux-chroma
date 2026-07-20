@@ -43,7 +43,10 @@ release.
 The release config deliberately uses the `go` strategy because Chroma has no
 language package manifest. Its generic extra-file updater keeps
 `CHROMA_VERSION` in `chroma.tmux` aligned with the release manifest, generated
-`CHANGELOG.md`, tags, and GitHub releases. The first release is `v0.1.0`.
+`CHANGELOG.md`, tags, and GitHub releases. Release Please intentionally emits
+extra blank lines between generated changelog sections, so Markdown linting
+disables `no-multiple-blanks` for `CHANGELOG.md` only. The first release is
+`v0.1.0`.
 
 `mise run release:package` creates the deterministic
 `dist/tmux-chroma-<version>.zip`. Keep its contents limited to `chroma.tmux`,
