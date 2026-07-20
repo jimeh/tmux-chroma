@@ -2,6 +2,8 @@
 
 set -u
 
+CHROMA_VERSION='0.0.0' # x-release-please-version
+
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # These ordered tables are Chroma's authored color source of truth. Keep the
@@ -499,6 +501,7 @@ main() {
   esac
 
   apply_preset "$preset" "$base_color" "$background" "$mode_override"
+  set_tmux_option @chroma_version "$CHROMA_VERSION"
 
   host_label="$(default_tmux_option @chroma_host_label '#H')"
   left_extra="$(get_tmux_option @chroma_left_extra)"
@@ -658,6 +661,13 @@ main() {
 }
 
 case "${1-}" in
+  --version)
+    if [ "$#" -ne 1 ]; then
+      printf '%s takes no arguments\n' "$1" >&2
+      exit 2
+    fi
+    printf 'chroma %s\n' "$CHROMA_VERSION"
+    ;;
   --dump-colors)
     if [ "$#" -ne 1 ]; then
       printf '%s takes no arguments\n' "$1" >&2

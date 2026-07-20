@@ -16,6 +16,7 @@ oxlint = "1.74.0"
 pinact = "4.1.0"
 taplo = "0.10.0"
 zizmor = "1.26.1"
+"github:ouch-org/ouch" = "0.8.1"
 
 [tasks.setup]
 description = "Install pinned tools and website dependencies"
@@ -50,16 +51,16 @@ run = "bunx --bun tsc --noEmit"
 [tasks.format]
 description = "Format shell, TypeScript, CSS, JSON, TOML, and Markdown"
 run = [
-  "shfmt -w chroma.tmux scripts/cpu scripts/disk scripts/memory test/smoke.sh",
+  "shfmt -w chroma.tmux scripts/cpu scripts/disk scripts/memory scripts/package-release.sh test/package.sh test/smoke.sh",
   "oxfmt website/src website/scripts website/test website/vite.config.ts website/playwright.config.ts website/package.json website/tsconfig.json website/wrangler.jsonc test/*.ts .oxfmtrc.json .oxlintrc.json",
   "taplo format mise.toml",
-  "markdownlint-cli2 --fix README.md THIRD_PARTY_NOTICES.md AGENTS.md website/AGENTS.md",
+  "markdownlint-cli2 --fix README.md CHANGELOG.md THIRD_PARTY_NOTICES.md AGENTS.md website/AGENTS.md",
 ]
 
 [tasks."format:check"]
 description = "Check formatting without changing files"
 run = [
-  "shfmt -d chroma.tmux scripts/cpu scripts/disk scripts/memory test/smoke.sh",
+  "shfmt -d chroma.tmux scripts/cpu scripts/disk scripts/memory scripts/package-release.sh test/package.sh test/smoke.sh",
   "oxfmt --check website/src website/scripts website/test website/vite.config.ts website/playwright.config.ts website/package.json website/tsconfig.json website/wrangler.jsonc test/*.ts .oxfmtrc.json .oxlintrc.json",
   "taplo format --check mise.toml",
 ]
@@ -67,8 +68,8 @@ run = [
 [tasks."lint:shell"]
 description = "Check Bash syntax and run ShellCheck"
 run = [
-  "bash -n chroma.tmux scripts/cpu scripts/disk scripts/memory test/smoke.sh",
-  "shellcheck -s bash chroma.tmux scripts/cpu scripts/disk scripts/memory test/smoke.sh",
+  "bash -n chroma.tmux scripts/cpu scripts/disk scripts/memory scripts/package-release.sh test/package.sh test/smoke.sh",
+  "shellcheck -s bash chroma.tmux scripts/cpu scripts/disk scripts/memory scripts/package-release.sh test/package.sh test/smoke.sh",
 ]
 
 [tasks."lint:web"]
@@ -78,7 +79,7 @@ run = "oxlint --deny-warnings --react-plugin --jsx-a11y-plugin website/src websi
 [tasks."lint:docs"]
 description = "Lint Markdown and validate static HTML"
 run = [
-  "markdownlint-cli2 README.md THIRD_PARTY_NOTICES.md AGENTS.md website/AGENTS.md",
+  "markdownlint-cli2 README.md CHANGELOG.md THIRD_PARTY_NOTICES.md AGENTS.md website/AGENTS.md",
   "html-validate website/index.html",
 ]
 
@@ -96,6 +97,10 @@ run = "bun test ../test/palette.test.ts ../test/site.test.ts"
 description = "Run the live tmux and metric helper smoke tests"
 run = "env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 bash test/smoke.sh"
 
+[tasks."test:package"]
+description = "Build and inspect the minimal release archive"
+run = "bash test/package.sh"
+
 [tasks."test:browser"]
 description = "Run Chromium smoke tests against the production website"
 depends = ["build"]
@@ -104,7 +109,11 @@ run = "env -u NO_COLOR bunx --bun playwright test"
 
 [tasks.test]
 description = "Run all website and tmux tests"
-depends = ["test:web", "test:tmux"]
+depends = ["test:web", "test:tmux", "test:package"]
+
+[tasks."release:package"]
+description = "Package the minimal tmux plugin release archive into dist/"
+run = "scripts/package-release.sh dist"
 
 [tasks."ci:workflows"]
 description = "Check GitHub Actions syntax, security, and SHA pins"
@@ -124,8 +133,9 @@ run = [
   "mise install --dry-run-code",
   "test -d website/node_modules || { echo 'website dependencies missing; run: mise run setup' >&2; exit 1; }",
   "tmux -V",
+  "ouch --version",
 ]
 
 [tasks.clean]
 description = "Remove generated website and deployment artifacts"
-run = "rm -rf website/.generated website/dist website/.wrangler"
+run = "rm -rf dist website/.generated website/dist website/.wrangler"
