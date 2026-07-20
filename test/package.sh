@@ -15,6 +15,21 @@ fail() {
   exit 1
 }
 
+assert_mode() {
+  local expected="$1"
+  local path="$2"
+  local actual
+
+  if stat -c '%a' "$path" > /dev/null 2>&1; then
+    actual="$(stat -c '%a' "$path")"
+  else
+    actual="$(stat -f '%Lp' "$path")"
+  fi
+
+  [[ "$actual" == "$expected" ]] ||
+    fail "${path#"$extract/$package/"} has mode $actual, expected $expected"
+}
+
 version_output="$("$ROOT/chroma.tmux" --version)"
 version="${version_output#chroma }"
 package="tmux-chroma-$version"
@@ -62,9 +77,13 @@ for path in \
     fail "$path differs from the source"
 done
 
-for path in chroma.tmux scripts/cpu scripts/disk scripts/memory; do
-  [[ -x "$extract/$package/$path" ]] || fail "$path is not executable"
-done
+assert_mode 755 "$extract/$package/chroma.tmux"
+assert_mode 755 "$extract/$package/scripts/cpu"
+assert_mode 755 "$extract/$package/scripts/disk"
+assert_mode 755 "$extract/$package/scripts/memory"
+assert_mode 644 "$extract/$package/README.md"
+assert_mode 644 "$extract/$package/LICENSE"
+assert_mode 644 "$extract/$package/CHANGELOG.md"
 
 [[ "$("$extract/$package/chroma.tmux" --version)" == "$version_output" ]] ||
   fail 'packaged version differs from the source version'
