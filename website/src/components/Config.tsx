@@ -66,6 +66,7 @@ interface PopupPlacement {
   left: number;
   top: number;
   height?: number;
+  anchor: number;
   ready: boolean;
 }
 
@@ -112,8 +113,9 @@ function ConfSelect({
       return;
     }
     const selected = flat.findIndex((option) => option.value === value);
-    setActive(Math.max(0, selected));
-    setPlacement({ left: rect.left, top: rect.top, ready: false });
+    const anchor = Math.max(0, selected);
+    setActive(anchor);
+    setPlacement({ left: rect.left, top: rect.top, anchor, ready: false });
   }
 
   // Like a native select: the popup sits so the selected option's
@@ -121,14 +123,14 @@ function ConfSelect({
   // to keep the selection as centred as the viewport (top edge to
   // the dock) and the options around it allow.
   useLayoutEffect(() => {
-    if (!open) {
+    if (!placement || placement.ready) {
       return;
     }
     const button = buttonRef.current;
     const popup = popupRef.current;
     const scroll = scrollRef.current;
     const selected = popup?.querySelector(
-      '#' + CSS.escape(confOptionId(id, active))
+      '#' + CSS.escape(confOptionId(id, placement.anchor))
     );
     const label = selected?.querySelector('.conf-option-label');
     if (!button || !popup || !scroll || !selected || !label) {
@@ -182,9 +184,10 @@ function ConfSelect({
       left,
       top: btnCenter - chrome - halfUp,
       height,
+      anchor: placement.anchor,
       ready: true,
     });
-  }, [open, active, id]);
+  }, [placement, id]);
 
   function close(): void {
     setPlacement(null);

@@ -1058,6 +1058,16 @@ h3::before {
   }
 }
 
+/* iPhone Safari zooms the page when a focused input computes below
+   16px. Keep every phone orientation at that threshold without
+   disabling the user's normal pinch-to-zoom controls. */
+@media (max-width: 1024px) {
+  .custom-color-input {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+}
+
 @media (max-width: 720px) {
   .status-session,
   .status-metrics,

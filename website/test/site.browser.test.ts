@@ -44,6 +44,32 @@ test('supports keyboard selection in the background combobox', async ({
   await expect(page.getByRole('listbox')).toHaveCount(0);
 });
 
+test('keeps the background dropdown anchored while options are hovered', async ({
+  page,
+}) => {
+  const background = page.getByRole('combobox', {
+    name: '@chroma_background value',
+  });
+  await background.focus();
+  await page.evaluate(
+    () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+  );
+  await page.keyboard.press('Enter');
+
+  const popup = page.getByRole('listbox');
+  await expect(popup).toBeVisible();
+  const scroll = popup.locator('.conf-select-scroll');
+  const initialBox = await popup.boundingBox();
+  const initialScroll = await scroll.evaluate((node) => node.scrollTop);
+
+  await page.getByRole('option', { name: "'everforest-dark'" }).hover();
+
+  await expect.poll(() => popup.boundingBox()).toEqual(initialBox);
+  await expect
+    .poll(() => scroll.evaluate((node) => node.scrollTop))
+    .toBe(initialScroll);
+});
+
 test('restores dock focus when the preset gallery closes', async ({ page }) => {
   const paletteButton = page.locator('button[data-window="palette"]');
   await paletteButton.focus();
@@ -93,4 +119,15 @@ test('keeps the status dock on one scrollable line at mobile width', async ({
   await expect(page.locator('.statusbar')).toHaveCSS('height', '28px');
   await expect(page.locator('.status-session')).toBeHidden();
   await expect(page.locator('.status-metrics')).toBeHidden();
+});
+
+test('keeps text inputs at an iOS-safe mobile font size', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+
+  const inputs = page.locator('.custom-color-input');
+  await expect(inputs).toHaveCount(3);
+  for (let index = 0; index < 3; index += 1) {
+    await expect(inputs.nth(index)).toHaveCSS('font-size', '16px');
+  }
 });
