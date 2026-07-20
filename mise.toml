@@ -94,7 +94,7 @@ run = "bun test ../test/palette.test.ts ../test/site.test.ts"
 
 [tasks."test:tmux"]
 description = "Run the live tmux and metric helper smoke tests"
-run = "bash test/smoke.sh"
+run = "env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 bash test/smoke.sh"
 
 [tasks."test:browser"]
 description = "Run Chromium smoke tests against the production website"

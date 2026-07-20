@@ -164,6 +164,7 @@ describe('static document contracts', () => {
         '"pattern": "chroma.jimeh.dev"',
         '"custom_domain": true',
         '"directory": "./dist"',
+        '"workers_dev": false',
       ],
       'Wrangler deploys preview and production static assets'
     );
@@ -360,6 +361,11 @@ describe('interactive island contracts', () => {
       config,
       "querySelector('.status-dock')",
       'dropdown stops above the status dock'
+    );
+    expectContains(
+      config,
+      ['const maxUp = Math.max(', 'const maxDown = Math.max('],
+      'dropdown geometry clamps unavailable viewport space'
     );
   });
 

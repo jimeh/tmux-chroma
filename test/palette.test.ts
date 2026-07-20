@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { afterAll, describe, expect, test } from 'bun:test';
 import { resolve } from 'node:path';
 import { colorSchema } from '../website/.generated/colors.ts';
 import { cksum, presets, type ThemeMode } from '../website/src/presets.ts';
@@ -58,6 +58,36 @@ const storageApi = {
   setItem: (key: string, value: string) => storage.set(key, value),
   removeItem: (key: string) => storage.delete(key),
 };
+
+const mockedGlobals = [
+  'localStorage',
+  'navigator',
+  'screen',
+  'window',
+] as const;
+const originalGlobals = new Map(
+  mockedGlobals.map((name) => [
+    name,
+    Object.getOwnPropertyDescriptor(globalThis, name),
+  ])
+);
+
+function restoreGlobal(
+  name: (typeof mockedGlobals)[number] | 'document',
+  descriptor: PropertyDescriptor | undefined
+): void {
+  if (descriptor) {
+    Object.defineProperty(globalThis, name, descriptor);
+  } else {
+    Reflect.deleteProperty(globalThis, name);
+  }
+}
+
+afterAll(() => {
+  for (const name of mockedGlobals) {
+    restoreGlobal(name, originalGlobals.get(name));
+  }
+});
 
 Object.defineProperty(globalThis, 'localStorage', {
   configurable: true,
@@ -188,15 +218,23 @@ function runPrepaint(testCase: TestCase): PrepaintResult {
       setProperty: (name: string, value: string) => styles.set(name, value),
     },
   };
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: { documentElement },
-  });
-  Function(prepaintSource)();
-  return {
-    theme: documentElement.dataset.theme,
-    styles: Object.fromEntries(styles),
-  };
+  const originalDocument = Object.getOwnPropertyDescriptor(
+    globalThis,
+    'document'
+  );
+  try {
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: { documentElement },
+    });
+    Function(prepaintSource)();
+    return {
+      theme: documentElement.dataset.theme,
+      styles: Object.fromEntries(styles),
+    };
+  } finally {
+    restoreGlobal('document', originalDocument);
+  }
 }
 
 describe('color schema', () => {

@@ -154,10 +154,13 @@ function ConfSelect({
     // split, then let either side take whatever the other cannot
     // use, so the popup keeps its full height and drifts up or
     // down instead of shrinking near the edges.
-    const maxUp = Math.min(btnCenter - 8 - chrome, selCenter);
-    const maxDown = Math.min(
-      dockTop - 8 - btnCenter - chrome,
-      scroll.scrollHeight - selCenter
+    const maxUp = Math.max(0, Math.min(btnCenter - 8 - chrome, selCenter));
+    const maxDown = Math.max(
+      0,
+      Math.min(
+        dockTop - 8 - btnCenter - chrome,
+        scroll.scrollHeight - selCenter
+      )
     );
     const budget = 340;
     let halfUp = Math.min(maxUp, budget / 2);
