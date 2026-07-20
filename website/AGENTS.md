@@ -50,6 +50,11 @@ gitignored and must never be committed.
   Keyed window items keep focused dock buttons attached across re-renders for
   overlay focus restoration.
 - Preserve keyboard focus, mobile overflow, and reduced-motion behavior.
+- Keep mobile text inputs at a computed 16px or larger. iPhone Safari zooms
+  focused controls below that threshold; do not disable user viewport scaling.
+- Anchor conf dropdown geometry to the selected option only when opening.
+  Hover and keyboard changes may scroll the active row into view, but must not
+  reposition the popup or it will walk under the pointer and cascade hovers.
 - iOS Safari paints a scroll container background on its moving content layer.
   Every scrolling region therefore lives inside a non-scrolling shell with the
   same background: `.block-scroll`, `.status-dock-scroll`, and
