@@ -166,6 +166,7 @@ Chroma publishes its resolved values as global tmux options:
 @chroma_ink              @chroma_dark
 @chroma_current_mode     @chroma_current_preset
 @chroma_preset_names     @chroma_plugin_dir
+@chroma_version
 @chroma_sync_on          @chroma_sync_off
 ```
 

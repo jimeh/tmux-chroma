@@ -6,7 +6,8 @@ Chroma is a dependency-light tmux status theme for macOS and Linux.
 
 - `chroma.tmux`: executable TPM entrypoint, theme implementation, and the
   authored source for all color data.
-- `scripts/`: bundled CPU, memory, and disk status helpers.
+- `scripts/`: bundled CPU, memory, and disk status helpers plus release
+  packaging.
 - `test/`: Bun contract tests plus a live tmux regression test.
 - `website/`: Vite + Preact site and interactive preview. See
   `website/AGENTS.md` before changing it.
@@ -31,6 +32,28 @@ typechecking, Bun tests, and the live tmux smoke test. Use `mise run verify`
 before handoff; it also builds the production website and audits GitHub Actions.
 Run targeted tasks such as `test:web`, `test:tmux`, `lint:web`, or `build` while
 iterating. Every task has a description in `mise tasks`.
+
+## Releases
+
+Release Please opens and maintains the release PR from Conventional Commit PR
+titles. Merging that PR creates a `v*` tag and draft GitHub release, calls the
+release workflow, uploads the minimal plugin ZIP, verifies it, and publishes the
+release.
+
+The release config deliberately uses the `go` strategy because Chroma has no
+language package manifest. Its generic extra-file updater keeps
+`CHROMA_VERSION` in `chroma.tmux` aligned with the release manifest, generated
+`CHANGELOG.md`, tags, and GitHub releases. The first release is `v0.1.0`.
+
+`mise run release:package` creates the deterministic
+`dist/tmux-chroma-<version>.zip`. Keep its contents limited to `chroma.tmux`,
+the three metric helpers, README, license, and changelog. `mise run
+test:package` asserts the exact contents, source parity, executable modes, and
+reproducibility.
+
+The workflow authenticates as the release bot so its PRs trigger normal checks.
+It requires the `RELEASE_BOT_CLIENT_ID` repository variable and
+`RELEASE_BOT_PRIVATE_KEY` repository secret.
 
 ## Global conventions
 

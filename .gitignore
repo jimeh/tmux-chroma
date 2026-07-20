@@ -2,6 +2,7 @@
 *.swp
 *.tmp
 node_modules/
+dist/
 website/dist/
 website/.generated/
 website/.wrangler/

@@ -57,6 +57,8 @@ run_theme() {
 tmux -L "$SOCKET" -f /dev/null new-session -d -s chroma
 run_theme
 
+version_output="$("$PLUGIN" --version)"
+assert_option @chroma_version "${version_output#chroma }"
 assert_option @chroma_bg '#15181d'
 assert_option @chroma_current_mode dark
 assert_option @chroma_ink '#101216'

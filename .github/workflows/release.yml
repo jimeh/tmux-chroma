@@ -1,0 +1,186 @@
+name: release
+
+on:
+  workflow_call:
+    inputs:
+      sha:
+        description: Commit SHA associated with the draft release
+        required: true
+        type: string
+      tag:
+        description: Release tag associated with the draft release
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit SHA associated with the draft release
+        required: true
+        type: string
+      tag:
+        description: Release tag associated with the draft release
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      asset_digest: ${{ steps.asset.outputs.digest }}
+      asset_name: ${{ steps.package.outputs.asset_name }}
+      release_id: ${{ steps.draft.outputs.release_id }}
+    env:
+      RELEASE_SHA: ${{ inputs.sha }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ inputs.sha }}
+
+      - uses: jdx/mise-action@dad1bfd3df957f44999b559dd69dc1671cb4e9ea # v4.2.1
+        with:
+          cache: false
+
+      - id: draft
+        name: Validate draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          release="$({
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/releases"
+          } | jq -sc --arg tag "$RELEASE_TAG" '
+            [.[].[] | select(.draft and .tag_name == $tag)]
+            | if length == 1 then .[0]
+              elif length == 0 then error("draft release not found")
+              else error("multiple matching draft releases found")
+              end
+          ')"
+          target="$(jq -r '.target_commitish' <<<"$release")"
+          if [[ "$target" != "$RELEASE_SHA" ]]; then
+            echo "draft targets $target, expected $RELEASE_SHA" >&2
+            exit 1
+          fi
+          if [[ "$(git rev-parse HEAD)" != "$RELEASE_SHA" ]]; then
+            echo "checkout does not match release SHA" >&2
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor \
+            "$RELEASE_SHA" refs/remotes/origin/main; then
+            echo "release SHA is not contained in origin/main" >&2
+            exit 1
+          fi
+          echo "release_id=$(jq -r '.id' <<<"$release")" \
+            >>"$GITHUB_OUTPUT"
+
+      - id: package
+        name: Build release archive
+        run: |
+          version="${RELEASE_TAG#v}"
+          if [[ "$RELEASE_TAG" != "v$version" || \
+            ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+            echo "invalid release tag: $RELEASE_TAG" >&2
+            exit 1
+          fi
+          if [[ "$(./chroma.tmux --version)" != "chroma $version" ]]; then
+            echo "embedded version does not match $RELEASE_TAG" >&2
+            exit 1
+          fi
+
+          mise run release:package
+          asset_name="tmux-chroma-$version.zip"
+          asset_path="dist/$asset_name"
+          if [[ ! -s "$asset_path" ]]; then
+            echo "$asset_path is missing or empty" >&2
+            exit 1
+          fi
+          echo "asset_name=$asset_name" >>"$GITHUB_OUTPUT"
+          echo "asset_path=$asset_path" >>"$GITHUB_OUTPUT"
+
+      - name: Upload release archive
+        env:
+          ASSET_PATH: ${{ steps.package.outputs.asset_path }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$RELEASE_TAG" "$ASSET_PATH" \
+            --clobber --repo "$GITHUB_REPOSITORY"
+
+      - id: asset
+        name: Verify uploaded release archive
+        env:
+          ASSET_NAME: ${{ steps.package.outputs.asset_name }}
+          ASSET_PATH: ${{ steps.package.outputs.asset_path }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ steps.draft.outputs.release_id }}
+        run: |
+          asset="$({
+            gh api --paginate \
+              "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets"
+          } | jq -sc --arg name "$ASSET_NAME" '
+            [.[].[] | select(.name == $name)]
+            | if length == 1 then .[0]
+              elif length == 0 then error("release asset not found")
+              else error("multiple matching release assets found")
+              end
+          ')"
+          digest="sha256:$(sha256sum "$ASSET_PATH" | awk '{print $1}')"
+          jq -e --arg digest "$digest" '
+            .state == "uploaded"
+            and .size > 0
+            and .digest == $digest
+          ' <<<"$asset" >/dev/null
+          echo "digest=$digest" >>"$GITHUB_OUTPUT"
+
+  publish:
+    needs: build-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      ASSET_DIGEST: ${{ needs.build-release.outputs.asset_digest }}
+      ASSET_NAME: ${{ needs.build-release.outputs.asset_name }}
+      RELEASE_ID: ${{ needs.build-release.outputs.release_id }}
+      RELEASE_SHA: ${{ inputs.sha }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          release="$(gh api \
+            "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}")"
+          jq -e \
+            --arg tag "$RELEASE_TAG" \
+            --arg sha "$RELEASE_SHA" \
+            '.draft and .tag_name == $tag and .target_commitish == $sha' \
+            <<<"$release" >/dev/null
+
+          assets="$({
+            gh api --paginate \
+              "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets"
+          } | jq -sc '[.[].[]]')"
+          jq -e \
+            --arg digest "$ASSET_DIGEST" \
+            --arg name "$ASSET_NAME" '
+              length == 1
+              and .[0].name == $name
+              and .[0].digest == $digest
+              and .[0].state == "uploaded"
+              and .[0].size > 0
+            ' <<<"$assets" >/dev/null
+
+          published="$(gh api --method PATCH \
+            "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" \
+            -F draft=false -f make_latest=true)"
+          jq -e '.draft == false' <<<"$published" >/dev/null
