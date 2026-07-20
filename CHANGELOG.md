@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/jimeh/tmux-chroma/compare/v0.1.0...v0.1.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* **website:** stabilize controls on hover and iOS ([#12](https://github.com/jimeh/tmux-chroma/issues/12)) ([5cd41df](https://github.com/jimeh/tmux-chroma/commit/5cd41dfcd76a9bcae24131497ff6e750cb40724c))
+
 ## 0.1.0 (2026-07-20)
 
 
