@@ -8,6 +8,8 @@
     "build": "bun run generate && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
     "typecheck": "bun run generate && bunx --bun tsc --noEmit",
+    "test": "bun run generate && bun test ../test/palette.test.ts ../test/site.test.ts",
+    "test:browser": "bun run build && playwright test",
     "deploy": "wrangler deploy",
     "deploy:preview": "wrangler versions upload"
   },
@@ -16,7 +18,9 @@
     "preact": "^10.29.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.61.1",
     "@preact/preset-vite": "^2.10.5",
+    "@types/bun": "1.3.14",
     "typescript": "^7.0.2",
     "vite": "^8.1.4",
     "wrangler": "^4.111.0"

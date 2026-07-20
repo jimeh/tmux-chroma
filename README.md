@@ -173,15 +173,26 @@ These can be reused by configuration loaded after Chroma.
 
 ## Development
 
-Run the complete local validation:
+Install pinned tools and website dependencies once:
 
 ```sh
-make check
+mise run setup
+```
+
+Run fast checks during development and complete CI-equivalent validation before
+handoff:
+
+```sh
+mise run check
+mise run verify
 ```
 
 The tests load Chroma in an isolated tmux server, verify reload idempotency
 and option behavior, exercise the bundled metric scripts, and ensure the
 website palette stays in sync with the plugin.
+
+Run `mise tasks` to discover targeted formatting, linting, typechecking, build,
+and test commands.
 
 `chroma.tmux` is also the executable color specification used by the website:
 

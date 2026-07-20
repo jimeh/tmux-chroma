@@ -41,7 +41,7 @@ const child = Bun.spawn([plugin, '--dump-colors'], {
   stderr: 'inherit',
 });
 const text = await new Response(child.stdout).text();
-if (await child.exited !== 0) {
+if ((await child.exited) !== 0) {
   throw new Error('chroma.tmux --dump-colors failed');
 }
 
@@ -84,8 +84,11 @@ function number(
   minimum: number,
   maximum: number
 ): number {
-  if (!Number.isInteger(value) ||
-      (value as number) < minimum || (value as number) > maximum) {
+  if (
+    !Number.isInteger(value) ||
+    (value as number) < minimum ||
+    (value as number) > maximum
+  ) {
     fail(`${label} must be an integer from ${minimum} to ${maximum}`);
   }
   return value as number;
@@ -101,8 +104,15 @@ function validateColors(value: unknown): ColorSchema {
   for (const mode of ['dark', 'light'] as const) {
     const anchors = record(modeValues[mode], `modes.${mode}`);
     for (const anchor of [
-      'bg', 'bgAlt', 'fg', 'muted', 'subtle',
-      'border', 'warn', 'alert', 'ink',
+      'bg',
+      'bgAlt',
+      'fg',
+      'muted',
+      'subtle',
+      'border',
+      'warn',
+      'alert',
+      'ink',
     ]) {
       hex(anchors[anchor], `modes.${mode}.${anchor}`);
     }
@@ -127,10 +137,7 @@ function validateColors(value: unknown): ColorSchema {
     'namedBackgrounds'
   ).entries()) {
     const background = record(value, `namedBackgrounds[${index}]`);
-    const name = string(
-      background.name,
-      `namedBackgrounds[${index}].name`
-    );
+    const name = string(background.name, `namedBackgrounds[${index}].name`);
     if (!/^[a-z][a-z-]*$/.test(name)) {
       fail(`namedBackgrounds[${index}].name has an invalid format`);
     }
@@ -149,10 +156,7 @@ function validateColors(value: unknown): ColorSchema {
   number(luma.divisor, 'resolution.luma.divisor', 1, 10000);
   number(luma.lightThreshold, 'resolution.luma.lightThreshold', 0, 255);
 
-  const surfaceMix = record(
-    resolution.surfaceMix,
-    'resolution.surfaceMix'
-  );
+  const surfaceMix = record(resolution.surfaceMix, 'resolution.surfaceMix');
   for (const surface of ['bg', 'panel', 'bgAlt', 'border']) {
     number(surfaceMix[surface], `resolution.surfaceMix.${surface}`, 0, 100);
   }
@@ -179,14 +183,19 @@ const colors = validateColors(parsed);
 const first = colors.presets[0];
 
 function mix(firstColor: string, secondColor: string, percent: number): string {
-  return '#' + [1, 3, 5].map((index) => {
-    const firstChannel = parseInt(firstColor.slice(index, index + 2), 16);
-    const secondChannel = parseInt(secondColor.slice(index, index + 2), 16);
-    const value = Math.floor(
-      (firstChannel * percent + secondChannel * (100 - percent)) / 100
-    );
-    return value.toString(16).padStart(2, '0');
-  }).join('');
+  return (
+    '#' +
+    [1, 3, 5]
+      .map((index) => {
+        const firstChannel = parseInt(firstColor.slice(index, index + 2), 16);
+        const secondChannel = parseInt(secondColor.slice(index, index + 2), 16);
+        const value = Math.floor(
+          (firstChannel * percent + secondChannel * (100 - percent)) / 100
+        );
+        return value.toString(16).padStart(2, '0');
+      })
+      .join('')
+  );
 }
 
 function cssMode(mode: 'dark' | 'light'): string {

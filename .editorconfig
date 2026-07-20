@@ -15,6 +15,3 @@ switch_case_indent = true
 space_redirects = true
 keep_padding = false
 function_next_line = false
-
-[Makefile]
-indent_style = tab

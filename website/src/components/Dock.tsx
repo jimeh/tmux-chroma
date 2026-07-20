@@ -13,9 +13,7 @@ import {
 } from '../state.ts';
 import { StatusBar, type StatusWindowItem } from './StatusBar.tsx';
 
-const reducedMotion = window.matchMedia(
-  '(prefers-reduced-motion: reduce)'
-);
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function windowFlag(id: string): string {
   if (id === currentWindow.value) {

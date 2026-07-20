@@ -37,15 +37,14 @@ export function colorLuma(color: string): number {
   return Math.floor(
     (luma.red * channel(color, 1) +
       luma.green * channel(color, 3) +
-      luma.blue * channel(color, 5)) / luma.divisor
+      luma.blue * channel(color, 5)) /
+      luma.divisor
   );
 }
 
 export function normalizeHex(value: string): string {
   const candidate = value.trim().replace(/^#?/, '#');
-  return /^#[0-9a-f]{6}$/i.test(candidate)
-    ? candidate.toLowerCase()
-    : '';
+  return /^#[0-9a-f]{6}$/i.test(candidate) ? candidate.toLowerCase() : '';
 }
 
 export function mixColor(
@@ -53,11 +52,16 @@ export function mixColor(
   second: string,
   percent: number
 ): string {
-  return '#' + [1, 3, 5].map((index) => {
-    const value = (
-      channel(first, index) * percent +
-      channel(second, index) * (100 - percent)
-    ) / 100;
-    return hex(value);
-  }).join('');
+  return (
+    '#' +
+    [1, 3, 5]
+      .map((index) => {
+        const value =
+          (channel(first, index) * percent +
+            channel(second, index) * (100 - percent)) /
+          100;
+        return hex(value);
+      })
+      .join('')
+  );
 }

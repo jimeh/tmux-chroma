@@ -33,9 +33,10 @@ function DividerGlyph({ direction }: { direction: 'forward' | 'reverse' }) {
   // and shows a hairline seam; simply overshooting the base
   // corners instead would narrow them along the diagonals and
   // detach the triangle from the neighboring segment's corners.
-  const points = direction === 'forward'
-    ? '-0.1,0 0,0 1,0.5 0,1 -0.1,1'
-    : '1.1,0 1,0 0,0.5 1,1 1.1,1';
+  const points =
+    direction === 'forward'
+      ? '-0.1,0 0,0 1,0.5 0,1 -0.1,1'
+      : '1.1,0 1,0 0,0.5 1,1 1.1,1';
   return (
     <svg
       class="powerline-glyph"
@@ -65,9 +66,9 @@ function Divider({
       class={'powerline-divider is-' + direction + ' ' + name}
       style={tailColor ? { '--tail-color': tailColor } : undefined}
     >
-      <span class="powerline-space is-before">{' '}</span>
+      <span class="powerline-space is-before"> </span>
       <DividerGlyph direction={direction} />
-      <span class="powerline-space is-after">{' '}</span>
+      <span class="powerline-space is-after"> </span>
     </span>
   );
 }
@@ -79,17 +80,14 @@ function WindowItem({ item }: { item: StatusWindowItem }) {
   const content = (
     <>
       {' ' + item.text}
-      {item.nameSuffix
-        ? <span class="status-window-name">{item.nameSuffix}</span>
-        : null}
-      {item.flag
-        ? (
-          <span class={'flag' + (item.alert ? ' is-alert' : '')}>
-            {item.flag}
-          </span>
-        )
-        : null}
-      {' '}
+      {item.nameSuffix ? (
+        <span class="status-window-name">{item.nameSuffix}</span>
+      ) : null}
+      {item.flag ? (
+        <span class={'flag' + (item.alert ? ' is-alert' : '')}>
+          {item.flag}
+        </span>
+      ) : null}{' '}
     </>
   );
   if (!item.onSelect) {
@@ -134,27 +132,22 @@ export function StatusBar({
       <span class="status-segment status-host">
         {powerline ? '  ' + host + ' ' : ' ' + host + ' '}
       </span>
-      {powerline
-        ? <Divider name="divider-forward" direction="forward" />
-        : null}
+      {powerline ? (
+        <Divider name="divider-forward" direction="forward" />
+      ) : null}
       <span class="status-segment status-session">{' docs '}</span>
-      {powerline
-        ? <Divider name="divider-to-bar" direction="forward" />
-        : null}
-      {!powerline
-        ? (
-          <span
-            class={'status-session-gap' +
-              (prefixActive ? ' is-active' : '')}
-          >
-            {' '}
-          </span>
-        )
-        : null}
+      {powerline ? <Divider name="divider-to-bar" direction="forward" /> : null}
+      {!powerline ? (
+        <span class={'status-session-gap' + (prefixActive ? ' is-active' : '')}>
+          {' '}
+        </span>
+      ) : null}
       <span
-        class={'status-segment status-prefix' +
+        class={
+          'status-segment status-prefix' +
           (prefixActive ? ' is-active' : '') +
-          (powerline ? ' is-powerline' : '')}
+          (powerline ? ' is-powerline' : '')
+        }
       >
         {'∙ '}
       </span>
@@ -165,37 +158,30 @@ export function StatusBar({
         ))}
       </span>
       <span class="status-spacer" />
-      {metrics.length
-        ? (
-          <>
-            {powerline
-              ? <Divider name="divider-metrics" direction="reverse" />
-              : null}
-            <span class="status-segment status-metrics">
-              {metrics.map((metric, index) => (
-                <>
-                  {index > 0
-                    ? <span class="metric-dot">∙</span>
-                    : null}
-                  <span>{' ' + metric + ' '}</span>
-                </>
-              ))}
-            </span>
-          </>
-        )
-        : null}
-      {powerline
-        ? (
-          <Divider
-            name="divider-tail"
-            direction="reverse"
-            tailColor={tailColor}
-          />
-        )
-        : null}
+      {metrics.length ? (
+        <>
+          {powerline ? (
+            <Divider name="divider-metrics" direction="reverse" />
+          ) : null}
+          <span class="status-segment status-metrics">
+            {metrics.map((metric, index) => (
+              <>
+                {index > 0 ? <span class="metric-dot">∙</span> : null}
+                <span>{' ' + metric + ' '}</span>
+              </>
+            ))}
+          </span>
+        </>
+      ) : null}
+      {powerline ? (
+        <Divider
+          name="divider-tail"
+          direction="reverse"
+          tailColor={tailColor}
+        />
+      ) : null}
       <span
-        class={'status-segment status-tail' +
-          (syncActive ? ' is-sync' : '')}
+        class={'status-segment status-tail' + (syncActive ? ' is-sync' : '')}
       >
         {powerline ? ' ' + tail + '  ' : ' ' + tail + ' '}
       </span>

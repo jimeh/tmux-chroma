@@ -5,3 +5,5 @@ node_modules/
 website/dist/
 website/.generated/
 website/.wrangler/
+website/playwright-report/
+website/test-results/

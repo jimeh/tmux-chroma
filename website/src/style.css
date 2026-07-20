@@ -6,7 +6,7 @@
   --panel: #181b20;
   --line: #2b313b;
   --scrim: rgba(6, 7, 10, 0.82);
-  --mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+  --mono: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
   --dock-height: 28px;
 
   /* One shared 80-column measure for prose and code blocks:
@@ -138,11 +138,7 @@ button {
 .banner {
   margin: 0 0 2rem;
   animation: fade-up 700ms 1s backwards ease-out;
-  background: linear-gradient(
-    180deg,
-    var(--accent) 55%,
-    var(--accent-alt)
-  );
+  background: linear-gradient(180deg, var(--accent) 55%, var(--accent-alt));
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -257,13 +253,13 @@ button {
 .pane-border::before {
   width: 2.25rem;
   border-top: 1px solid var(--line);
-  content: "";
+  content: '';
 }
 
 .pane-border::after {
   flex: 1;
   border-top: 1px solid var(--line);
-  content: "";
+  content: '';
 }
 
 h2 {
@@ -286,7 +282,7 @@ h3 {
 }
 
 h3::before {
-  content: "# ";
+  content: '# ';
 }
 
 .swatch-grid {
@@ -318,17 +314,19 @@ h3::before {
   color: var(--muted);
 }
 
-.swatch[aria-pressed="true"] {
+.swatch[aria-pressed='true'] {
   color: var(--text);
 }
 
-.swatch[aria-pressed="true"] .swatch-color {
+.swatch[aria-pressed='true'] .swatch-color {
   border-color: var(--text);
-  box-shadow: 0 0 0 3px var(--canvas), 0 0 22px var(--swatch);
+  box-shadow:
+    0 0 0 3px var(--canvas),
+    0 0 22px var(--swatch);
 }
 
-.swatch[aria-pressed="true"] .swatch-name::after {
-  content: " *";
+.swatch[aria-pressed='true'] .swatch-name::after {
+  content: ' *';
 }
 
 /* The auto swatch stands for "hash the hostname"; a sweep of
@@ -511,7 +509,7 @@ h3::before {
 }
 
 .conf-select-button:hover,
-.conf-select-button[aria-expanded="true"] {
+.conf-select-button[aria-expanded='true'] {
   background: color-mix(in srgb, var(--accent), transparent 84%);
 }
 
@@ -562,7 +560,7 @@ h3::before {
   color: var(--text);
 }
 
-.conf-option[aria-selected="true"] {
+.conf-option[aria-selected='true'] {
   color: var(--accent);
 }
 
@@ -604,7 +602,7 @@ h3::before {
   font-size: 0.72rem;
 }
 
-.key-toggle[aria-pressed="true"] {
+.key-toggle[aria-pressed='true'] {
   border-color: var(--accent-alt);
   background: color-mix(in srgb, var(--accent), transparent 88%);
   color: var(--text);

@@ -1,4 +1,4 @@
 # Supply-chain cooldown: refuse npm package versions published less
-# than three days ago, matching minimum_release_age in mise.toml.
+# than seven days ago, matching minimum_release_age in mise.toml.
 [install]
-minimumReleaseAge = 259200
+minimumReleaseAge = 604800
