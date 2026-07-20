@@ -12,3 +12,9 @@ config:
     siblings_only: true
   blanks-around-fences:
     list_items: false
+overrides:
+  - filter:
+      - CHANGELOG.md
+    config:
+      line-length: false
+    combine: merge

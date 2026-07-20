@@ -47,7 +47,7 @@ chmod 644 \
 
 # ZIP timestamps cannot predate 1980. Fix every entry to the earliest portable
 # timestamp so identical source content produces an identical archive.
-touch -t 198001010000 \
+TZ=UTC0 touch -t 198001010000 \
   "$work/$package" \
   "$work/$package/scripts" \
   "$work/$package/chroma.tmux" \

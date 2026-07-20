@@ -23,8 +23,8 @@ first="$work/first"
 second="$work/second"
 extract="$work/extract"
 
-"$ROOT/scripts/package-release.sh" "$first" > /dev/null
-"$ROOT/scripts/package-release.sh" "$second" > /dev/null
+TZ=UTC0 "$ROOT/scripts/package-release.sh" "$first" > /dev/null
+TZ=EST5EDT "$ROOT/scripts/package-release.sh" "$second" > /dev/null
 
 first_archive="$first/$package.zip"
 second_archive="$second/$package.zip"

@@ -28,6 +28,9 @@ concurrency:
 
 permissions: {}
 
+env:
+  MISE_LOCKED: "1"
+
 jobs:
   build-release:
     runs-on: ubuntu-latest
@@ -75,6 +78,13 @@ jobs:
             echo "checkout does not match release SHA" >&2
             exit 1
           fi
+          tag_sha="$(
+            git rev-list -n 1 "refs/tags/$RELEASE_TAG" 2>/dev/null || true
+          )"
+          if [[ "$tag_sha" != "$RELEASE_SHA" ]]; then
+            echo "$RELEASE_TAG targets $tag_sha, expected $RELEASE_SHA" >&2
+            exit 1
+          fi
           if ! git merge-base --is-ancestor \
             "$RELEASE_SHA" refs/remotes/origin/main; then
             echo "release SHA is not contained in origin/main" >&2
@@ -97,6 +107,7 @@ jobs:
             exit 1
           fi
 
+          mise run test:package
           mise run release:package
           asset_name="tmux-chroma-$version.zip"
           asset_path="dist/$asset_name"
@@ -154,10 +165,24 @@ jobs:
       RELEASE_SHA: ${{ inputs.sha }}
       RELEASE_TAG: ${{ inputs.tag }}
     steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ inputs.sha }}
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          tag_sha="$(
+            git rev-list -n 1 "refs/tags/$RELEASE_TAG" 2>/dev/null || true
+          )"
+          if [[ "$tag_sha" != "$RELEASE_SHA" ]]; then
+            echo "$RELEASE_TAG targets $tag_sha, expected $RELEASE_SHA" >&2
+            exit 1
+          fi
+
           release="$(gh api \
             "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}")"
           jq -e \
