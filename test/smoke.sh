@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# Keep the runner's SSH state out of the controlled tmux client fixtures.
+unset SSH_CONNECTION
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PLUGIN="$ROOT/chroma.tmux"
 SOCKET="chroma-test-$$"
