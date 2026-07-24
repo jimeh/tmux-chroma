@@ -146,12 +146,18 @@ normalize_configured_background() {
 
 detect_ghostty_background() {
   local client_term client_count=0
+  local ssh_environment
   local output line value background='' background_count=0
+
+  ssh_environment="$(tmux show-environment -g SSH_CONNECTION 2> /dev/null)" ||
+    ssh_environment=''
+  case "$ssh_environment" in
+    SSH_CONNECTION=*) return 1 ;;
+  esac
 
   # Chroma styles the whole tmux server, so only one attached client can
   # provide an unambiguous terminal background.
   while IFS= read -r client_term; do
-    [ -n "$client_term" ] || continue
     client_count=$((client_count + 1))
     [ "$client_term" = 'xterm-ghostty' ] || return 1
   done < <(tmux list-clients -F '#{client_termname}' 2> /dev/null)
@@ -193,6 +199,7 @@ tmux_supports_client_theme_hooks() {
 
   version="$(tmux -V 2> /dev/null)"
   version="${version#tmux }"
+  version="${version#next-}"
   major="${version%%.*}"
   minor="${version#*.}"
   minor="${minor%%[!0-9]*}"
@@ -203,7 +210,7 @@ tmux_supports_client_theme_hooks() {
   [ "$major" -gt 3 ] || { [ "$major" -eq 3 ] && [ "$minor" -ge 6 ]; }
 }
 
-sync_ghostty_theme_hook() {
+sync_ghostty_reload_hook() {
   local hook="$1"
   local enabled="$2"
   local command='run-shell "#{@chroma_plugin_dir}/chroma.tmux"'
@@ -227,12 +234,15 @@ sync_ghostty_theme_hook() {
   fi
 }
 
-sync_ghostty_theme_hooks() {
+sync_ghostty_reload_hooks() {
   local enabled="$1"
 
-  tmux_supports_client_theme_hooks || return
-  sync_ghostty_theme_hook client-light-theme "$enabled"
-  sync_ghostty_theme_hook client-dark-theme "$enabled"
+  sync_ghostty_reload_hook client-attached "$enabled"
+  sync_ghostty_reload_hook client-detached "$enabled"
+  if tmux_supports_client_theme_hooks; then
+    sync_ghostty_reload_hook client-light-theme "$enabled"
+    sync_ghostty_reload_hook client-dark-theme "$enabled"
+  fi
 }
 
 host_short() {
@@ -635,7 +645,7 @@ main() {
   set_tmux_option @chroma_current_background "$background"
   set_tmux_option @chroma_current_background_source "$background_source"
   set_tmux_option @chroma_plugin_dir "$CURRENT_DIR"
-  sync_ghostty_theme_hooks "$detect_ghostty"
+  sync_ghostty_reload_hooks "$detect_ghostty"
 
   host_label="$(default_tmux_option @chroma_host_label '#H')"
   left_extra="$(get_tmux_option @chroma_left_extra)"

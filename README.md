@@ -150,18 +150,20 @@ set -g @chroma_detect_ghostty_background 'on'
 
 Chroma uses `ghostty +show-config --changes-only=false` only when tmux has
 exactly one attached client and its `#{client_termname}` is `xterm-ghostty`.
-This works through tmux without relying on pane environment variables. If the
-client is missing or ambiguous, Ghostty is unavailable, its output is invalid,
-or its theme uses conditional light/dark branches, Chroma atomically falls back
-to `@chroma_background`. Invalid or unset fallback values retain the default
-dark background.
+This works through tmux without relying on pane environment variables, but
+requires Ghostty and tmux to run on the same host. If the tmux server has an
+active `SSH_CONNECTION`, the client is missing or ambiguous, Ghostty is
+unavailable, its output is invalid, or its theme uses conditional light/dark
+branches, Chroma atomically falls back to `@chroma_background`. Invalid or
+unset fallback values retain the default dark background.
 
 Chroma styles a tmux server globally, so it cannot safely choose different
-backgrounds for simultaneous clients. On tmux 3.6 and newer, Chroma preserves
-existing `client-light-theme` and `client-dark-theme` hooks and adds an
-idempotent reload hook so Ghostty theme reports refresh the colors. Older tmux
-versions still detect on each Chroma load, but cannot refresh automatically
-when the terminal theme changes.
+backgrounds for simultaneous clients. Chroma preserves existing
+`client-attached` and `client-detached` hooks and adds idempotent reload hooks
+so connecting and disconnecting clients refreshes the decision. On tmux 3.6
+and newer it does the same for `client-light-theme` and `client-dark-theme`, so
+Ghostty theme reports refresh the colors automatically. Older tmux versions
+still detect terminal theme changes on the next Chroma load.
 
 ## Status behavior
 

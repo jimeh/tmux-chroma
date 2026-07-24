@@ -78,11 +78,22 @@ wait_for_client_count() {
   fail "expected $expected attached client(s), got $(client_count)"
 }
 
+wait_for_option() {
+  local name="$1" expected="$2" _
+
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    [ "$(option "$name")" = "$expected" ] && return
+    sleep 0.1
+  done
+  fail "$name: expected '$expected', got '$(option "$name")'"
+}
+
 tmux_supports_client_theme_hooks() {
   local version major minor
 
   version="$(tmux -V)"
   version="${version#tmux }"
+  version="${version#next-}"
   major="${version%%.*}"
   minor="${version#*.}"
   minor="${minor%%[!0-9]*}"
@@ -304,8 +315,13 @@ tmux -L "$SOCKET" set-option -gu @chroma_background
 # Ghostty detection is opt-in and falls back atomically. The control-mode
 # client proves client_termname survives tmux even though the theme runs in a
 # tmux-owned run-shell process.
+tmux -L "$SOCKET" set-environment -gu SSH_CONNECTION
 tmux -L "$SOCKET" set-option -g @chroma_background '#301934'
 tmux -L "$SOCKET" set-option -g @chroma_detect_ghostty_background on
+tmux -L "$SOCKET" set-hook -g client-attached \
+  'display-message "user attached hook"'
+tmux -L "$SOCKET" set-hook -g client-detached \
+  'display-message "user detached hook"'
 if tmux_supports_client_theme_hooks; then
   tmux -L "$SOCKET" set-hook -g client-light-theme \
     'display-message "user light hook"'
@@ -315,6 +331,10 @@ fi
 run_theme
 assert_option @chroma_current_background '#301934'
 assert_option @chroma_current_background_source configured
+[ "$(chroma_hook_count client-attached)" -eq 1 ] ||
+  fail 'Ghostty client-attached reload hook was not installed'
+[ "$(chroma_hook_count client-detached)" -eq 1 ] ||
+  fail 'Ghostty client-detached reload hook was not installed'
 
 tmux -L "$SOCKET" set-option -g @chroma_background solarized-light
 run_theme
@@ -322,20 +342,27 @@ assert_option @chroma_current_background '#fdf6e3'
 assert_option @chroma_current_background_source configured
 tmux -L "$SOCKET" set-option -g @chroma_background '#301934'
 
+printf 'background = #FDF6E3\ntheme = Catppuccin Latte\n' \
+  > "$GHOSTTY_FIXTURE/output"
 mkfifo "$TEST_TMP/ghost-client-input"
 exec 8<> "$TEST_TMP/ghost-client-input"
 TERM=xterm-ghostty tmux -L "$SOCKET" -C attach-session -t chroma \
   <&8 > "$TEST_TMP/ghost-client-output" &
 GHOST_CLIENT_PID=$!
 wait_for_client_count 1
-assert_option @chroma_current_background_source configured
+wait_for_option @chroma_current_background '#fdf6e3'
+wait_for_option @chroma_current_background_source ghostty
+assert_option @chroma_current_mode light
 
-printf 'background = #FDF6E3\ntheme = Catppuccin Latte\n' \
-  > "$GHOSTTY_FIXTURE/output"
+tmux -L "$SOCKET" set-environment -g SSH_CONNECTION \
+  '192.0.2.1 12345 192.0.2.2 22'
+run_theme
+assert_option @chroma_current_background '#301934'
+assert_option @chroma_current_background_source configured
+tmux -L "$SOCKET" set-environment -gu SSH_CONNECTION
 run_theme
 assert_option @chroma_current_background '#fdf6e3'
 assert_option @chroma_current_background_source ghostty
-assert_option @chroma_current_mode light
 
 tmux -L "$SOCKET" set-option -g @chroma_mode dark
 run_theme
@@ -345,6 +372,11 @@ assert_option @chroma_current_mode dark
 tmux -L "$SOCKET" set-option -gu @chroma_mode
 
 printf 'background = fdf6e3\n' > "$GHOSTTY_FIXTURE/output"
+run_theme
+assert_option @chroma_current_background '#301934'
+assert_option @chroma_current_background_source configured
+
+printf 'theme = Catppuccin Latte\n' > "$GHOSTTY_FIXTURE/output"
 run_theme
 assert_option @chroma_current_background '#301934'
 assert_option @chroma_current_background_source configured
@@ -376,20 +408,32 @@ TERM=xterm-256color tmux -L "$SOCKET" -C attach-session -t chroma \
   <&9 > "$TEST_TMP/other-client-output" &
 OTHER_CLIENT_PID=$!
 wait_for_client_count 2
-run_theme
-assert_option @chroma_current_background '#301934'
-assert_option @chroma_current_background_source configured
+wait_for_option @chroma_current_background '#301934'
+wait_for_option @chroma_current_background_source configured
 
+printf 'background = #002B36\n' > "$GHOSTTY_FIXTURE/output"
 kill "$OTHER_CLIENT_PID"
 wait "$OTHER_CLIENT_PID" 2> /dev/null || true
 OTHER_CLIENT_PID=''
 exec 9>&-
 wait_for_client_count 1
+wait_for_option @chroma_current_background '#002b36'
+wait_for_option @chroma_current_background_source ghostty
 run_theme
 run_theme
-assert_option @chroma_current_background '#fdf6e3'
+assert_option @chroma_current_background '#002b36'
 assert_option @chroma_current_background_source ghostty
 
+assert_contains \
+  "$(tmux -L "$SOCKET" show-hooks -g client-attached)" \
+  'display-message "user attached hook"'
+assert_contains \
+  "$(tmux -L "$SOCKET" show-hooks -g client-detached)" \
+  'display-message "user detached hook"'
+[ "$(chroma_hook_count client-attached)" -eq 1 ] ||
+  fail 'Ghostty client-attached reload hook was not idempotent'
+[ "$(chroma_hook_count client-detached)" -eq 1 ] ||
+  fail 'Ghostty client-detached reload hook was not idempotent'
 if tmux_supports_client_theme_hooks; then
   assert_contains \
     "$(tmux -L "$SOCKET" show-hooks -g client-light-theme)" \
@@ -407,6 +451,16 @@ tmux -L "$SOCKET" set-option -g @chroma_detect_ghostty_background invalid
 run_theme
 assert_option @chroma_current_background '#301934'
 assert_option @chroma_current_background_source configured
+[ "$(chroma_hook_count client-attached)" -eq 0 ] ||
+  fail 'Ghostty client-attached reload hook remained after opt-out'
+[ "$(chroma_hook_count client-detached)" -eq 0 ] ||
+  fail 'Ghostty client-detached reload hook remained after opt-out'
+assert_contains \
+  "$(tmux -L "$SOCKET" show-hooks -g client-attached)" \
+  'display-message "user attached hook"'
+assert_contains \
+  "$(tmux -L "$SOCKET" show-hooks -g client-detached)" \
+  'display-message "user detached hook"'
 if tmux_supports_client_theme_hooks; then
   [ "$(chroma_hook_count client-light-theme)" -eq 0 ] ||
     fail 'Ghostty light-theme reload hook remained after opt-out'
