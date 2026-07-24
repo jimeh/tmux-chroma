@@ -71,7 +71,7 @@ It requires the `RELEASE_BOT_CLIENT_ID` repository variable and
 - Ghostty `+show-config` can resolve a conditional light/dark theme against the
   CLI process rather than an attached surface. Reject conditional themes and
   require one same-host, unambiguous `xterm-ghostty` client before using its
-  background; a live global `SSH_CONNECTION` must fall back.
+  background; a live global or client-session `SSH_CONNECTION` must fall back.
 - `chroma.tmux` is the single authored source for presets, named backgrounds,
   neutral anchors, and resolution constants. Its `--dump-colors` mode emits the
   versioned JSON schema without tmux, and `--resolve-colors` exposes the real

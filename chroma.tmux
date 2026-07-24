@@ -145,7 +145,7 @@ normalize_configured_background() {
 }
 
 detect_ghostty_background() {
-  local client_term client_count=0
+  local client_record client_term client_session='' client_count=0
   local ssh_environment
   local output line value background='' background_count=0
 
@@ -157,11 +157,28 @@ detect_ghostty_background() {
 
   # Chroma styles the whole tmux server, so only one attached client can
   # provide an unambiguous terminal background.
-  while IFS= read -r client_term; do
+  while IFS= read -r client_record; do
     client_count=$((client_count + 1))
+    case "$client_record" in
+      *'|'*)
+        client_term="${client_record%%|*}"
+        client_session="${client_record#*|}"
+        ;;
+      *) return 1 ;;
+    esac
     [ "$client_term" = 'xterm-ghostty' ] || return 1
-  done < <(tmux list-clients -F '#{client_termname}' 2> /dev/null)
+    [ -n "$client_session" ] || return 1
+  done < <(
+    tmux list-clients -F '#{client_termname}|#{session_id}' 2> /dev/null
+  )
   [ "$client_count" -eq 1 ] || return 1
+
+  ssh_environment="$(
+    tmux show-environment -t "$client_session" SSH_CONNECTION 2> /dev/null
+  )" || ssh_environment=''
+  case "$ssh_environment" in
+    SSH_CONNECTION=*) return 1 ;;
+  esac
 
   command -v ghostty > /dev/null 2>&1 || return 1
   output="$(ghostty +show-config --changes-only=false 2> /dev/null)" ||

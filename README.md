@@ -152,10 +152,11 @@ Chroma uses `ghostty +show-config --changes-only=false` only when tmux has
 exactly one attached client and its `#{client_termname}` is `xterm-ghostty`.
 This works through tmux without relying on pane environment variables, but
 requires Ghostty and tmux to run on the same host. If the tmux server has an
-active `SSH_CONNECTION`, the client is missing or ambiguous, Ghostty is
-unavailable, its output is invalid, or its theme uses conditional light/dark
-branches, Chroma atomically falls back to `@chroma_background`. Invalid or
-unset fallback values retain the default dark background.
+active `SSH_CONNECTION` in its global environment or the sole client's
+session, the client is missing or ambiguous, Ghostty is unavailable, its
+output is invalid, or its theme uses conditional light/dark branches, Chroma
+atomically falls back to `@chroma_background`. Invalid or unset fallback
+values retain the default dark background.
 
 Chroma styles a tmux server globally, so it cannot safely choose different
 backgrounds for simultaneous clients. Chroma preserves existing

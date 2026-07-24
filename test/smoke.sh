@@ -364,6 +364,16 @@ run_theme
 assert_option @chroma_current_background '#fdf6e3'
 assert_option @chroma_current_background_source ghostty
 
+tmux -L "$SOCKET" set-environment -t chroma SSH_CONNECTION \
+  '192.0.2.1 12345 192.0.2.2 22'
+run_theme
+assert_option @chroma_current_background '#301934'
+assert_option @chroma_current_background_source configured
+tmux -L "$SOCKET" set-environment -ut chroma SSH_CONNECTION
+run_theme
+assert_option @chroma_current_background '#fdf6e3'
+assert_option @chroma_current_background_source ghostty
+
 tmux -L "$SOCKET" set-option -g @chroma_mode dark
 run_theme
 assert_option @chroma_current_background '#fdf6e3'
