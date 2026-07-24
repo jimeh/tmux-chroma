@@ -76,6 +76,7 @@ Set options before Chroma loads:
 | `@chroma_preset` | `auto` | Preset name below, or `auto` for host-seeded |
 | `@chroma_base_color` | unset | Full `#rrggbb` accent override |
 | `@chroma_background` | `dark` | Background: dark, light, a theme name, or #rrggbb |
+| `@chroma_detect_ghostty_background` | `off` | Detect Ghostty's exact background |
 | `@chroma_mode` | `auto` | Force the dark or light palette over the background |
 | `@chroma_clock_format` | `%H:%M` | Clock `strftime` format |
 | `@chroma_clock_min_width` | `91` | Minimum client width for the clock |
@@ -136,11 +137,31 @@ to that theme's background color and is treated like the matching `#rrggbb`:
 
 Set `@chroma_mode` to `dark` or `light` to override the luma classification
 for backgrounds near the boundary; the background still supplies the color the
-surfaces blend toward. The default `auto` follows `@chroma_background`.
+surfaces blend toward. The default `auto` follows the effective background.
 
 `@chroma_base_color` is used verbatim in both modes, so choose a
-light-appropriate custom accent yourself. Tmux cannot reliably query the
-terminal's background, so `@chroma_background` is manual.
+light-appropriate custom accent yourself.
+
+Ghostty users can opt into exact background detection:
+
+```tmux
+set -g @chroma_detect_ghostty_background 'on'
+```
+
+Chroma uses `ghostty +show-config --changes-only=false` only when tmux has
+exactly one attached client and its `#{client_termname}` is `xterm-ghostty`.
+This works through tmux without relying on pane environment variables. If the
+client is missing or ambiguous, Ghostty is unavailable, its output is invalid,
+or its theme uses conditional light/dark branches, Chroma atomically falls back
+to `@chroma_background`. Invalid or unset fallback values retain the default
+dark background.
+
+Chroma styles a tmux server globally, so it cannot safely choose different
+backgrounds for simultaneous clients. On tmux 3.6 and newer, Chroma preserves
+existing `client-light-theme` and `client-dark-theme` hooks and adds an
+idempotent reload hook so Ghostty theme reports refresh the colors. Older tmux
+versions still detect on each Chroma load, but cannot refresh automatically
+when the terminal theme changes.
 
 ## Status behavior
 
@@ -165,12 +186,16 @@ Chroma publishes its resolved values as global tmux options:
 @chroma_warn             @chroma_alert
 @chroma_ink              @chroma_dark
 @chroma_current_mode     @chroma_current_preset
+@chroma_current_background
+@chroma_current_background_source
 @chroma_preset_names     @chroma_plugin_dir
 @chroma_version
 @chroma_sync_on          @chroma_sync_off
 ```
 
 These can be reused by configuration loaded after Chroma.
+`@chroma_current_background` is the normalized effective background (`dark`,
+`light`, or `#rrggbb`). Its source is `ghostty`, `configured`, or `default`.
 
 ## Development
 
