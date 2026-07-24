@@ -109,6 +109,18 @@ default_tmux_option() {
   fi
 }
 
+normalize_hex() {
+  local value="$1"
+
+  value="${value//A/a}"
+  value="${value//B/b}"
+  value="${value//C/c}"
+  value="${value//D/d}"
+  value="${value//E/e}"
+  value="${value//F/f}"
+  printf '%s\n' "$value"
+}
+
 normalize_configured_background() {
   local configured="$1" named
 
@@ -118,7 +130,7 @@ normalize_configured_background() {
       resolved_background="$configured"
       ;;
     '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-      resolved_background="${configured,,}"
+      resolved_background="$(normalize_hex "$configured")"
       ;;
     *)
       named="$(named_background "$configured")"
@@ -156,7 +168,7 @@ detect_ghostty_background() {
         value="${line#background = }"
         case "$value" in
           '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-            background="${value,,}"
+            background="$(normalize_hex "$value")"
             ;;
           *) return 1 ;;
         esac
