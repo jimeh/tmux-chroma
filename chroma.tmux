@@ -109,6 +109,159 @@ default_tmux_option() {
   fi
 }
 
+normalize_hex() {
+  local value="$1"
+
+  value="${value//A/a}"
+  value="${value//B/b}"
+  value="${value//C/c}"
+  value="${value//D/d}"
+  value="${value//E/e}"
+  value="${value//F/f}"
+  printf '%s\n' "$value"
+}
+
+normalize_configured_background() {
+  local configured="$1" named
+
+  resolved_background_source='configured'
+  case "$configured" in
+    dark | light)
+      resolved_background="$configured"
+      ;;
+    '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
+      resolved_background="$(normalize_hex "$configured")"
+      ;;
+    *)
+      named="$(named_background "$configured")"
+      if [ -n "$named" ]; then
+        resolved_background="$named"
+      else
+        resolved_background='dark'
+        resolved_background_source='default'
+      fi
+      ;;
+  esac
+}
+
+detect_ghostty_background() {
+  local client_record client_term client_session='' client_count=0
+  local ssh_environment
+  local output line value background='' background_count=0
+
+  ssh_environment="$(tmux show-environment -g SSH_CONNECTION 2> /dev/null)" ||
+    ssh_environment=''
+  case "$ssh_environment" in
+    SSH_CONNECTION=*) return 1 ;;
+  esac
+
+  # Chroma styles the whole tmux server, so only one attached client can
+  # provide an unambiguous terminal background.
+  while IFS= read -r client_record; do
+    client_count=$((client_count + 1))
+    case "$client_record" in
+      *'|'*)
+        client_term="${client_record%%|*}"
+        client_session="${client_record#*|}"
+        ;;
+      *) return 1 ;;
+    esac
+    [ "$client_term" = 'xterm-ghostty' ] || return 1
+    [ -n "$client_session" ] || return 1
+  done < <(
+    tmux list-clients -F '#{client_termname}|#{session_id}' 2> /dev/null
+  )
+  [ "$client_count" -eq 1 ] || return 1
+
+  ssh_environment="$(
+    tmux show-environment -t "$client_session" SSH_CONNECTION 2> /dev/null
+  )" || ssh_environment=''
+  case "$ssh_environment" in
+    SSH_CONNECTION=*) return 1 ;;
+  esac
+
+  command -v ghostty > /dev/null 2>&1 || return 1
+  output="$(ghostty +show-config --changes-only=false 2> /dev/null)" ||
+    return 1
+
+  while IFS= read -r line; do
+    case "$line" in
+      'background = '*)
+        background_count=$((background_count + 1))
+        value="${line#background = }"
+        case "$value" in
+          '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
+            background="$(normalize_hex "$value")"
+            ;;
+          *) return 1 ;;
+        esac
+        ;;
+      'theme = '*)
+        value="${line#theme = }"
+        # +show-config resolves conditional themes to one branch. Reject the
+        # source syntax so a dual light/dark theme never looks authoritative.
+        case "$value" in
+          *light:* | *dark:*) return 1 ;;
+        esac
+        ;;
+    esac
+  done <<< "$output"
+
+  [ "$background_count" -eq 1 ] || return 1
+  printf '%s\n' "$background"
+}
+
+tmux_supports_client_theme_hooks() {
+  local version major minor
+
+  version="$(tmux -V 2> /dev/null)"
+  version="${version#tmux }"
+  version="${version#next-}"
+  major="${version%%.*}"
+  minor="${version#*.}"
+  minor="${minor%%[!0-9]*}"
+
+  case "$major:$minor" in
+    *[!0-9:]* | *: | :*) return 1 ;;
+  esac
+  [ "$major" -gt 3 ] || { [ "$major" -eq 3 ] && [ "$minor" -ge 6 ]; }
+}
+
+sync_ghostty_reload_hook() {
+  local hook="$1"
+  local enabled="$2"
+  local command='run-shell "#{@chroma_plugin_dir}/chroma.tmux"'
+  local line indexed found='off'
+
+  while IFS= read -r line; do
+    case "$line" in
+      "${hook}["*"] $command")
+        if [ "$enabled" = 'on' ] && [ "$found" = 'off' ]; then
+          found='on'
+        else
+          indexed="${line%% *}"
+          tmux set-hook -gu "$indexed"
+        fi
+        ;;
+    esac
+  done < <(tmux show-hooks -g "$hook" 2> /dev/null)
+
+  if [ "$enabled" = 'on' ] && [ "$found" = 'off' ]; then
+    tmux set-hook -ag "$hook" "$command"
+  fi
+}
+
+sync_ghostty_reload_hooks() {
+  local enabled="$1"
+
+  sync_ghostty_reload_hook client-attached "$enabled"
+  sync_ghostty_reload_hook client-detached "$enabled"
+  if tmux_supports_client_theme_hooks; then
+    sync_ghostty_reload_hook client-light-theme "$enabled"
+    sync_ghostty_reload_hook client-dark-theme "$enabled"
+  fi
+}
+
 host_short() {
   local host
 
@@ -462,6 +615,8 @@ powerline_divider() {
 
 main() {
   local host preset requested_preset base_color background mode_override
+  local configured_background detect_ghostty detected_background
+  local background_source
   local host_label left_extra right_extra clock_format clock_min_width
   local powerline
   local interval
@@ -475,7 +630,20 @@ main() {
   requested_preset="$(get_tmux_option @chroma_preset)"
   preset="$(resolve_preset "$requested_preset" "$host")"
   base_color="$(get_tmux_option @chroma_base_color)"
-  background="$(default_tmux_option @chroma_background 'dark')"
+  configured_background="$(get_tmux_option @chroma_background)"
+  normalize_configured_background "$configured_background"
+  background="$resolved_background"
+  background_source="$resolved_background_source"
+  detect_ghostty="$(default_tmux_option \
+    @chroma_detect_ghostty_background 'off')"
+  [ "$detect_ghostty" = 'on' ] || detect_ghostty='off'
+  if [ "$detect_ghostty" = 'on' ]; then
+    detected_background="$(detect_ghostty_background)" || detected_background=''
+    if [ -n "$detected_background" ]; then
+      background="$detected_background"
+      background_source='ghostty'
+    fi
+  fi
   mode_override="$(default_tmux_option @chroma_mode 'auto')"
 
   case "$mode_override" in
@@ -489,19 +657,12 @@ main() {
     *) base_color='' ;;
   esac
 
-  case "$background" in
-    dark | light) ;;
-    '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) ;;
-    *)
-      # A theme name resolves to its background seed; anything
-      # unknown falls back to the dark default.
-      background="$(named_background "$background")"
-      [ -n "$background" ] || background='dark'
-      ;;
-  esac
-
   apply_preset "$preset" "$base_color" "$background" "$mode_override"
   set_tmux_option @chroma_version "$CHROMA_VERSION"
+  set_tmux_option @chroma_current_background "$background"
+  set_tmux_option @chroma_current_background_source "$background_source"
+  set_tmux_option @chroma_plugin_dir "$CURRENT_DIR"
+  sync_ghostty_reload_hooks "$detect_ghostty"
 
   host_label="$(default_tmux_option @chroma_host_label '#H')"
   left_extra="$(get_tmux_option @chroma_left_extra)"
@@ -527,7 +688,6 @@ main() {
   alert="$(get_tmux_option @chroma_alert)"
   ink="$(get_tmux_option @chroma_ink)"
 
-  set_tmux_option @chroma_plugin_dir "$CURRENT_DIR"
   # Unquoted echo flattens the newline in PRESET_NAMES to a space.
   # shellcheck disable=SC2086,SC2116
   set_tmux_option @chroma_preset_names "$(echo $PRESET_NAMES)"
