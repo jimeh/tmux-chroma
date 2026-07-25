@@ -161,7 +161,7 @@ values retain the default dark background.
 Chroma styles a tmux server globally, so it cannot safely choose different
 backgrounds for simultaneous clients. Chroma preserves existing
 `client-attached` and `client-detached` hooks and adds idempotent reload hooks
-so connecting and disconnecting clients refreshes the decision. On tmux 3.6
+so connecting and disconnecting clients refresh the decision. On tmux 3.6
 and newer it does the same for `client-light-theme` and `client-dark-theme`, so
 Ghostty theme reports refresh the colors automatically. Older tmux versions
 still detect terminal theme changes on the next Chroma load.

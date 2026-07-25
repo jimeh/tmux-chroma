@@ -146,7 +146,7 @@ normalize_configured_background() {
 
 detect_ghostty_background() {
   local client_record client_term client_session='' client_count=0
-  local ssh_environment
+  local ssh_environment ghostty_command
   local output line value background='' background_count=0
 
   ssh_environment="$(tmux show-environment -g SSH_CONNECTION 2> /dev/null)" ||
@@ -180,8 +180,14 @@ detect_ghostty_background() {
     SSH_CONNECTION=*) return 1 ;;
   esac
 
-  command -v ghostty > /dev/null 2>&1 || return 1
-  output="$(ghostty +show-config --changes-only=false 2> /dev/null)" ||
+  if command -v ghostty > /dev/null 2>&1; then
+    ghostty_command='ghostty'
+  elif [ -x '/Applications/Ghostty.app/Contents/MacOS/ghostty' ]; then
+    ghostty_command='/Applications/Ghostty.app/Contents/MacOS/ghostty'
+  else
+    return 1
+  fi
+  output="$("$ghostty_command" +show-config --changes-only=false 2> /dev/null)" ||
     return 1
 
   while IFS= read -r line; do

@@ -74,7 +74,7 @@ client_count() {
 wait_for_client_count() {
   local expected="$1" _
 
-  for _ in 1 2 3 4 5 6 7 8 9 10; do
+  for _ in {1..30}; do
     [ "$(client_count)" -eq "$expected" ] && return
     sleep 0.1
   done
@@ -84,7 +84,7 @@ wait_for_client_count() {
 wait_for_option() {
   local name="$1" expected="$2" _
 
-  for _ in 1 2 3 4 5 6 7 8 9 10; do
+  for _ in {1..30}; do
     [ "$(option "$name")" = "$expected" ] && return
     sleep 0.1
   done
@@ -100,6 +100,10 @@ tmux_supports_client_theme_hooks() {
   major="${version%%.*}"
   minor="${version#*.}"
   minor="${minor%%[!0-9]*}"
+
+  case "$major:$minor" in
+    *[!0-9:]* | *: | :*) return 1 ;;
+  esac
   [ "$major" -gt 3 ] || { [ "$major" -eq 3 ] && [ "$minor" -ge 6 ]; }
 }
 
