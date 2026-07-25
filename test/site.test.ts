@@ -142,6 +142,23 @@ describe('static document contracts', () => {
     );
   });
 
+  test('lists Ghostty detection outside the editable config', () => {
+    expectContains(
+      html,
+      [
+        '@chroma_detect_ghostty_background',
+        'one same-host Ghostty client&rsquo;s exact',
+        'otherwise use @chroma_background',
+      ],
+      'additional options describe Ghostty background detection'
+    );
+    expectExcludes(
+      config,
+      '@chroma_detect_ghostty_background',
+      'Ghostty detection stays outside the previewable config'
+    );
+  });
+
   test('uses the Workers custom domain and deployment commands', () => {
     expectContains(
       html,
