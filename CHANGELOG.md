@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/jimeh/tmux-chroma/compare/v0.1.0...v0.2.0) (2026-07-25)
+
+
+### Features
+
+* follow Ghostty background changes ([#14](https://github.com/jimeh/tmux-chroma/issues/14)) ([f9a3911](https://github.com/jimeh/tmux-chroma/commit/f9a3911671e10453f34b82127f2a10a7c51e8319))
+
+
+### Bug Fixes
+
+* **website:** stabilize controls on hover and iOS ([#12](https://github.com/jimeh/tmux-chroma/issues/12)) ([5cd41df](https://github.com/jimeh/tmux-chroma/commit/5cd41dfcd76a9bcae24131497ff6e750cb40724c))
+
 ## 0.1.0 (2026-07-20)
 
 
